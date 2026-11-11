@@ -15,7 +15,7 @@ try {
   await import('./game.js');
   window.__barbasLoaded = true;
 } catch (error) {
-  document.getElementById('fatal').textContent = 'No se pudo iniciar el juego: ' + (error?.message || String(error));
+  document.getElementById('fatal').textContent = 'No se pudo iniciar el juego: ' + (error?.stack ||(error?.message || String(error));
   document.getElementById('notice').textContent = '⚠️ Fallo al cargar el juego. Haz una captura del mensaje rojo de abajo.';
 }
 </script></body></html>
