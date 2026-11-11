@@ -181,5 +181,5 @@ function actualizar(dt,modo='quieto',estado={}){
 }
 // El personaje del taller mide aproximadamente 2.9 unidades; lo escalamos a 1.9.
 root.scale.setScalar(.64);
-return {root,head,arms,legs,knees,garment,baseShorts,actualizar};
+return {root,body,head,arms,legs,knees,garment,baseShorts,actualizar};
 }
