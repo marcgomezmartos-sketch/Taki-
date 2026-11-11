@@ -103,26 +103,10 @@ for(const side of [-1,1]){
  ell(skin,[0,-.31,.005],[.08,.098,.078],elbow);
  // Cuff rim and forearm fabric fold.
  ell(skin,[0,-.235,.005],[.135,.035,.133],elbow);
- line(pinkLight,[[-.10,-.12,.152],[0,-.15,.178],[.10,-.11,.15]],.006,elbow);
- line(stitch,[[side*.155,-.36,.07],[side*.16,-.39,.10],[side*.15,-.43,.12]],.007,sleeve);
- line(pinkLight,[[side*.15,-.17,.07],[side*.17,-.20,.11]],.009,sleeve);
- if(side===1){
-   // High contrast sleeve compass badge, on the outer face of the RIGHT upper arm.
-   const patchCanvas=document.createElement('canvas');patchCanvas.width=512;patchCanvas.height=512;
-   const c=patchCanvas.getContext('2d');
-   c.fillStyle='#141719';c.fillRect(0,0,512,512);
-   c.strokeStyle='#d5c83a';c.lineWidth=13;c.beginPath();c.arc(256,256,145,0,Math.PI*2);c.stroke();
-   c.lineWidth=10;c.beginPath();c.moveTo(256,66);c.lineTo(256,446);c.moveTo(66,256);c.lineTo(446,256);c.stroke();
-   c.beginPath();c.moveTo(256,106);c.lineTo(285,226);c.lineTo(406,256);c.lineTo(285,285);c.lineTo(256,406);c.lineTo(227,285);c.lineTo(106,256);c.lineTo(227,227);c.closePath();c.stroke();
-   c.beginPath();c.arc(256,256,31,0,Math.PI*2);c.fillStyle='#d5c83a';c.fill();
-   const texture=new T.CanvasTexture(patchCanvas);texture.colorSpace=T.SRGBColorSpace;
-   const pm=new T.MeshStandardMaterial({map:texture,roughness:1,side:T.DoubleSide});
-   const badgeBack=box(beardMat,[.204,-.20,0],[.018,.248,.236],sleeve);
-   const patch=mesh(new T.PlaneGeometry(.219,.229),pm,sleeve,.216,-.20,.002);patch.visible=false;
-   patch.rotation.y=Math.PI/2;
-   for(const z of [-.124,.124])line(charcoal,[[.217,-.31,z],[.217,-.09,z]],.005,sleeve);
+ 
+ 
+ 
 
- }
 }
 // Loose cargo trousers with straighter fabric silhouette and layered utility pockets
 const legs=[],knees=[];const baseShorts=[];
@@ -133,15 +117,6 @@ for(const side of [-1,1]){
  const knee=new T.Group();knee.position.y=-.56;pivot.add(knee);knees.push(knee);
  garment(skin,[[-.50,.20,.20],[-.42,.215,.205],[-.25,.225,.21],[-.02,.23,.215]],knee,24);
  
- // pocket flap and hanging pocket on outer thigh
- // No cargo pockets on starter shorts.
- // Cargo pocket edges and top flap
- box(charcoal,[side*.30,-.372,.035],[.03,.058,.277],pivot);
- line(pocketSeam,[[side*.315,-.41,-.11],[side*.315,-.61,-.11]],.005,pivot);
- box(charcoal,[side*.31,-.39,.037],[.022,.06,.268],pivot);
- line(charcoal,[[side*.235,-.53,.18],[side*.235,-.66,.18]],.008,pivot);
- // Natural folds at ankle
- for(let i=0;i<3;i++)line(charcoal,[[-.16,-.33+i*.06,.205],[0,-.345+i*.06,.216],[.16,-.32+i*.06,.205]],.006,knee);
  // Proper sneaker with toe, sole and laces
  ell(sole,[0,-.565,.095],[.203,.079,.28],knee);
  ell(charcoal,[0,-.53,.19],[.189,.075,.205],knee);
