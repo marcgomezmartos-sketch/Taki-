@@ -12,15 +12,15 @@ export function crearBarbasV4(){
  ell(body,skin,0,2.07,0,.115,.17,.115);
  const head=new T.Group();head.position.set(0,2.34,.02);body.add(head);
  ell(head,skin,0,.02,0,.29,.315,.265);
- for(const side of [-1,1]){ell(head,skin,side*.286,-.02,.01,.055,.082,.055);ell(head,white,side*.115,.09,.247,.052,.054,.026);ell(head,iris,side*.112,.09,.274,.027,.032,.012);const brow=ell(head,hair,side*.115,.203,.251,.088,.018,.018);brow.rotation.z=side*.12}
+ for(const side of [-1,1]){ell(head,skin,side*.286,-.02,.01,.055,.082,.055);ell(head,white,side*.115,.09,.247,.052,.054,.026);face.eyes.push(ell(head,iris,side*.112,.09,.274,.027,.032,.012));const brow=ell(head,hair,side*.115,.203,.251,.088,.018,.018);brow.rotation.z=side*.12;face.brows.push(brow)}
  ell(head,shade,0,-.035,.266,.065,.073,.061);
  // Signature full beard stays on every avatar and follows head movement.
  ell(head,dark,0,-.187,.124,.256,.174,.19);
  ell(head,dark,0,-.22,.235,.19,.11,.083);
  for(const side of [-1,1]){ell(head,dark,side*.215,-.123,.14,.055,.145,.105);ell(head,dark,side*.073,-.09,.29,.093,.038,.033)}
  ell(head,skin,0,-.145,.29,.105,.043,.024);
- ell(head,hair,0,.292,-.025,.285,.058,.23);
- const arms=[],elbows=[],legs=[],knees=[],baseShorts=[];
+ // Bald by default: no scalp hair. Beard and eyebrows are permanent.
+ const arms=[],elbows=[],legs=[],knees=[],baseShorts=[];const face={eyes:[],brows:[]};
  for(const side of [-1,1]){
   const arm=new T.Group();arm.position.set(side*.385,1.94,0);body.add(arm);arms.push(arm);
   ell(arm,skin,0,-.12,0,.14,.23,.14);
@@ -36,7 +36,7 @@ export function crearBarbasV4(){
   ell(knee,dark,0,-.49,.07,.19,.09,.245);
  }
  ell(body,shorts,0,1.33,0,.34,.15,.235);
- let t=0,blend=0,stride=0,land=0,wasAir=false;
+ let t=0,blend=0,stride=0,land=0,wasAir=false,blink=0,look=0;
  function actualizar(dt,mode='quieto',state={}){
   dt=Math.min(dt,.05);t+=dt;
   const moving=mode==='caminar'||mode==='correr',running=mode==='correr',air=!!state.aire;
@@ -61,7 +61,7 @@ export function crearBarbasV4(){
   ease(body,'z',air?0:Math.sin(phase)*.019*blend,7);
   head.rotation.x=T.MathUtils.damp(head.rotation.x,-body.rotation.x*.36+Math.sin(t*1.5)*.008,6,dt);
   head.rotation.y=Math.sin(t*.8)*.026;
-  head.position.y=2.34+Math.sin(t*2.2)*.007;
+  head.position.y=2.34+Math.sin(t*2.2)*.007;const eyePulse=Math.pow(Math.max(0,Math.sin(t*1.43+1.4)),34);for(const eye of face.eyes)eye.scale.y=.032*(1-eyePulse*.9);head.rotation.z=T.MathUtils.damp(head.rotation.z,Math.sin(t*.61)*.023,4,dt);
   const breathe=1+Math.sin(t*2.3)*.004;
   body.scale.set(breathe,1,1);
  }
