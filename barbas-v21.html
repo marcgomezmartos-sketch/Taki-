@@ -1,0 +1,43 @@
+<!doctype html><html lang="es"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no"><title>BARBAS PARTY — V21</title><style>*{box-sizing:border-box}html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#211c43;color:white;font:600 15px system-ui;touch-action:none}canvas{display:block}#hud{position:fixed;top:12px;left:14px;z-index:3;text-shadow:0 2px 6px #28213b}#hud b{font-size:24px;color:#ffe28b}#status{margin-top:5px;font-size:13px;max-width:72vw}#menu{position:fixed;inset:0;background:linear-gradient(#17132c99,#17132cdd);z-index:8;display:flex;flex-direction:column;justify-content:center;align-items:center;text-align:center;padding:25px;gap:13px}h1{font-size:clamp(35px,9vw,68px);margin:0;color:#ffe27c;text-shadow:0 4px #ac4e8c}p{max-width:470px;margin:4px}button{border:0;border-radius:16px;background:#ffd34f;color:#28213b;padding:14px 21px;font-weight:900;font-size:16px;cursor:pointer}#notice{font-size:12px;color:#ffdfd7;max-width:470px}#controls{position:fixed;bottom:19px;left:16px;right:16px;z-index:5;display:none;justify-content:space-between;pointer-events:none}.pad{display:grid;grid-template-columns:repeat(3,54px);grid-template-rows:repeat(2,54px);gap:5px}.up{grid-column:2}.left{grid-column:1;grid-row:2}.down{grid-column:2;grid-row:2}.right{grid-column:3;grid-row:2}.ctl{pointer-events:auto;touch-action:none;background:#ffffffbb;padding:0;min-width:54px;min-height:54px;font-size:22px}.actions{display:flex;gap:7px;align-items:end}.actions .ctl{font-size:12px;padding:9px}.panel{position:fixed;inset:0;z-index:9;background:#181a35ee;display:none;align-items:center;justify-content:center;flex-direction:column;gap:12px;text-align:center;padding:25px}.panel h2{font-size:29px;margin:0}.panel p{max-width:460px}#topbtn{position:fixed;top:15px;right:15px;z-index:6;display:none;padding:9px 14px;font-size:13px}#skinChoice{display:flex;gap:9px;flex-wrap:wrap;justify-content:center}.choice{background:#9cdef0}#fatal{position:fixed;bottom:4px;left:5px;z-index:20;color:#ffb3b3;font-size:12px}</style><style>
+#menu{background:linear-gradient(145deg,#101b39ed,#262046e8 56%,#543653db);overflow:auto}
+.menuGlow{position:absolute;width:78vw;height:78vw;max-width:500px;max-height:500px;border-radius:50%;background:#ffc46b20;filter:blur(55px);top:8%;right:-12%;pointer-events:none}
+.menuCard{position:relative;width:min(420px,94vw);border:1px solid #ffe3b74a;background:#191c38bd;box-shadow:0 20px 70px #0b1029a3;border-radius:28px;padding:30px 24px;display:flex;flex-direction:column;align-items:center;gap:13px;backdrop-filter:blur(12px)}
+.menuCard h1{font-size:clamp(54px,12vw,82px);line-height:.9;letter-spacing:-3px;text-shadow:0 5px 0 #a54c85;text-align:center}.menuCard h1 span{color:#ffaecb}
+.eyebrow{font-size:10px;font-weight:900;letter-spacing:2px;color:#fce7b6}.subtitle{font-size:15px;color:#f5e8dd;font-weight:500}.menuButtons{display:flex;flex-direction:column;gap:10px;width:100%;margin:10px 0}.menuButtons button{width:100%;padding:17px;border-radius:16px}.menuButtons .secondary{background:#ffffff22;color:#fff;border:1px solid #ffffff55}.menuFoot{font-size:10px;color:#d9cbd4;letter-spacing:1px}.menuCard #notice{min-height:14px}
+#settingsPanel{position:absolute;inset:0;z-index:3;display:flex;justify-content:center;align-items:center;background:#141529ed;padding:18px}#settingsPanel[hidden]{display:none}
+.settingsCard{width:min(430px,95vw);background:#292b4c;border:1px solid #ffdcaa77;border-radius:25px;padding:27px 23px;box-shadow:0 20px 65px #0007;display:flex;flex-direction:column;gap:16px;text-align:left}
+.settingsCard h2{font-size:27px;margin:0;color:#ffe18b}.settingsCard label{display:flex;justify-content:space-between;font-size:15px}.settingsCard output{color:#ffdf80}.settingsCard input{width:100%;accent-color:#ffcc60;touch-action:pan-x;height:24px}.settingsCard .hint{font-size:12px;color:#d5d3e4;line-height:1.6}.settingsCard button{margin-top:5px}
+</style></head><body><div id="hud"><b>🌅 BARBAS CITY</b><div id="status">Explora la ciudad y visita las tiendas</div></div><div id="menu"><div class="menuGlow"></div><div class="menuCard"><div class="eyebrow">🌅 UN MUNDO PARA EXPLORAR</div><h1>BARBAS<br><span>PARTY</span></h1><p class="subtitle">Tu ciudad, tus aventuras, tu estilo.</p><div class="menuButtons"><button id="googleLogin" class="secondary">🌐 CONTINUAR CON GOOGLE</button><div id="authStatus" style="font-size:12px;color:#f7e8c7;min-height:16px">Conectando con Firebase...</div><button id="logout" class="secondary" style="display:none">Cerrar sesión</button><button id="start">▶ JUGAR AHORA</button><button id="settingsOpen" class="secondary">⚙ CONFIGURACIÓN</button></div><div class="menuFoot">TK SHOP · MINIJUEGOS · CIUDAD ABIERTA</div><span id="notice"></span></div><div id="settingsPanel" hidden><div class="settingsCard"><div class="eyebrow">PERSONALIZA TU EXPERIENCIA</div><h2>⚙ Configuración</h2><label for="musicVolume">🎵 Música <output id="musicValue">42%</output></label><input id="musicVolume" type="range" min="0" max="100" value="42"><label for="effectsVolume">🔊 Efectos <output id="effectsValue">55%</output></label><input id="effectsVolume" type="range" min="0" max="100" value="55"><p class="hint">Puedes cambiar estos ajustes cuando quieras. Se guardan automáticamente.</p><button id="settingsClose">✓ GUARDAR Y VOLVER</button></div></div></div><button id="topbtn">☰ MENÚ</button><div id="controls"><div class="pad"><button class="ctl up" data-key="KeyW">▲</button><button class="ctl left" data-key="KeyA">◀</button><button class="ctl down" data-key="KeyS">▼</button><button class="ctl right" data-key="KeyD">▶</button></div><div class="actions"><button class="ctl" id="interact">USAR</button><button class="ctl" data-key="ShiftLeft">CORRER</button><button class="ctl" id="jump">SALTAR</button></div></div><div id="panel" class="panel"><h2 id="panelTitle">Tienda</h2><p id="panelText"></p><div id="skinChoice"></div><button id="closePanel">VOLVER A LA CIUDAD</button></div><div id="fatal"></div><script>
+(()=>{const panel=document.getElementById('settingsPanel'),open=document.getElementById('settingsOpen'),close=document.getElementById('settingsClose'),music=document.getElementById('musicVolume'),effects=document.getElementById('effectsVolume');let settings={music:42,effects:55};try{settings={...settings,...JSON.parse(localStorage.getItem('barbas-audio-settings-v1')||'{}')}}catch{};function sync(){music.value=settings.music;effects.value=settings.effects;document.getElementById('musicValue').textContent=settings.music+'%';document.getElementById('effectsValue').textContent=settings.effects+'%'}sync();open.onclick=()=>{panel.hidden=false};close.onclick=()=>{panel.hidden=true};for(const [input,key] of [[music,'music'],[effects,'effects']])input.addEventListener('input',()=>{settings[key]=Number(input.value);sync();try{localStorage.setItem('barbas-audio-settings-v1',JSON.stringify(settings))}catch{};window.dispatchEvent(new CustomEvent('barbas-audio-change',{detail:settings}))})})();
+</script><script type="module" src="./firebase-cloud.js?v=21"></script><script type="importmap">{"imports":{"three":"https://cdn.jsdelivr.net/npm/three@0.165.0/build/three.module.js","three/addons/":"https://cdn.jsdelivr.net/npm/three@0.165.0/examples/jsm/"}}</script><script>
+window.__barbasLoaded = false;
+const startButton = document.getElementById('start');
+startButton.addEventListener('click', () => {
+  if (!window.__barbasLoaded) {
+    document.getElementById('notice').textContent = '⚠️ El juego no se ha cargado. Comprueba la conexión y el mensaje de error de abajo.';
+  }
+});
+window.addEventListener('error', e => {
+  document.getElementById('fatal').textContent = 'Error: ' + (e.message || 'No se pudo cargar un archivo');
+});
+</script>
+<script type="module">
+const fatal = document.getElementById('fatal');
+const notice = document.getElementById('notice');
+const steps = [
+  ['world.js', './world.js?v=shop21'],
+  ['barbas_v4.js', './barbas_v4.js?v=shop18'],
+  ['game.js', './game.js?v=shop18']
+];
+for (const [name, path] of steps) {
+  try {
+    await import(path);
+    if (name === 'game.js') window.__barbasLoaded = true;
+  } catch (error) {
+    fatal.textContent = 'ERROR EN ' + name + ': ' + (error?.stack || error?.message || String(error));
+    fatal.style.cssText += ';background:#290c20;padding:8px;white-space:pre-wrap;overflow-wrap:anywhere;max-height:32vh;overflow:auto';
+    notice.textContent = '⚠️ Error detectado en ' + name + '.';
+    break;
+  }
+}
+</script></body></html>
