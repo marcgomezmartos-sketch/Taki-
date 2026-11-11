@@ -10,7 +10,7 @@ function report(message){status.textContent=message}
 async function loadProfile(user){const ref=doc(db,'players',user.uid);let snapshot;try{snapshot=await getDoc(ref)}catch(e){report('No se pudo leer la partida: revisa Firestore y sus reglas. '+e.code);return}
 let data=snapshot.exists()?snapshot.data():null;
 if(!data){data={coins:400,owned:[],equipped:{},createdAt:new Date().toISOString()};try{await setDoc(ref,data)}catch(e){report('No se pudo crear la partida: '+e.code);return}}
-window.barbasAccount={ready:true,user,save:async payload=>{await setDoc(ref,{...payload,updatedAt:new Date().toISOString()},{merge:true})}};
+window.barbasAccount={ready:true,user,profile:data,save:async payload=>{await setDoc(ref,{...payload,updatedAt:new Date().toISOString()},{merge:true})}};
 window.dispatchEvent(new CustomEvent('barbas-profile-ready',{detail:data}));
 login.style.display='none';logout.style.display='inline-block';start.disabled=false;start.style.opacity='1';report('✓ Sesión iniciada: '+(user.displayName||user.email||'Jugador'))}
 onAuthStateChanged(auth,async user=>{window.barbasAccount={ready:false,user:null,save:null};start.disabled=true;start.style.opacity='.5';if(!user){login.style.display='inline-block';logout.style.display='none';report('Inicia sesión con Google para cargar tu partida');return}report('Cargando tu partida...');await loadProfile(user)});
