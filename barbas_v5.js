@@ -10,7 +10,7 @@ export function crearBarbasV4(){
  garment(skin,[[1.30,.29,.205],[1.42,.34,.23],[1.65,.37,.245],[1.87,.355,.232],[2.04,.235,.17]]);
  ell(body,skin,0,1.40,0,.33,.19,.23);
  ell(body,skin,0,2.07,0,.115,.17,.115);
- const head=new T.Group();head.position.set(0,2.34,.02);body.add(head);
+ const head=new T.Group();head.position.set(0,2.34,.02);body.add(head);const face={eyes:[],brows:[]};
  ell(head,skin,0,.02,0,.29,.315,.265);
  for(const side of [-1,1]){ell(head,skin,side*.286,-.02,.01,.055,.082,.055);ell(head,white,side*.115,.09,.247,.052,.054,.026);face.eyes.push(ell(head,iris,side*.112,.09,.274,.027,.032,.012));const brow=ell(head,hair,side*.115,.203,.251,.088,.018,.018);brow.rotation.z=side*.12;face.brows.push(brow)}
  ell(head,shade,0,-.035,.266,.065,.073,.061);
@@ -20,7 +20,7 @@ export function crearBarbasV4(){
  for(const side of [-1,1]){ell(head,dark,side*.215,-.123,.14,.055,.145,.105);ell(head,dark,side*.073,-.09,.29,.093,.038,.033)}
  ell(head,skin,0,-.145,.29,.105,.043,.024);
  // Bald by default: no scalp hair. Beard and eyebrows are permanent.
- const arms=[],elbows=[],legs=[],knees=[],baseShorts=[];const face={eyes:[],brows:[]};
+ const arms=[],elbows=[],legs=[],knees=[],baseShorts=[];
  for(const side of [-1,1]){
   const arm=new T.Group();arm.position.set(side*.385,1.94,0);body.add(arm);arms.push(arm);
   ell(arm,skin,0,-.12,0,.14,.23,.14);
