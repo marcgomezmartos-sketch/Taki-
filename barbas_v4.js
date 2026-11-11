@@ -29,18 +29,18 @@ function garment(m,rings,parent=body,n=16){
  const g=new T.BufferGeometry();g.setAttribute('position',new T.Float32BufferAttribute(verts,3));g.setIndex(inds);g.computeVertexNormals();return mesh(g,m,parent);
 }
 function line(m,pts,r=.007,parent=body){return curve(m,pts,r,parent)}
-garment(pink,[[1.27,.33,.22],[1.38,.345,.235],[1.43,.365,.245],[1.57,.39,.255],[1.78,.395,.25],[1.97,.35,.23],[2.06,.28,.20]],body,28);
-garment(pinkDark,[[1.355,.36,.248],[1.415,.38,.255]]);
+garment(skin,[[1.27,.33,.22],[1.38,.345,.235],[1.43,.365,.245],[1.57,.39,.255],[1.78,.395,.25],[1.97,.35,.23],[2.06,.28,.20]],body,28);
+garment(skinShade,[[1.355,.36,.248],[1.415,.38,.255]]);
 // Continuous waist and hip shells cover the moving leg pivots; no white gap during running.
 ell(pant,[0,1.37,-.012],[.375,.19,.248]);
-ell(pink,[0,1.49,-.005],[.34,.10,.235]);
+ell(skin,[0,1.49,-.005],[.34,.10,.235]);
 // Underarm panels remain attached to the torso when the arms swing.
 for(const side of [-1,1]){
- const joint=ell(pink,[side*.366,1.91,-.006],[.115,.145,.145]);joint.rotation.z=side*.16;
+ const joint=ell(skin,[side*.366,1.91,-.006],[.115,.145,.145]);joint.rotation.z=side*.16;
 }
 // Hood behind the neck, with distinct opening and soft folded fabric
-const hood=ell(pink,[0,2.02,-.22],[.39,.23,.22]);
-ell(pinkDark,[0,2.10,-.115],[.25,.12,.13]);
+// No hood on the starter avatar.
+
 for(const side of [-1,1]){
  line(stitch,[[side*.35,1.43,.14],[side*.38,1.49,.16],[side*.40,1.57,.17]],.006);
  line(pinkDark,[[side*.16,1.99,.22],[side*.18,1.92,.28],[side*.19,1.84,.28]],.008);
@@ -93,16 +93,16 @@ for(const side of [-1,1]){
  const pivot=new T.Group();pivot.position.set(side*.392,1.96,0);body.add(pivot);arms.push(pivot);
  const sleeve=new T.Group();pivot.add(sleeve);sleeve.position.x=side*.065;
  // Rounded upper-arm shoulder insert, always overlapping the jacket and sleeve.
- ell(pink,[0,-.06,-.006],[.145,.16,.145],sleeve);
- garment(pink,[[-.56,.117,.115],[-.49,.132,.13],[-.36,.142,.145],[-.19,.154,.153],[-.04,.16,.16],[.035,.135,.14]],sleeve,24);
- garment(pinkDark,[[-.585,.13,.13],[-.545,.147,.147]],sleeve);
+ ell(skin,[0,-.06,-.006],[.145,.16,.145],sleeve);
+ garment(skin,[[-.56,.117,.115],[-.49,.132,.13],[-.36,.142,.145],[-.19,.154,.153],[-.04,.16,.16],[.035,.135,.14]],sleeve,24);
+ garment(skinShade,[[-.585,.13,.13],[-.545,.147,.147]],sleeve);
  // Articulated forearm, anchored at the elbow. The overlap hides the hinge.
  const elbow=new T.Group();elbow.position.set(0,-.315,0);sleeve.add(elbow);elbows.push(elbow);
- ell(pink,[0,-.015,0],[.14,.16,.143],elbow);
- garment(pink,[[ -.275,.124,.125],[-.22,.135,.137],[-.10,.145,.144],[.025,.145,.145]],elbow,24);
+ ell(skin,[0,-.015,0],[.14,.16,.143],elbow);
+ garment(skin,[[ -.275,.124,.125],[-.22,.135,.137],[-.10,.145,.144],[.025,.145,.145]],elbow,24);
  ell(skin,[0,-.31,.005],[.08,.098,.078],elbow);
  // Cuff rim and forearm fabric fold.
- ell(pinkDark,[0,-.235,.005],[.135,.035,.133],elbow);
+ ell(skin,[0,-.235,.005],[.135,.035,.133],elbow);
  line(pinkLight,[[-.10,-.12,.152],[0,-.15,.178],[.10,-.11,.15]],.006,elbow);
  line(stitch,[[side*.155,-.36,.07],[side*.16,-.39,.10],[side*.15,-.43,.12]],.007,sleeve);
  line(pinkLight,[[side*.15,-.17,.07],[side*.17,-.20,.11]],.009,sleeve);
@@ -118,23 +118,23 @@ for(const side of [-1,1]){
    const texture=new T.CanvasTexture(patchCanvas);texture.colorSpace=T.SRGBColorSpace;
    const pm=new T.MeshStandardMaterial({map:texture,roughness:1,side:T.DoubleSide});
    const badgeBack=box(beardMat,[.204,-.20,0],[.018,.248,.236],sleeve);
-   const patch=mesh(new T.PlaneGeometry(.219,.229),pm,sleeve,.216,-.20,.002);
+   const patch=mesh(new T.PlaneGeometry(.219,.229),pm,sleeve,.216,-.20,.002);patch.visible=false;
    patch.rotation.y=Math.PI/2;
    for(const z of [-.124,.124])line(charcoal,[[.217,-.31,z],[.217,-.09,z]],.005,sleeve);
 
  }
 }
 // Loose cargo trousers with straighter fabric silhouette and layered utility pockets
-const legs=[],knees=[];
+const legs=[],knees=[];const baseShorts=[];
 for(const side of [-1,1]){
  const pivot=new T.Group();pivot.position.set(side*.207,1.40,0);body.add(pivot);legs.push(pivot);
- garment(pant,[[-.61,.228,.215],[-.55,.23,.213],[-.40,.226,.21],[-.18,.218,.205],[.02,.205,.195]],pivot,28);
+ garment(skin,[[-.61,.228,.215],[-.55,.23,.213],[-.40,.226,.21],[-.18,.218,.205],[.02,.205,.195]],pivot,28);baseShorts.push(garment(pant,[[-.25,.227,.216],[-.20,.228,.216],[-.08,.225,.215],[.03,.213,.202]],pivot,28));
  // Lower leg is a separate pivot so the knee can flex while running.
  const knee=new T.Group();knee.position.y=-.56;pivot.add(knee);knees.push(knee);
- garment(pant,[[-.50,.20,.20],[-.42,.215,.205],[-.25,.225,.21],[-.02,.23,.215]],knee,24);
- garment(pant2,[[-.49,.20,.20],[-.42,.215,.205]],knee);
+ garment(skin,[[-.50,.20,.20],[-.42,.215,.205],[-.25,.225,.21],[-.02,.23,.215]],knee,24);
+ 
  // pocket flap and hanging pocket on outer thigh
- const pocket=box(pant2,[side*.245,-.49,.035],[.115,.26,.255],pivot);
+ // No cargo pockets on starter shorts.
  // Cargo pocket edges and top flap
  box(charcoal,[side*.30,-.372,.035],[.03,.058,.277],pivot);
  line(pocketSeam,[[side*.315,-.41,-.11],[side*.315,-.61,-.11]],.005,pivot);
@@ -147,31 +147,6 @@ for(const side of [-1,1]){
  ell(charcoal,[0,-.53,.19],[.189,.075,.205],knee);
  for(let i=0;i<4;i++)line(metal,[[-.09,-.475,.30-i*.035],[.09,-.475,.30-i*.035]],.004,knee);
 }
-// Tailored textile details: sleeve wrinkles, side seams, hems and cargo folds.
-for(const side of [-1,1]){
- line(stitch,[[side*.32,1.41,.14],[side*.34,1.52,.16],[side*.36,1.65,.14]],.005);
- line(pinkLight,[[side*.18,1.48,.222],[side*.27,1.50,.215],[side*.33,1.46,.17]],.006);
- line(clothShadow,[[side*.23,1.73,.233],[side*.30,1.70,.207],[side*.37,1.75,.15]],.005);
- line(stitch,[[side*.26,1.39,.18],[side*.17,1.37,.229],[0,1.37,.238]],.005);
-}
-// Front pocket seams on hoodie, shaped as diagonals rather than flat rectangles.
-for(const side of [-1,1]){
- line(stitch,[[side*.12,1.55,.255],[side*.19,1.62,.24],[side*.29,1.62,.19]],.008);
- line(pinkLight,[[side*.13,1.56,.264],[side*.19,1.625,.248]],.004);
-}
-// Subtle jaw and beard definition; avoids shiny disconnected beard spheres.
-for(const side of [-1,1]){
- line(beardEdge,[[side*.21,-.06,.218],[side*.225,-.16,.224],[side*.15,-.29,.24]],.008,head);
- line(skinShade,[[side*.055,-.16,.318],[side*.015,-.165,.317]],.004,head);
-}
-// Zip, cords, seams, strap and structured pouch
-line(charcoal,[[0,1.41,.258],[0,1.72,.287],[0,1.98,.245]],.009);
-for(const side of [-1,1])line(charcoal,[[side*.12,2.03,.21],[side*.125,1.85,.28]],.008);
-line(olive,[[-.30,2.01,.24],[-.15,1.84,.295],[.02,1.65,.316],[.26,1.46,.25]],.033);
-const pouch=box(olive,[.25,1.52,.33],[.21,.235,.105]);
-box(charcoal,[.25,1.395,.39],[.26,.027,.115]);
-box(charcoal,[.25,1.58,.389],[.21,.015,.009]);
-
 let tiempo=0,blend=0,lean=0,hop=0;
 function actualizar(dt,modo='quieto',estado={}){
  dt=Math.min(dt,.05);tiempo+=dt;
@@ -206,5 +181,5 @@ function actualizar(dt,modo='quieto',estado={}){
 }
 // El personaje del taller mide aproximadamente 2.9 unidades; lo escalamos a 1.9.
 root.scale.setScalar(.64);
-return {root,head,actualizar};
+return {root,head,arms,legs,knees,garment,baseShorts,actualizar};
 }
