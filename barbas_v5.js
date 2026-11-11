@@ -36,7 +36,34 @@ export function crearBarbasV4(){
   ell(knee,dark,0,-.49,.07,.19,.09,.245);
  }
  ell(body,shorts,0,1.33,0,.34,.15,.235);
- let t=0,blend=0;
- function actualizar(dt,mode='quieto',state={}){dt=Math.min(dt,.05);t+=dt;const moving=mode==='caminar'||mode==='correr',running=mode==='correr';blend=T.MathUtils.damp(blend,moving?1:0,8,dt);const phase=t*(running?11:7),a=(running?.62:.37)*blend;for(let i=0;i<2;i++){const p=Math.sin(phase+i*Math.PI)*a;legs[i].rotation.x=T.MathUtils.damp(legs[i].rotation.x,state.aire?-.18:p,10,dt);arms[i].rotation.x=T.MathUtils.damp(arms[i].rotation.x,state.aire?-.3:-p*.9,10,dt);knees[i].rotation.x=T.MathUtils.damp(knees[i].rotation.x,Math.max(0,-Math.sin(phase+i*Math.PI))*.28*blend,10,dt);elbows[i].rotation.x=T.MathUtils.damp(elbows[i].rotation.x,-.18-.22*blend,10,dt)}body.position.y=state.aire?0:Math.abs(Math.sin(phase))*.022*blend;body.rotation.x=T.MathUtils.damp(body.rotation.x,moving?-.055:0,6,dt);head.rotation.y=Math.sin(t)*.012}
+ let t=0,blend=0,stride=0,land=0,wasAir=false;
+ function actualizar(dt,mode='quieto',state={}){
+  dt=Math.min(dt,.05);t+=dt;
+  const moving=mode==='caminar'||mode==='correr',running=mode==='correr',air=!!state.aire;
+  blend=T.MathUtils.damp(blend,moving?1:0,moving?6:9,dt);
+  stride+=dt*(running?12.8:8.1)*Math.max(.25,blend);
+  const amp=(running?.62:.37)*blend,phase=stride;
+  if(wasAir&&!air)land=1;wasAir=air;land=T.MathUtils.damp(land,0,9,dt);
+  const ease=(obj,key,value,speed=10)=>{obj.rotation[key]=T.MathUtils.damp(obj.rotation[key],value,speed,dt)};
+  for(let i=0;i<2;i++){
+   const side=i===0?-1:1,cycle=phase+i*Math.PI,swing=Math.sin(cycle),plant=Math.max(0,-Math.sin(cycle));
+   ease(legs[i],'x',air?(state.subiendo?-.28:.17):swing*amp,11);
+   ease(legs[i],'z',air?side*.08:side*.025*blend,9);
+   ease(knees[i],'x',air?(state.subiendo?.55:.25):plant*(running?.75:.38)*blend+land*.15,12);
+   ease(arms[i],'x',air?-.6:-swing*amp*.88-.045,11);
+   ease(arms[i],'z',air?side*.27:side*(.09+.07*blend),9);
+   ease(arms[i],'y',side*.045*blend,8);
+   ease(elbows[i],'x',air?-.75:-(running?.67:.28)*blend-.1,11);
+  }
+  const bob=air?0:(Math.cos(phase*2)*-.022*(running?1.6:1)*blend);
+  body.position.y=T.MathUtils.damp(body.position.y,bob-land*.065,13,dt);
+  ease(body,'x',air?(state.subiendo?-.09:.06):moving?(running?-.13:-.055):0,7);
+  ease(body,'z',air?0:Math.sin(phase)*.019*blend,7);
+  head.rotation.x=T.MathUtils.damp(head.rotation.x,-body.rotation.x*.36+Math.sin(t*1.5)*.008,6,dt);
+  head.rotation.y=Math.sin(t*.8)*.026;
+  head.position.y=2.34+Math.sin(t*2.2)*.007;
+  const breathe=1+Math.sin(t*2.3)*.004;
+  body.scale.set(breathe,1,1);
+ }
  root.scale.setScalar(.64);return {root,body,head,arms,elbows,legs,knees,garment,baseShorts,actualizar};
 }
