@@ -36,29 +36,29 @@ export function crearBarbasV4(){
   ell(knee,dark,0,-.49,.07,.19,.09,.245);
  }
  ell(body,shorts,0,1.33,0,.34,.15,.235);
- let t=0,blend=0,stride=0,land=0,wasAir=false,blink=0,look=0;
+ let t=0,blend=0,stride=0,land=0,wasAir=false,blink=0,look=0,runBlend=0;
  function actualizar(dt,mode='quieto',state={}){
   dt=Math.min(dt,.05);t+=dt;
   const moving=mode==='caminar'||mode==='correr',running=mode==='correr',air=!!state.aire;
-  blend=T.MathUtils.damp(blend,moving?1:0,moving?6:9,dt);
-  stride+=dt*(running?12.8:8.1)*Math.max(.25,blend);
-  const amp=(running?.62:.37)*blend,phase=stride;
+  blend=T.MathUtils.damp(blend,moving?1:0,moving?6:9,dt);runBlend=T.MathUtils.damp(runBlend,running?1:0,5,dt);
+  stride+=dt*(8.1+4.7*runBlend)*Math.max(.25,blend);
+  const amp=(.44+.36*runBlend)*blend,phase=stride;
   if(wasAir&&!air)land=1;wasAir=air;land=T.MathUtils.damp(land,0,9,dt);
   const ease=(obj,key,value,speed=10)=>{obj.rotation[key]=T.MathUtils.damp(obj.rotation[key],value,speed,dt)};
   for(let i=0;i<2;i++){
    const side=i===0?-1:1,cycle=phase+i*Math.PI,swing=Math.sin(cycle),plant=Math.max(0,-Math.sin(cycle));
    ease(legs[i],'x',air?(state.subiendo?-.28:.17):swing*amp,11);
    ease(legs[i],'z',air?side*.08:side*.025*blend,9);
-   ease(knees[i],'x',air?(state.subiendo?.55:.25):plant*(running?.75:.38)*blend+land*.15,12);
+   ease(knees[i],'x',air?(state.subiendo?.55:.25):plant*(.52+.43*runBlend)*blend+land*.15,12);
    ease(arms[i],'x',air?-.6:-swing*amp*.88-.045,11);
    ease(arms[i],'z',air?side*.27:side*(.09+.07*blend),9);
    ease(arms[i],'y',side*.045*blend,8);
-   ease(elbows[i],'x',air?-.75:-(running?.67:.28)*blend-.1,11);
+   ease(elbows[i],'x',air?-.75:-(.32+.47*runBlend)*blend-.1,11);
   }
-  const bob=air?0:(Math.cos(phase*2)*-.022*(running?1.6:1)*blend);
+  const bob=air?0:(Math.cos(phase*2)*-.037*(1+runBlend*.7)*blend);
   body.position.y=T.MathUtils.damp(body.position.y,bob-land*.065,13,dt);
-  ease(body,'x',air?(state.subiendo?-.09:.06):moving?(running?-.13:-.055):0,7);
-  ease(body,'z',air?0:Math.sin(phase)*.019*blend,7);
+  ease(body,'x',air?(state.subiendo?-.09:.06):moving?(-.065-.09*runBlend):0,7);
+  ease(body,'z',air?0:Math.sin(phase)*.055*blend,7);ease(body,'y',air?0:Math.sin(phase)*.026*blend,7);
   head.rotation.x=T.MathUtils.damp(head.rotation.x,-body.rotation.x*.36+Math.sin(t*1.5)*.008,6,dt);
   head.rotation.y=Math.sin(t*.8)*.026;
   head.position.y=2.34+Math.sin(t*2.2)*.007;const eyePulse=Math.pow(Math.max(0,Math.sin(t*1.43+1.4)),34);for(const eye of face.eyes)eye.scale.y=.032*(1-eyePulse*.9);head.rotation.z=T.MathUtils.damp(head.rotation.z,Math.sin(t*.61)*.023,4,dt);
