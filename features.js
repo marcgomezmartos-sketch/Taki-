@@ -1,5 +1,5 @@
 import * as T from 'three';
-export function iniciarExtras({player,model,head,showStatus}){
+export function iniciarExtras({player,model,head,rig,showStatus}){
  const inventory=[
  {id:'capBlack',name:'Gorra urbana negra',kind:'cap',price:75,color:'#171a22',emoji:'🧢'},
  {id:'capRed',name:'Gorra roja',kind:'cap',price:90,color:'#bf3548',emoji:'🧢'},
@@ -11,7 +11,7 @@ export function iniciarExtras({player,model,head,showStatus}){
  ];
  const key='barbas-party-economy-v1';
  let saved={};
- let coins=Number.isFinite(saved.coins)?saved.coins:400,owned=new Set(Array.isArray(saved.owned)?saved.owned:[]),equipped=saved.equipped||{};
+ let coins=Number.isFinite(saved.coins)?saved.coins:0,owned=new Set(Array.isArray(saved.owned)?saved.owned:[]),equipped=saved.equipped||{};
  let cloudReady=false;let cloudSaveChain=Promise.resolve();const save=()=>{const data={coins,owned:[...owned],equipped};if(cloudReady&&window.barbasAccount?.save){cloudSaveChain=cloudSaveChain.catch(()=>{}).then(()=>window.barbasAccount.save(data)).catch(e=>{showStatus('Error guardando partida: '+(e.code||e.message))})}};
  const style=document.createElement('style');style.textContent=`
  #coinsHud{position:fixed;top:75px;left:14px;z-index:6;background:#201b39d9;border:1px solid #ffe19a66;border-radius:12px;padding:8px 12px;font-weight:900;color:#ffe38a}
@@ -30,7 +30,16 @@ export function iniciarExtras({player,model,head,showStatus}){
  const updateHud=()=>{hud.textContent='🪙 '+coins+' monedas';overlay.querySelector('#shopBalance').textContent='Saldo: '+coins+' 🪙'};
  const accessories=new T.Group();model.add(accessories);const headwear=new T.Group();(head||model).add(headwear);
  function itemMesh(geo,color,x,y,z,parent=accessories){const m=new T.Mesh(geo,new T.MeshStandardMaterial({color,roughness:.92}));m.position.set(x,y,z);parent.add(m);return m}
- function applyOutfit(){accessories.clear();headwear.clear();for(const kind of ['cap','jacket','pants','shoes']){const it=inventory.find(x=>x.id===equipped[kind]);if(!it)continue;const c=it.color;if(kind==='cap'){const cap=new T.Mesh(new T.SphereGeometry(1,24,12,0,Math.PI*2,0,Math.PI/2),new T.MeshStandardMaterial({color:c,roughness:.94}));cap.scale.set(.314,.165,.29);cap.position.set(0,.29,-.012);headwear.add(cap);itemMesh(new T.BoxGeometry(.42,.028,.22),c,0,.29,.29,headwear)}if(kind==='jacket'){itemMesh(new T.BoxGeometry(.79,.7,.53),c,0,1.73,0);for(const x of [-.49,.49])itemMesh(new T.BoxGeometry(.23,.66,.3),c,x,1.65,0)}if(kind==='pants'){for(const x of [-.18,.18])itemMesh(new T.BoxGeometry(.29,.68,.34),c,x,.62,0)}if(kind==='shoes'){for(const x of [-.19,.19])itemMesh(new T.BoxGeometry(.35,.19,.52),c,x,.13,.09)}}}
+ function applyOutfit(){
+ accessories.clear();headwear.clear();for(const p of wearableParts)p.parent?.remove(p);wearableParts.length=0;
+ const fitted=(rings,color,parent)=>{const mesh=rig.garment(new T.MeshStandardMaterial({color,roughness:1,side:T.DoubleSide}),rings,parent,28);wearableParts.push(mesh);return mesh};
+ const get=kind=>inventory.find(x=>x.id===equipped[kind]);
+ const cap=get('cap');if(cap){const material=new T.MeshStandardMaterial({color:cap.color,roughness:1});const crown=new T.Mesh(new T.SphereGeometry(1,32,16,0,Math.PI*2,0,Math.PI/2),material);crown.scale.set(.305,.155,.278);crown.position.set(0,.30,0);headwear.add(crown);const brim=new T.Mesh(new T.SphereGeometry(1,24,10,0,Math.PI*2,0,Math.PI),material);brim.scale.set(.22,.018,.15);brim.position.set(0,.30,.275);headwear.add(brim)}
+ const jacket=get('jacket');if(jacket){const c=jacket.color;fitted([[1.28,.342,.233],[1.39,.358,.251],[1.55,.402,.273],[1.77,.413,.269],[1.96,.367,.244],[2.045,.292,.213]],c,model);for(const arm of rig.arms){fitted([[-.56,.134,.13],[-.39,.155,.155],[-.18,.169,.169],[.025,.151,.15]],c,arm);const cuff=new T.Mesh(new T.CylinderGeometry(.134,.134,.045,20),new T.MeshStandardMaterial({color:c,roughness:1}));cuff.position.y=-.56;arm.add(cuff);wearableParts.push(cuff)}}
+ const pants=get('pants');if(pants){for(const leg of rig.legs)fitted([[-.59,.235,.221],[-.41,.243,.224],[-.18,.235,.221],[.035,.218,.211]],pants.color,leg);for(const knee of rig.knees)fitted([[-.49,.215,.216],[-.27,.238,.224],[-.01,.241,.229]],pants.color,knee)}
+ const shoes=get('shoes');if(shoes){for(const knee of rig.knees){const shoe=new T.Mesh(new T.SphereGeometry(1,20,12),new T.MeshStandardMaterial({color:shoes.color,roughness:1}));shoe.position.set(0,-.545,.095);shoe.scale.set(.213,.092,.29);knee.add(shoe);wearableParts.push(shoe)}}
+ }
+ const wearableParts=[];
  let selectedItem=null;function drawShop(){const grid=overlay.querySelector('.shopGrid');grid.replaceChildren();for(const it of inventory){if(selectedItem&&it.id!==selectedItem)continue;const card=document.createElement('div');card.className='product';card.dataset.itemId=it.id;const emoji=document.createElement('div');emoji.className='emoji';emoji.textContent=it.emoji;const name=document.createElement('b');name.textContent=it.name;const price=document.createElement('small');price.textContent=it.price+' 🪙';const btn=document.createElement('button');const have=owned.has(it.id),wearing=equipped[it.kind]===it.id;btn.textContent=wearing?'✓ EQUIPADO':have?'PONER':'COMPRAR';btn.disabled=wearing;btn.onclick=()=>{if(!owned.has(it.id)){if(coins<it.price){showStatus('No tienes monedas suficientes');sound('error');return}coins-=it.price;owned.add(it.id);sound('buy')}else sound('equip');equipped[it.kind]=it.id;applyOutfit();save();updateHud();drawShop()};card.append(emoji,name,price,btn);grid.append(card)}}
  let shopOpen=false;
  function openShop(itemId){if(!itemId)return;selectedItem=itemId;shopOpen=true;overlay.style.display='flex';drawShop();updateHud();sound('open')}
