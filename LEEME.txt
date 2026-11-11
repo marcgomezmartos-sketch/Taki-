@@ -1,0 +1,7 @@
+BARBAS PARTY — V4 EN BARBAS CITY
+
+Sube el contenido de este ZIP a Netlify Drop.
+Se ha integrado la geometría V4 del taller en Barbas City.
+Controles táctiles: flechas, CORRER, SALTAR, USAR.
+La animación de V4 usa pivotes articulados (no rig esquelético GLB).
+Necesita conexión a Internet para cargar Three.js desde CDN.
