@@ -38,16 +38,18 @@ export function iniciarExtras({player,model,showStatus}){
  shopButton.onclick=()=>showStatus('Entra en TK SHOP para comprar ropa');overlay.querySelector('#closeShop').onclick=closeShop;
  let ctx,master,musicTimer,musicOn=true,step=0;
  // Original cozy village-inspired melody: gentle marimba, soft chords and light bass.
- const melody=[392,440,523.25,440,392,329.63,349.23,392,440,392,329.63,293.66,329.63,349.23,392,329.63];
+ const melody=[392,0,440,523.25,0,493.88,440,0,392,349.23,329.63,0,349.23,392,440,0,392,0,329.63,293.66,0,329.63,349.23,0,392,440,392,0,349.23,329.63,293.66,0];
  const chords=[[261.63,329.63,392],[220,261.63,329.63],[174.61,220,261.63],[196,246.94,293.66]];
- function ensureAudio(){if(!ctx){ctx=new (window.AudioContext||window.webkitAudioContext)();master=ctx.createGain();master.gain.value=.17;master.connect(ctx.destination)}if(ctx.state==='suspended')ctx.resume();if(!musicTimer)musicTimer=setInterval(()=>{if(!musicOn||!ctx)return;const n=melody[step%melody.length],ch=chords[Math.floor(step/4)%4];if(step%2===0)tone(n,.36,'sine',.18);if(step%4===0){for(const f of ch)tone(f,.9,'triangle',.035);tone(ch[0]/2,.7,'sine',.08)}if(step%8===6)tone(n*2,.13,'sine',.04);step++},350)}
+ let ambience;
+ function ensureAudio(){if(!ctx){ctx=new (window.AudioContext||window.webkitAudioContext)();master=ctx.createGain();master.gain.value=.15;master.connect(ctx.destination);const buffer=ctx.createBuffer(1,ctx.sampleRate*2,ctx.sampleRate),data=buffer.getChannelData(0);for(let i=0;i<data.length;i++)data[i]=(Math.random()*2-1)*.12;const noise=ctx.createBufferSource();noise.buffer=buffer;noise.loop=true;const low=ctx.createBiquadFilter();low.type='lowpass';low.frequency.value=260;ambience=ctx.createGain();ambience.gain.value=.02;noise.connect(low);low.connect(ambience);ambience.connect(master);noise.start()}if(ctx.state==='suspended')ctx.resume();if(!musicTimer)musicTimer=setInterval(()=>{if(!musicOn||!ctx)return;const n=melody[step%melody.length],ch=chords[Math.floor(step/8)%4];if(n)tone(n,.29,'sine',.11);if(step%8===0){for(const f of ch)tone(f,1.6,'triangle',.028);tone(ch[0]/2,1.2,'sine',.08)}if(step%4===2)tone(880,.035,'sine',.012);step++},285)}
  function tone(freq,duration,type='sine',volume=.25){if(!ctx)return;const o=ctx.createOscillator(),g=ctx.createGain();o.type=type;o.frequency.value=freq;g.gain.setValueAtTime(.0001,ctx.currentTime);g.gain.exponentialRampToValueAtTime(Math.max(.0002,volume),ctx.currentTime+.025);g.gain.exponentialRampToValueAtTime(.0001,ctx.currentTime+duration);o.connect(g);g.connect(master);o.start();o.stop(ctx.currentTime+duration+.02)}
  function sound(type){if(!ctx)return;const presets={jump:[[330,.13],[440,.19]],step:[[110,.05]],buy:[[440,.11],[660,.2],[880,.3]],equip:[[550,.12]],open:[[390,.12],[520,.2]],close:[[320,.1]],error:[[170,.2],[130,.2]],coin:[[620,.09],[930,.15]]};let delay=0;for(const [f,d] of presets[type]||[]){setTimeout(()=>tone(f,d,type==='step'?'triangle':'sine',type==='step'?.07:.26),delay);delay+=90}}
- audioButton.onclick=()=>{ensureAudio();musicOn=!musicOn;audioButton.textContent='♫ Música: '+(musicOn?'ON':'OFF')};
+ audioButton.onclick=()=>{ensureAudio();musicOn=!musicOn;if(ambience)ambience.gain.value=musicOn?.02:0;audioButton.textContent='♫ Música: '+(musicOn?'ON':'OFF')};
  function start(){ensureAudio();shopButton.style.display='none';audioButton.style.display='block';hud.style.display='block'}
  function hide(){shopButton.style.display='none';audioButton.style.display='none';hud.style.display='none';closeShop()}
- let travel=0,walkSound=0;
- function update(dt,moving,speed){if(!moving||shopOpen)return;travel+=dt*speed;walkSound+=dt;if(walkSound>.4){sound('step');walkSound=0}if(travel>=32){travel-=32;coins+=10;updateHud();save();sound('coin');showStatus('🪙 +10 monedas por explorar')}}
+ let walkSound=0;
+ function update(dt,moving,speed){if(!moving||shopOpen)return;walkSound+=dt;if(walkSound>.42){sound('step');walkSound=0}}
+ function reward(amount,message){coins+=amount;updateHud();save();sound('coin');showStatus('🪙 +'+amount+' monedas · '+message)}
  applyOutfit();updateHud();hud.style.display='none';
- return {start,hide,openShop,closeShop,inventory,get shopOpen(){return shopOpen},update,sound,ensureAudio};
+ return {start,hide,openShop,closeShop,inventory,reward,get shopOpen(){return shopOpen},update,sound,ensureAudio};
 }
