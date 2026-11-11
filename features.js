@@ -10,9 +10,9 @@ export function iniciarExtras({player,model,head,showStatus}){
  {id:'shoesWhite',name:'Zapatillas blancas',kind:'shoes',price:95,color:'#eeeeea',emoji:'👟'}
  ];
  const key='barbas-party-economy-v1';
- let saved={};try{saved=JSON.parse(localStorage.getItem(key)||'{}')||{}}catch{}
+ let saved={};
  let coins=Number.isFinite(saved.coins)?saved.coins:400,owned=new Set(Array.isArray(saved.owned)?saved.owned:[]),equipped=saved.equipped||{};
- const save=()=>{try{localStorage.setItem(key,JSON.stringify({coins,owned:[...owned],equipped}))}catch{}};
+ let cloudReady=false;let cloudSaveChain=Promise.resolve();const save=()=>{const data={coins,owned:[...owned],equipped};if(cloudReady&&window.barbasAccount?.save){cloudSaveChain=cloudSaveChain.catch(()=>{}).then(()=>window.barbasAccount.save(data)).catch(e=>{showStatus('Error guardando partida: '+(e.code||e.message))})}};
  const style=document.createElement('style');style.textContent=`
  #coinsHud{position:fixed;top:75px;left:14px;z-index:6;background:#201b39d9;border:1px solid #ffe19a66;border-radius:12px;padding:8px 12px;font-weight:900;color:#ffe38a}
  #shopButton,#audioButton{position:fixed;z-index:7;right:12px;display:none;font-size:13px;padding:10px 12px;border-radius:12px}
@@ -52,6 +52,6 @@ export function iniciarExtras({player,model,head,showStatus}){
  let walkSound=0;
  function update(dt,moving,speed){if(!moving||shopOpen)return;walkSound+=dt;if(walkSound>.42){sound('step');walkSound=0}}
  function reward(amount,message){coins+=amount;updateHud();save();sound('coin');showStatus('🪙 +'+amount+' monedas · '+message)}
- applyOutfit();updateHud();hud.style.display='none';
+ function useCloudProfile(data){if(!data||cloudReady)return;coins=Number.isFinite(data.coins)?data.coins:400;owned=new Set(Array.isArray(data.owned)?data.owned:[]);equipped=data.equipped&&typeof data.equipped==='object'?data.equipped:{};cloudReady=true;applyOutfit();updateHud()}window.addEventListener('barbas-profile-ready',e=>useCloudProfile(e.detail));if(window.barbasAccount?.ready&&window.barbasAccount.profile)useCloudProfile(window.barbasAccount.profile);applyOutfit();updateHud();hud.style.display='none';
  return {start,hide,openShop,closeShop,inventory,reward,get shopOpen(){return shopOpen},update,sound,ensureAudio};
 }
