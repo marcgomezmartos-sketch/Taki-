@@ -15,7 +15,7 @@ export function iniciarExtras({player,model,head,rig,showStatus}){
  const key='barbas-party-economy-v1';
  let saved={};
  let coins=Number.isFinite(saved.coins)?saved.coins:0,owned=new Set(Array.isArray(saved.owned)?saved.owned:[]),equipped=saved.equipped||{};
- let cloudReady=false;let cloudSaveChain=Promise.resolve();const save=()=>{const data={coins,owned:[...owned],equipped};if(cloudReady&&window.barbasAccount?.save){cloudSaveChain=cloudSaveChain.catch(()=>{}).then(()=>window.barbasAccount.save(data)).catch(e=>{showStatus('Error guardando partida: '+(e.code||e.message))})}};
+ let avatarStyle='';let cloudReady=false;let cloudSaveChain=Promise.resolve();const save=()=>{const data={coins,owned:[...owned],equipped,avatarStyle};if(cloudReady&&window.barbasAccount?.save){cloudSaveChain=cloudSaveChain.catch(()=>{}).then(()=>window.barbasAccount.save(data)).catch(e=>{showStatus('Error guardando partida: '+(e.code||e.message))})}};
  const style=document.createElement('style');style.textContent=`
  #coinsHud{position:fixed;top:75px;left:14px;z-index:6;background:#201b39d9;border:1px solid #ffe19a66;border-radius:12px;padding:8px 12px;font-weight:900;color:#ffe38a}
  #shopButton,#audioButton{position:fixed;z-index:7;right:12px;display:none;font-size:13px;padding:10px 12px;border-radius:12px}
@@ -61,6 +61,42 @@ export function iniciarExtras({player,model,head,rig,showStatus}){
  const audioButton=document.createElement('button');audioButton.id='audioButton';audioButton.textContent='♫ Música: ON';document.body.append(audioButton);
  const overlay=document.createElement('section');overlay.id='shopOverlay';overlay.innerHTML='<div class="shopHead"><h2>🛍️ TK SHOP · PROBADOR</h2><button id="closeShop">✕ VOLVER A LA TIENDA</button></div><p>Prenda seleccionada del expositor.</p><strong id="shopBalance"></strong><div class="shopGrid"></div>';document.body.append(overlay);
  const updateHud=()=>{hud.textContent='🪙 '+coins+' monedas';overlay.querySelector('#shopBalance').textContent='Saldo: '+coins+' 🪙'};
+ // Avatar selection is purely visual; every clothing category is unisex.
+ const hairGroup=new T.Group();rig.head.add(hairGroup);
+ const hairMat=new T.MeshStandardMaterial({color:'#292028',roughness:.91});
+ const stylePanel=document.createElement('div');stylePanel.id='avatarStylePanel';
+ stylePanel.innerHTML='<div class="avatarStyleCard"><small>BARBAS · TU PERSONAJE</small><h2>¿Qué personaje quieres?</h2><p>Elige el aspecto que prefieras. Toda la ropa es para los dos personajes y podrás cambiar cuando quieras.</p><div class="avatarChoices"><button data-style="man">👨 PERSONAJE CHICO</button><button data-style="woman">👩 PERSONAJE CHICA</button></div></div>';
+ document.body.append(stylePanel);
+ const styleCSS=document.createElement('style');styleCSS.textContent=`
+ #avatarStylePanel{position:fixed;inset:0;z-index:55;display:none;align-items:center;justify-content:center;padding:22px;background:#15171ce8;backdrop-filter:blur(12px);color:#fff}
+ #avatarStylePanel .avatarStyleCard{width:min(420px,95vw);padding:28px 20px;background:#292d35;border:2px solid #c89e70;border-radius:20px;text-align:center;box-shadow:0 18px 65px #0009}
+ #avatarStylePanel small{letter-spacing:2px;color:#e5ba8e}#avatarStylePanel h2{font-size:27px;margin:14px 0}#avatarStylePanel p{line-height:1.5;color:#d7d8d8;font-size:14px}
+ #avatarStylePanel .avatarChoices{display:grid;gap:12px;margin-top:20px}
+ #avatarStylePanel button{border:1px solid #f2d4ac;background:#e7c198;color:#27211d;font-weight:900;border-radius:13px;padding:15px;font-size:15px}
+ #avatarStylePanel button:last-child{background:#d9b6a9}
+ #wardrobeGender{display:flex;gap:8px;flex-wrap:wrap;margin:12px 0 18px}#wardrobeGender button{flex:1;min-width:125px;background:#46515a;color:#fff;border:1px solid #c7a47d}#wardrobeGender button.active{background:#d8b48d;color:#24252a}
+ `;document.head.append(styleCSS);
+ function setAvatarStyle(style,persist=true){
+  avatarStyle=style==='woman'?'woman':'man';
+  hairGroup.clear();
+  const addHair=(x,y,z,sx,sy,sz)=>{const m=new T.Mesh(new T.SphereGeometry(1,18,12),hairMat);m.position.set(x,y,z);m.scale.set(sx,sy,sz);hairGroup.add(m)};
+  // Both avatars share the same fully articulated skeleton and outfit rig.
+  if(avatarStyle==='woman'){
+   addHair(0,.21,-.04,.302,.21,.26);
+   for(const side of [-1,1]){addHair(side*.23,-.06,-.09,.105,.29,.13);addHair(side*.19,-.22,-.16,.125,.21,.14)}
+   addHair(0,.18,.16,.25,.075,.12);
+   // Hide facial beard components but preserve the rest of the face.
+   rig.head.children.forEach(c=>{if(c!==hairGroup&&c.userData?.beard)c.visible=false});
+  }else{
+   rig.head.children.forEach(c=>{if(c!==hairGroup&&c.userData?.beard)c.visible=true});
+   addHair(0,.315,-.05,.29,.075,.24);
+  }
+  stylePanel.style.display='none';
+  if(persist)save();
+  if(typeof drawGenderButtons==='function')drawGenderButtons();
+  if(typeof refreshWardrobePreview==='function')refreshWardrobePreview();
+ }
+ stylePanel.querySelectorAll('[data-style]').forEach(b=>b.onclick=()=>setAvatarStyle(b.dataset.style));
  const accessories=new T.Group();model.add(accessories);const headwear=new T.Group();(head||model).add(headwear);
  function itemMesh(geo,color,x,y,z,parent=accessories){const m=new T.Mesh(geo,new T.MeshStandardMaterial({color,roughness:.92}));m.position.set(x,y,z);parent.add(m);return m}
  function applyOutfit(){
@@ -162,7 +198,7 @@ export function iniciarExtras({player,model,head,rig,showStatus}){
  const wearableParts=[];
  
  // Private dressing room: a 3D preview of the actual equipped character.
- const wardrobe=document.createElement('section');wardrobe.id='wardrobeRoom';wardrobe.innerHTML=`<div class="wardrobeTop"><div><small>🛸 IDENTIDAD DIGITAL</small><h2>👕 VESTUARIO</h2></div><button id="wardrobeClose">✕ VOLVER</button></div><div class="wardrobeStage"><canvas id="wardrobeCanvas"></canvas><div class="wardrobeHint">Tu personaje con la ropa que llevas puesta</div></div><div class="wardrobeBottom"><h3>EQUIPAMIENTO DISPONIBLE</h3><p>Tus dos prendas iniciales son gratuitas para siempre. Puedes equiparlas, combinar otras prendas o quitarlas.</p><div id="wardrobeItems"></div><button id="wardrobeClear">QUITAR PRENDAS EQUIPADAS</button></div>`;document.body.append(wardrobe);
+ const wardrobe=document.createElement('section');wardrobe.id='wardrobeRoom';wardrobe.innerHTML=`<div class="wardrobeTop"><div><small>🛸 IDENTIDAD DIGITAL</small><h2>👕 VESTUARIO</h2></div><button id="wardrobeClose">✕ VOLVER</button></div><div class="wardrobeStage"><canvas id="wardrobeCanvas"></canvas><div class="wardrobeHint">Tu personaje con la ropa que llevas puesta</div></div><div class="wardrobeBottom"><h3>ELIGE TU PERSONAJE</h3><div id="wardrobeGender"></div><h3>EQUIPAMIENTO DISPONIBLE</h3><p>Tus dos prendas iniciales son gratuitas para siempre. Puedes equiparlas, combinar otras prendas o quitarlas.</p><div id="wardrobeItems"></div><button id="wardrobeClear">QUITAR PRENDAS EQUIPADAS</button></div>`;document.body.append(wardrobe);
  const roomStyle=document.createElement('style');roomStyle.textContent=`
  #wardrobeRoom{position:fixed;inset:0;z-index:30;display:none;flex-direction:column;background:radial-gradient(ellipse at 50% -20%,#2b6284,#101b32 55%,#0b1325);overflow:auto;touch-action:pan-y;color:white;padding:15px 16px 24px;align-items:center}
  #wardrobeRoom .wardrobeTop{display:flex;justify-content:space-between;align-items:center;width:min(700px,100%);gap:12px}
@@ -174,7 +210,8 @@ export function iniciarExtras({player,model,head,rig,showStatus}){
  `;document.head.append(roomStyle);
  let wardrobeRenderer=null,wardrobeScene=null,wardrobeCamera=null,wardrobePreview=null,wardrobeOpen=false,wardrobeAngle=0;
  function refreshWardrobePreview(){if(!wardrobeScene)return;if(wardrobePreview)wardrobeScene.remove(wardrobePreview);wardrobePreview=model.clone(true);wardrobePreview.rotation.y=Math.PI;wardrobeScene.add(wardrobePreview)}
- function drawWardrobe(){const area=wardrobe.querySelector('#wardrobeItems');area.replaceChildren();for(const kind of ['cap','jacket','pants','dress','shoes','bag']){const none=document.createElement('button');none.textContent='✕ Sin '+({cap:'gorra',jacket:'chaqueta',pants:'pantalón',shoes:'zapatillas',dress:'vestido',bag:'bolso'}[kind]);none.className=!equipped[kind]?'wearing':'';none.onclick=()=>{delete equipped[kind];applyOutfit();save();drawWardrobe();refreshWardrobePreview()};area.append(none);for(const item of inventory.filter(i=>i.kind===kind&&owned.has(i.id))){const btn=document.createElement('button');btn.textContent=item.emoji+' '+item.name+(equipped[kind]===item.id?' ✓':'');btn.className=equipped[kind]===item.id?'wearing':'';btn.onclick=()=>{equipped[kind]=item.id;if(kind==='dress'){delete equipped.jacket;delete equipped.pants}else if(kind==='jacket'||kind==='pants')delete equipped.dress;applyOutfit();save();drawWardrobe();refreshWardrobePreview()};area.append(btn)}}}
+ function drawGenderButtons(){const wrap=wardrobe.querySelector('#wardrobeGender');if(!wrap)return;wrap.replaceChildren();for(const [style,label] of [['man','👨 CHICO'],['woman','👩 CHICA']]){const b=document.createElement('button');b.textContent=label;b.className=avatarStyle===style?'active':'';b.onclick=()=>setAvatarStyle(style);wrap.append(b)}}
+ function drawWardrobe(){drawGenderButtons();const area=wardrobe.querySelector('#wardrobeItems');area.replaceChildren();for(const kind of ['cap','jacket','pants','dress','shoes','bag']){const none=document.createElement('button');none.textContent='✕ Sin '+({cap:'gorra',jacket:'chaqueta',pants:'pantalón',shoes:'zapatillas',dress:'vestido',bag:'bolso'}[kind]);none.className=!equipped[kind]?'wearing':'';none.onclick=()=>{delete equipped[kind];applyOutfit();save();drawWardrobe();refreshWardrobePreview()};area.append(none);for(const item of inventory.filter(i=>i.kind===kind&&owned.has(i.id))){const btn=document.createElement('button');btn.textContent=item.emoji+' '+item.name+(equipped[kind]===item.id?' ✓':'');btn.className=equipped[kind]===item.id?'wearing':'';btn.onclick=()=>{equipped[kind]=item.id;if(kind==='dress'){delete equipped.jacket;delete equipped.pants}else if(kind==='jacket'||kind==='pants')delete equipped.dress;applyOutfit();save();drawWardrobe();refreshWardrobePreview()};area.append(btn)}}}
  function openWardrobe(){if(!window.barbasAccount?.ready){showStatus('Inicia sesión con Google primero');return}wardrobeOpen=true;wardrobe.style.display='flex';drawWardrobe();if(!wardrobeRenderer){const canvas=wardrobe.querySelector('#wardrobeCanvas');wardrobeRenderer=new T.WebGLRenderer({canvas,antialias:true,alpha:true,powerPreference:'low-power'});wardrobeRenderer.setPixelRatio(Math.min(devicePixelRatio,1.5));wardrobeScene=new T.Scene();wardrobeScene.add(new T.HemisphereLight('#ffffff','#786081',2.2));const light=new T.DirectionalLight('#fff3dc',2);light.position.set(3,6,6);wardrobeScene.add(light);wardrobeCamera=new T.PerspectiveCamera(36,1,.1,30);wardrobeCamera.position.set(0,1.05,5.5);wardrobeCamera.lookAt(0,.95,0)}refreshWardrobePreview();renderWardrobe()}
  function renderWardrobe(){if(!wardrobeOpen)return;const canvas=wardrobeRenderer.domElement,w=canvas.clientWidth,h=canvas.clientHeight;if(w&&h){wardrobeRenderer.setSize(w,h,false);wardrobeCamera.aspect=w/h;wardrobeCamera.updateProjectionMatrix();if(wardrobePreview)wardrobePreview.rotation.y=wardrobeAngle;wardrobeRenderer.render(wardrobeScene,wardrobeCamera)}requestAnimationFrame(renderWardrobe)}
  function closeWardrobe(){wardrobeOpen=false;wardrobe.style.display='none'}
@@ -182,6 +219,7 @@ export function iniciarExtras({player,model,head,rig,showStatus}){
  let turnStart=null;wardrobe.querySelector('#wardrobeCanvas').addEventListener('pointerdown',e=>{turnStart=e.clientX;e.currentTarget.setPointerCapture(e.pointerId)});wardrobe.querySelector('#wardrobeCanvas').addEventListener('pointermove',e=>{if(turnStart!==null){wardrobeAngle+=(e.clientX-turnStart)*.009;turnStart=e.clientX}});wardrobe.querySelector('#wardrobeCanvas').addEventListener('pointerup',()=>turnStart=null);
  wardrobeButton.onclick=openWardrobe;
  window.barbasOpenWardrobe=openWardrobe;
+ window.barbasSetAvatarStyle=setAvatarStyle;
  let selectedItem=null,shopCategory='all';
  const categoryNames={all:'✨ TODO',exclusive:'💎 EXCLUSIVOS',bag:'👜 BOLSOS',cap:'🧢 GORROS',jacket:'👕 TOPS Y CHAQUETAS',pants:'👖 PANTALONES Y FALDAS',dress:'👗 VESTIDOS',shoes:'👟 BAMBAS'};
  const filters=document.createElement('div');filters.id='shopFilters';overlay.querySelector('.shopGrid').before(filters);
@@ -221,7 +259,7 @@ export function iniciarExtras({player,model,head,rig,showStatus}){
  function tone(freq,duration,type='sine',volume=.25,bus=sfxBus){if(!ctx||!bus)return;const o=ctx.createOscillator(),g=ctx.createGain();o.type=type;o.frequency.value=freq;const now=ctx.currentTime;g.gain.setValueAtTime(0,now);g.gain.linearRampToValueAtTime(volume,now+.055);g.gain.setValueAtTime(volume*.75,now+Math.max(.06,duration*.36));g.gain.exponentialRampToValueAtTime(.0001,now+duration+.16);o.connect(g);g.connect(bus);o.start(now);o.stop(now+duration+.18)}
  function sound(type){if(!ctx)return;const presets={jump:[[330,.13],[440,.19]],step:[[110,.05]],buy:[[440,.11],[660,.2],[880,.3]],equip:[[550,.12]],open:[[390,.12],[520,.2]],close:[[320,.1]],error:[[170,.2],[130,.2]],coin:[[620,.09],[930,.15]]};let delay=0;for(const [f,d] of presets[type]||[]){setTimeout(()=>tone(f,d,type==='step'?'triangle':'sine',type==='step'?.07:.26),delay);delay+=90}}
  audioButton.onclick=()=>{ensureAudio();musicOn=!musicOn;syncVolumes();audioButton.textContent='♫ Música: '+(musicOn?'ON':'OFF')};
- function start(){ensureAudio();shopButton.style.display='none';wardrobeButton.style.display='block';audioButton.style.display='block';hud.style.display='block'}
+ function start(){if(!avatarStyle)stylePanel.style.display='flex';ensureAudio();shopButton.style.display='none';wardrobeButton.style.display='block';audioButton.style.display='block';hud.style.display='block'}
  function hide(){shopButton.style.display='none';wardrobeButton.style.display='none';audioButton.style.display='none';hud.style.display='none';closeWardrobe();closeShop()}
  let walkSound=0;
  function update(dt,moving,speed){if(!moving||shopOpen)return;walkSound+=dt;if(walkSound>.42){sound('step');walkSound=0}}
@@ -229,6 +267,8 @@ export function iniciarExtras({player,model,head,rig,showStatus}){
  function useCloudProfile(data){
   if(!data||cloudReady)return;
   coins=Number.isFinite(data.coins)?data.coins:0;
+  avatarStyle=data.avatarStyle==='woman'?'woman':data.avatarStyle==='man'?'man':'';
+  if(avatarStyle)setAvatarStyle(avatarStyle,false);
   owned=new Set(Array.isArray(data.owned)?data.owned:[]);
   equipped=data.equipped&&typeof data.equipped==='object'?{...data.equipped}:{};
   // Every existing account receives both permanent starter items, without
