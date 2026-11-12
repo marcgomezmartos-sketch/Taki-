@@ -67,26 +67,57 @@ export function iniciarExtras({player,model,head,rig,showStatus}){
  accessories.clear();headwear.clear();for(const p of wearableParts)p.parent?.remove(p);wearableParts.length=0;
  const fitted=(rings,color,parent)=>{const mesh=rig.garment(new T.MeshStandardMaterial({color,roughness:1,side:T.DoubleSide}),rings,parent,28);wearableParts.push(mesh);return mesh};
  const get=kind=>inventory.find(x=>x.id===equipped[kind]);
- const cap=get('cap');if(cap){const material=new T.MeshStandardMaterial({color:cap.color,roughness:1});const crown=new T.Mesh(new T.SphereGeometry(1,32,16,0,Math.PI*2,0,Math.PI/2),material);crown.scale.set(.305,.155,.278);crown.position.set(0,.30,0);headwear.add(crown);const brim=new T.Mesh(new T.SphereGeometry(1,24,10,0,Math.PI*2,0,Math.PI),material);brim.scale.set(.22,.018,.15);brim.position.set(0,.30,.275);headwear.add(brim)}
+ const cap=get('cap');if(cap){
+  const material=new T.MeshStandardMaterial({color:cap.color,roughness:.82,side:T.DoubleSide});
+  // The crown is fitted around the actual skull (head center y=0), rather than
+  // floating as a small hemisphere over the hair.
+  const crown=new T.Mesh(new T.SphereGeometry(1,28,16,0,Math.PI*2,0,Math.PI*.57),material);
+  crown.scale.set(.294,.32,.276);crown.position.set(0,.055,0);headwear.add(crown);
+  const band=new T.Mesh(new T.CylinderGeometry(.285,.29,.085,32),material);
+  band.position.y=.09;headwear.add(band);
+  const brim=new T.Mesh(new T.SphereGeometry(1,24,10,0,Math.PI*2,0,Math.PI),material);
+  brim.scale.set(.285,.018,.175);brim.position.set(0,.075,.247);headwear.add(brim);
+  if(['beanie','wool','knit'].includes(cap.design)){brim.visible=false;band.scale.set(1,1.4,1);crown.position.y=.08}
+  if(['bucket','fisher'].includes(cap.design)){brim.scale.set(.37,.03,.36);brim.position.z=0;brim.position.y=.055}
+ }
  const dress=get('dress'),jacket=get('jacket'),pants=get('pants'),bag=get('bag');
  // Every garment is attached to the animated body rig. Overlapping cuffs and
  // generous joints avoid exposed skin at shoulder, elbow, waist and knee.
  const meshBall=(parent,color,x,y,z,sx,sy,sz)=>{const m=new T.Mesh(new T.SphereGeometry(1,20,14),new T.MeshStandardMaterial({color,roughness:.91}));m.position.set(x,y,z);m.scale.set(sx,sy,sz);m.castShadow=true;parent.add(m);wearableParts.push(m);return m};
- const coverTorso=(color)=>fitted([[1.265,.348,.257],[1.34,.363,.263],[1.44,.369,.267],[1.66,.395,.273],[1.83,.389,.269],[1.96,.336,.235],[2.07,.235,.184],[2.105,.14,.13]],color,rig.body);
- const sleeve=(color,long=true)=>{for(let i=0;i<2;i++){const arm=rig.arms[i],elbow=rig.elbows[i];meshBall(arm,color,0,-.09,0,.164,.205,.162);fitted([[-.385,.142,.146],[-.28,.159,.161],[-.11,.166,.167],[.09,.165,.165]],color,arm);
- if(long){meshBall(elbow,color,0,-.08,0,.144,.17,.146);fitted([[-.34,.124,.13],[-.25,.142,.146],[-.09,.148,.15],[.09,.15,.151]],color,elbow);meshBall(elbow,color,0,-.30,0,.128,.055,.133)}
- }};
+ const coverTorso=(color)=>fitted([[1.245,.356,.268],[1.31,.38,.28],[1.44,.389,.288],[1.66,.41,.294],[1.83,.405,.291],[1.96,.355,.267],[2.055,.28,.215],[2.095,.165,.145]],color,rig.body);
+ const sleeve=(color,long=true)=>{
+  for(let i=0;i<2;i++){
+   const arm=rig.arms[i],elbow=rig.elbows[i];
+   // Shoulder dome must overlap the torso and upper arm to hide the skin seam
+   // even during arm swing and when viewed from above.
+   meshBall(arm,color,0,.005,0,.205,.22,.197);
+   meshBall(arm,color,0,-.12,0,.186,.24,.182);
+   fitted([[-.39,.151,.153],[-.27,.173,.17],[-.10,.185,.18],[.05,.195,.191],[.14,.152,.158]],color,arm);
+   if(long){
+    meshBall(elbow,color,0,-.035,0,.155,.175,.154);
+    fitted([[-.345,.13,.133],[-.27,.153,.155],[-.10,.159,.161],[.09,.156,.157]],color,elbow);
+    meshBall(elbow,color,0,-.29,0,.139,.058,.14);
+   }else{
+    // Short sleeves still close over the upper arm instead of leaving a skin gap.
+    meshBall(arm,color,0,-.24,0,.17,.11,.168);
+   }
+  }
+ };
  const skirtTypes=['pleated','denimskirt','floral','midi'];
  const shortTypes=['denimshort','cargoShort','sportShort','tailoredShort','raggedShort'];
  for(const piece of rig.baseShorts)piece.visible=!(pants||dress);
+ if(rig.baseWaist)rig.baseWaist.visible=!(pants||dress);
  if(jacket&&!dress){coverTorso(jacket.color);const isShort=['graphic','skate','stripe','polo','crop','halter','corset','sport','blouse'].includes(jacket.design);sleeve(jacket.color,!isShort);
  // Waistband overlaps trousers and torso; cropped tops intentionally leave waist exposed.
- if(!['crop','halter','corset','sport'].includes(jacket.design))meshBall(rig.body,jacket.color,0,1.34,0,.35,.08,.253);
+ if(!['crop','halter','corset','sport'].includes(jacket.design)){
+ // Flat overlapping hem rather than a large oval sticking out of the hoodie.
+ fitted([[1.235,.355,.27],[1.27,.373,.281],[1.33,.375,.281]],jacket.color,rig.body);
+ }
  if(jacket.design==='patch'){const patch=new T.Mesh(new T.BoxGeometry(.012,.17,.16),new T.MeshStandardMaterial({color:'#1c2422',roughness:1}));patch.position.set(.172,-.22,0);rig.arms[1].add(patch);wearableParts.push(patch)}
  }
  if(pants&&!dress){const isSkirt=skirtTypes.includes(pants.design),isShort=shortTypes.includes(pants.design);
  // Hip cover joins both legs to the torso; avoids skin-colored crotch gaps.
- meshBall(rig.body,pants.color,0,1.33,0,.358,.175,.255);
+ fitted([[1.18,.343,.26],[1.29,.356,.268],[1.39,.347,.257]],pants.color,rig.body);
  if(isSkirt){const hem=pants.design==='midi'?.65:.91;fitted([[hem,.47,.39],[hem+.13,.49,.41],[1.12,.405,.32],[1.35,.352,.26]],pants.color,rig.body)}
  else{for(let i=0;i<2;i++){const leg=rig.legs[i];fitted([[-.56,.193,.187],[-.39,.211,.208],[-.16,.233,.225],[.10,.229,.222]],pants.color,leg);meshBall(leg,pants.color,0,-.06,0,.226,.15,.219);
  if(!isShort){const knee=rig.knees[i];meshBall(knee,pants.color,0,-.10,0,.177,.24,.18);fitted([[-.55,.173,.177],[-.39,.181,.184],[-.19,.192,.197],[.10,.196,.197]],pants.color,knee);meshBall(knee,pants.color,0,-.43,0,.173,.09,.18)}
