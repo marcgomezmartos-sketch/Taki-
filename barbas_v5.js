@@ -16,9 +16,9 @@ export function crearBarbasV4(){
  ell(head,skin,0,.01,0,.28,.315,.26);
  for(const side of [-1,1]){ell(head,skin,side*.277,-.015,0,.055,.079,.054);ell(head,white,side*.113,.082,.238,.054,.048,.026);face.eyes.push(ell(head,iris,side*.11,.083,.263,.025,.029,.013));const brow=ell(head,hair,side*.115,.188,.245,.086,.019,.022);brow.rotation.z=side*.1;face.brows.push(brow)}
  ell(head,shade,0,-.025,.255,.062,.068,.07);
- ell(head,dark,0,-.182,.126,.247,.174,.187);
- ell(head,dark,0,-.214,.232,.184,.107,.078);
- for(const side of [-1,1]){ell(head,dark,side*.21,-.125,.137,.058,.138,.1);ell(head,dark,side*.07,-.086,.285,.09,.034,.029)}
+ const beardChin=ell(head,dark,0,-.182,.126,.247,.174,.187);beardChin.userData.beard=true;
+ const beardFront=ell(head,dark,0,-.214,.232,.184,.107,.078);beardFront.userData.beard=true;
+ for(const side of [-1,1]){const sideburn=ell(head,dark,side*.21,-.125,.137,.058,.138,.1);sideburn.userData.beard=true;const moustache=ell(head,dark,side*.07,-.086,.285,.09,.034,.029);moustache.userData.beard=true}
  ell(head,skin,0,-.144,.29,.103,.041,.024);
  const arms=[],elbows=[],wrists=[],legs=[],knees=[],feet=[],baseShorts=[];
  for(const side of [-1,1]){
