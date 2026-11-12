@@ -129,6 +129,20 @@ export function crearCiudad(scene){
   const ring=mesh(new T.TorusGeometry(i===0?2.8:1.7,.075,8,40),chrome,0,0,0,g);
   holo.push({g,icon,ring,phase:i*.9});
  }
+ // V47: material variation and richer glass facade reflections.
+ const windowDark=make('#4c8eaf',.45,.19),windowLight=make('#a3d9ed',.25,.17),bronze=make('#c99b73',.55,.31);
+ for(let i=0;i<shops.length;i++){const sh=shops[i],r=i===0?8.3:6.5,h=i===0?15.5:12.5;
+  for(let level=0;level<2;level++)for(let k=0;k<16;k++){const a=k*Math.PI/8,x=sh.x+Math.sin(a)*(r+.19),z=sh.z+Math.cos(a)*(r+.19);
+   const pane=box(1.7,level?1.55:2.1,.065,(k+i+level)%4===0?windowDark:windowLight,x,level?10.1:5.4,z);pane.rotation.y=a;
+   if(k%4===0){const rail=box(.11,2.6,.12,bronze,x,level?10.1:5.4,z);rail.rotation.y=a}
+  }
+  const crown=torus(r+.4,.18,bronze,sh.x,h-.12,sh.z);crown.castShadow=false;
+ }
+ // Low-cost faux shadows and colored plaza accents, avoiding expensive realtime shadow maps.
+ const shadowMat=new T.MeshBasicMaterial({color:'#65859b',transparent:true,opacity:.16,depthWrite:false});
+ for(const sh of shops){const radius=sh.name==='ARENA PARTY'?9.4:7.3;
+  const disc=mesh(new T.CircleGeometry(radius,40),shadowMat,sh.x,-.105,sh.z);disc.rotation.x=-Math.PI/2;
+ }
  // V46 landmark architecture: lively centerpiece, light sculpture and transit pods.
  const pearl=make('#f8f2e5',.24,.25),water=make('#61c9e5',.2,.18),copper=make('#e6ad7c',.45,.35);
  // Circular landmark fountain with cascading water layers, visible at spawn.
