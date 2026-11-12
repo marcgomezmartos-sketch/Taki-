@@ -45,7 +45,7 @@ export function crearBarbasV4(){
   ell(foot,white,0,-.194,.155,.19,.027,.285);
  }
  // Waist geometry is concealed by equipped clothing.
- ell(body,shorts,0,1.31,0,.33,.15,.24);
+ const baseWaist=ell(body,shorts,0,1.31,0,.33,.15,.24);
  let t=0,blend=0,runBlend=0,phase=0,landing=0,wasAir=false,look=0,lookGoal=0,lookTimer=0;
  const damp=(v,target,speed,dt)=>T.MathUtils.damp(v,target,speed,dt);
  function actualizar(dt,mode='quieto',state={}){
@@ -90,5 +90,5 @@ export function crearBarbasV4(){
   body.scale.x=1+Math.sin(t*2.05)*.005;
  }
  root.scale.setScalar(.64);
- return {root,body,head,arms,elbows,wrists,legs,knees,feet,garment,baseShorts,actualizar};
+ return {root,body,head,arms,elbows,wrists,legs,knees,feet,garment,baseShorts,baseWaist,actualizar};
 }
