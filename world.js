@@ -115,6 +115,30 @@ export function crearCiudad(scene){
   for(let i=0;i<5;i++){let a=i*2.4,xx=Math.cos(a)*.92,zz=Math.sin(a)*.9;let crown=mesh(new T.SphereGeometry(1.08+(i%3)*.2,12,9),leaf[i%3],xx,3.5+(i%3)*.45,zz,g);crown.scale.set(1.22,.87,1.15)}mesh(new T.SphereGeometry(1.12,12,9),leaf[1],0,4.9,0,g)}
  for(let i=0;i<18;i++){let a=i*Math.PI/9;tree(Math.sin(a)*23,Math.cos(a)*23,.9+(i%3)*.1)}
  for(let i=0;i<35;i++){let x=-63+(i*37%126),z=-63+(i*53%126);if(Math.hypot(x,z)<26||Math.abs(x+29)<10&&Math.abs(z)<10||Math.abs(x-29)<10&&Math.abs(z)<10)continue;tree(x,z,.8+(i%4)*.15)}
+ // V37 art pass: layered architecture, landscaped planters, canopies, and warm shopfronts.
+ const bronze=mat('#c49a6a',.28,.52),windowGlow=new T.MeshStandardMaterial({color:'#9cc9d8',emissive:'#528fa5',emissiveIntensity:.43,roughness:.15,metalness:.22});
+ const paleStone=mat('#eee1ce',.9),brick=mat('#b98473',.92);
+ for(const [bi,b] of shops.entries()){
+  const radius=bi===0?8.3:6.5,yy=bi===0?12.5:9.5;
+  for(let k=0;k<18;k++){const a=(k+.5)*Math.PI/9,xx=b.x+Math.sin(a)*(radius+.25),zz=b.z+Math.cos(a)*(radius+.25);
+   // Small luminous balcony sconces between windows.
+   if(k%3===0){sphere(.19,mat('#ffdc9a',.24),xx,4.55,zz,2);sphere(.16,mat('#ffdc9a',.24),xx,8.2,zz,2)}
+   if(k%2===0){const bal=mesh(new T.BoxGeometry(1.25,.13,.55),paleStone,xx,3.45,zz);bal.rotation.y=a;const rail=mesh(new T.BoxGeometry(1.22,.45,.06),bronze,xx,3.77,zz);rail.rotation.y=a}
+  }
+  for(let k=0;k<8;k++){const a=k*Math.PI/4,xx=b.x+Math.sin(a)*(radius+.44),zz=b.z+Math.cos(a)*(radius+.44);
+   const flower=sphere(.35,mat(k%2?'#d98b9f':'#f5cf89'),xx,1.05,zz,1);flower.scale.set(1,.42,.8)}
+  // Additional subtle vertical façade lines give the buildings visual scale.
+  for(let k=0;k<20;k++){let a=k*Math.PI/10;let x=b.x+Math.sin(a)*(radius+.17),z=b.z+Math.cos(a)*(radius+.17);let pil=mesh(new T.BoxGeometry(.08,2.6,.08),bronze,x,5.6,z);pil.castShadow=false}
+ }
+ // Recessed street planters with varied foliage and flowering bushes.
+ for(let i=0;i<20;i++){let a=i*Math.PI/10,x=Math.sin(a)*34,z=Math.cos(a)*34;if(Math.abs(x)>28&&Math.abs(z)<12)continue;
+  cyl(.95,1.08,.35,brick,x,.18,z,12);
+  for(let j=0;j<5;j++){let theta=j*2.4,rr=.35+(j%2)*.25;let b=sphere(.44,leaf[(i+j)%3],x+Math.cos(theta)*rr,.63+(j%2)*.19,z+Math.sin(theta)*rr,2);b.scale.set(1,.7,1)}
+  for(let j=0;j<4;j++){let a=j*Math.PI/2;let f=sphere(.15,mat((i+j)%2?'#f9b5cf':'#ffdf91'),x+Math.cos(a)*.47,.98,z+Math.sin(a)*.47,1);f.scale.y=.65}
+ }
+ // Fine concentric paving, raised road curbs and stone details.
+ for(const z of [-47,-37,37,47])box(136,.085,.18,paleStone,0,-.065,z);
+ for(const x of [-47,-37,37,47])box(.18,.085,136,paleStone,x,-.065,0);
  // Rounded flower beds, sculpted shrubs, benches and vintage lamps.
  for(let i=0;i<12;i++){let a=i*Math.PI/6,x=Math.sin(a)*26,z=Math.cos(a)*26;cyl(1.35,1.55,.5,stone,x,.2,z,24);for(let j=0;j<9;j++){let t=j*2.4;let f=sphere(.22,mat(['#f7a7bf','#f9d48e','#a9c7ed'][j%3]),x+Math.cos(t)*(.4+(j%3)*.25),.6+(j%2)*.1,z+Math.sin(t)*(.4+(j%3)*.25));f.scale.y=.6}}
  function lamp(x,z){cyl(.09,.16,4.6,navy,x,2.3,z);sphere(.4,mat('#ffe5a6',.22),x,4.65,z,2);cyl(.52,.52,.15,navy,x,5.05,z)}
