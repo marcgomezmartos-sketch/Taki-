@@ -36,33 +36,58 @@ export function crearBarbasV4(){
   ell(knee,dark,0,-.49,.07,.19,.09,.245);
  }
  ell(body,shorts,0,1.33,0,.34,.15,.235);
- let t=0,blend=0,stride=0,land=0,wasAir=false,blink=0,look=0,runBlend=0;
+ let t=0,blend=0,stride=0,land=0,wasAir=false,runBlend=0,turnLean=0;
+ let idleShift=0,lookTarget=0,nextLook=2.2,headLook=0,headTilt=0;
+ const damp=(current,target,speed,dt)=>T.MathUtils.damp(current,target,speed,dt);
  function actualizar(dt,mode='quieto',state={}){
-  dt=Math.min(dt,.05);t+=dt;
+  dt=Math.min(Math.max(dt,0),.05);t+=dt;
   const moving=mode==='caminar'||mode==='correr',running=mode==='correr',air=!!state.aire;
-  blend=T.MathUtils.damp(blend,moving?1:0,moving?6:9,dt);runBlend=T.MathUtils.damp(runBlend,running?1:0,5,dt);
-  stride+=dt*(8.1+4.7*runBlend)*Math.max(.25,blend);
-  const amp=(.44+.36*runBlend)*blend,phase=stride;
-  if(wasAir&&!air)land=1;wasAir=air;land=T.MathUtils.damp(land,0,9,dt);
-  const ease=(obj,key,value,speed=10)=>{obj.rotation[key]=T.MathUtils.damp(obj.rotation[key],value,speed,dt)};
+  blend=damp(blend,moving?1:0,moving?4.7:6.5,dt);
+  runBlend=damp(runBlend,running?1:0,3.7,dt);
+  // Speed-sensitive step cycle with smooth transitions between standing, walking and sprinting.
+  const frequency=1.55+1.05*runBlend;
+  stride+=dt*Math.PI*2*frequency*Math.max(.15,blend);
+  const phase=stride,amp=(.48+.27*runBlend)*blend;
+  if(wasAir&&!air)land=1;wasAir=air;land=damp(land,0,6.8,dt);
+  const ease=(obj,axis,target,speed=9)=>{obj.rotation[axis]=damp(obj.rotation[axis],target,speed,dt)};
+  const footLift=Math.max(0,Math.sin(phase));
   for(let i=0;i<2;i++){
-   const side=i===0?-1:1,cycle=phase+i*Math.PI,swing=Math.sin(cycle),plant=Math.max(0,-Math.sin(cycle));
-   ease(legs[i],'x',air?(state.subiendo?-.28:.17):swing*amp,11);
-   ease(legs[i],'z',air?side*.08:side*.025*blend,9);
-   ease(knees[i],'x',air?(state.subiendo?.55:.25):plant*(.52+.43*runBlend)*blend+land*.15,12);
-   ease(arms[i],'x',air?-.6:-swing*amp*.88-.045,11);
-   ease(arms[i],'z',air?side*.27:side*(.09+.07*blend),9);
-   ease(arms[i],'y',side*.045*blend,8);
-   ease(elbows[i],'x',air?-.75:-(.32+.47*runBlend)*blend-.1,11);
+   const side=i===0?-1:1,cycle=phase+i*Math.PI;
+   const swing=Math.sin(cycle),forward=Math.cos(cycle);
+   const lift=Math.max(0,forward);
+   // The planted leg stays straighter; the swinging leg folds and rises.
+   const hip=air?(state.subiendo?-.32:.26):swing*amp;
+   ease(legs[i],'x',hip,9);
+   ease(legs[i],'z',air?side*.12:side*(.032+.022*runBlend)*blend,8);
+   ease(legs[i],'y',side*.022*blend,8);
+   ease(knees[i],'x',air?(state.subiendo?.68:.38):lift*(.47+.31*runBlend)*blend+.17*land,10);
+   // Arms counter-swing to legs, with elbow flex and a subtle wrist-side sway.
+   ease(arms[i],'x',air?-.55:-swing*amp*.78-.09*runBlend*blend,8);
+   ease(arms[i],'z',air?side*.25:side*(.10+.055*runBlend*blend)+Math.cos(cycle)*.018*blend,7);
+   ease(arms[i],'y',-side*.065*blend+Math.sin(cycle)*.02*blend,7);
+   ease(elbows[i],'x',air?-.72:-.10-(.19+.37*runBlend)*blend-lift*.13*blend,9);
+   ease(elbows[i],'z',side*.028*blend,7);
   }
-  const bob=air?0:(Math.cos(phase*2)*-.037*(1+runBlend*.7)*blend);
-  body.position.y=T.MathUtils.damp(body.position.y,bob-land*.065,13,dt);
-  ease(body,'x',air?(state.subiendo?-.09:.06):moving?(-.065-.09*runBlend):0,7);
-  ease(body,'z',air?0:Math.sin(phase)*.055*blend,7);ease(body,'y',air?0:Math.sin(phase)*.026*blend,7);
-  head.rotation.x=T.MathUtils.damp(head.rotation.x,-body.rotation.x*.36+Math.sin(t*1.5)*.008,6,dt);
-  head.rotation.y=Math.sin(t*.8)*.026;
-  head.position.y=2.34+Math.sin(t*2.2)*.007;const eyePulse=Math.pow(Math.max(0,Math.sin(t*1.43+1.4)),34);for(const eye of face.eyes)eye.scale.y=.032*(1-eyePulse*.9);head.rotation.z=T.MathUtils.damp(head.rotation.z,Math.sin(t*.61)*.023,4,dt);
-  const breathe=1+Math.sin(t*2.3)*.004;
+  const bounce=(Math.cos(phase*2)-1)*.017*(1+.5*runBlend)*blend;
+  const lateral=Math.sin(phase)*.023*blend;
+  body.position.y=damp(body.position.y,air?.035:bounce-land*.09,10,dt);
+  body.position.x=damp(body.position.x,air?0:lateral,8,dt);
+  body.position.z=damp(body.position.z,air?-.025:Math.cos(phase)*.012*blend,7,dt);
+  // Pelvis and shoulders rotate in opposite directions, breaking the rigid robot silhouette.
+  ease(body,'x',air?(state.subiendo?-.12:.12):-.025-.09*runBlend*blend+Math.cos(phase*2)*.017*blend+land*.11,7);
+  ease(body,'y',air?0:Math.sin(phase)*.068*blend,6);
+  ease(body,'z',air?0:Math.sin(phase)*.039*blend,6);
+  // The head stabilizes against body motion and occasionally glances around when idle.
+  nextLook-=dt;if(nextLook<=0){lookTarget=Math.sin(t*1.37)*.17;nextLook=2.2+1.1*(1+Math.sin(t*.73))}
+  headLook=damp(headLook,blend?0:lookTarget,1.5,dt);
+  ease(head,'x',-body.rotation.x*.46+Math.sin(t*1.7)*.012+land*.06,5.5);
+  ease(head,'y',headLook-body.rotation.y*.45+Math.sin(phase)*.014*blend,4.8);
+  ease(head,'z',-body.rotation.z*.58+Math.sin(t*.82)*.014,5);
+  head.position.y=damp(head.position.y,2.34+Math.sin(t*2.1)*.008,6,dt);
+  // Natural blinks, not a repeated mechanical scale jump.
+  const blinkPhase=t%4.1,eyeOpen=1-.92*Math.pow(Math.max(0,1-Math.abs(blinkPhase-3.55)/.115),2);
+  for(const eye of face.eyes)eye.scale.y=.032*eyeOpen;
+  const breathe=1+Math.sin(t*2.05)*.006;
   body.scale.set(breathe,1,1);
  }
  root.scale.setScalar(.64);return {root,body,head,arms,elbows,legs,knees,garment,baseShorts,actualizar};
