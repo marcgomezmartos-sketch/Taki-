@@ -2,6 +2,20 @@ import * as T from 'three';
 export function crearCiudad(scene){
  const mat=(c,r=.83,metal=0)=>new T.MeshStandardMaterial({color:c,roughness:r,metalness:metal});
 
+ // Replace these file paths with your own seamless image assets.
+ // Images load asynchronously; procedural textures remain as fallback.
+ const TEXTURE_FILES={stone:'assets/suelo_piedra.jpg',road:'assets/carretera.jpg',wall:'assets/pared.jpg',grass:'assets/cesped.jpg'};
+ const loadedTextures={};
+ for(const [kind,url] of Object.entries(TEXTURE_FILES)){
+   const image=new Image();image.decoding='async';image.onload=()=>{
+     const canvas=document.createElement('canvas');canvas.width=512;canvas.height=512;
+     const ctx=canvas.getContext('2d');ctx.drawImage(image,0,0,512,512);
+     const t=new T.CanvasTexture(canvas);t.colorSpace=T.SRGBColorSpace;t.wrapS=t.wrapT=T.RepeatWrapping;t.anisotropy=8;
+     loadedTextures[kind]=t;
+     for(const entry of pendingTextures){if(entry.kind!==kind)continue;const copy=t.clone();copy.needsUpdate=true;copy.repeat.set(entry.rx,entry.ry);entry.material.map=copy;entry.material.needsUpdate=true}
+   };image.onerror=()=>{};image.src=url;
+ }
+ const pendingTextures=[];
  const texture=(kind,base,seed=1)=>{
    const c=document.createElement('canvas');c.width=512;c.height=512;const q=c.getContext('2d');
    let rnd=()=>{seed=(seed*1664525+1013904223)>>>0;return seed/4294967296};
@@ -22,7 +36,7 @@ export function crearCiudad(scene){
    }
    let t=new T.CanvasTexture(c);t.colorSpace=T.SRGBColorSpace;t.wrapS=t.wrapT=T.RepeatWrapping;t.anisotropy=4;return t;
  };
- const textured=(kind,color,repeatX=1,repeatY=1)=>{let t=texture(kind,color,Math.floor(color.length*1337+repeatX*19));t.repeat.set(repeatX,repeatY);return new T.MeshStandardMaterial({map:t,roughness:.9})};
+ const textured=(kind,color,repeatX=1,repeatY=1)=>{let t=texture(kind,color,Math.floor(color.length*1337+repeatX*19));t.repeat.set(repeatX,repeatY);const material=new T.MeshStandardMaterial({map:t,roughness:.82});pendingTextures.push({kind,rx:repeatX,ry:repeatY,material});if(loadedTextures[kind]){const copy=loadedTextures[kind].clone();copy.needsUpdate=true;copy.repeat.set(repeatX,repeatY);material.map=copy}return material};
  const masonry=textured('stone','#d9c5ad',10,10),lawn=textured('grass','#77a879',15,15),asphalt=textured('road','#5b6271',8,8);
  const stone=mat('#f3dcca'),ivory=mat('#fff0d7'),terracotta=mat('#c77c76'),navy=mat('#333a61'),grass=mat('#6ba77a'),darkGrass=mat('#428d72'),wood=mat('#a16e54'),gold=mat('#efc477',.35,.2),glass=new T.MeshPhysicalMaterial({color:'#80d8e6',roughness:.13,metalness:.2,transparent:true,opacity:.73,side:T.DoubleSide}),water=new T.MeshPhysicalMaterial({color:'#47c4d5',roughness:.1,metalness:.18,transparent:true,opacity:.85});
  const mesh=(geo,m,x=0,y=0,z=0,parent=scene)=>{let o=new T.Mesh(geo,m);o.position.set(x,y,z);o.castShadow=true;o.receiveShadow=true;parent.add(o);return o};
