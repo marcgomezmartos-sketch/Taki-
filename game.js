@@ -1,4 +1,4 @@
-import * as T from 'three';import {crearCiudad} from './world.js?v=atrium43';import {crearBarbasV4} from './barbas_v5.js?v=bald26';import {iniciarExtras} from './features.js?v=shop38';
+import * as T from 'three';import {crearCiudad} from './world.js?v=atrium44';import {crearBarbasV4} from './barbas_v5.js?v=bald26';import {iniciarExtras} from './features.js?v=shop38';
 function iniciarBarbasParty(){
 const $=id=>document.getElementById(id), scene=new T.Scene();scene.background=new T.Color('#e99588');scene.fog=new T.FogExp2('#d99c94',.0035);// Skybox image path: replace with your own panoramic sky asset.
  const SKY_IMAGE='assets/cielo_ciudad.jpg';
@@ -119,16 +119,22 @@ player.position.set(0,0,11);$('hud').style.display='none';let dragging=false,las
  const mapFull=document.createElement('section');mapFull.id='mapFull';mapFull.innerHTML='<div class="mapHeader"><b>🗺️ BARBAS MINIGAMES · MAPA</b><button id="mapClose">✕ CERRAR</button></div><canvas width="800" height="800"></canvas><div id="mapLegend">🟡 Tú · 🛍️ TK SHOP · 🏆 Arena · 🧗 Parkour · 👥 Online (próximamente) · 🏅 Trofeos (próximamente)</div>';document.body.append(mapFull);
  let fullMapOpen=false;mapButton.onclick=()=>{if(!active)return;fullMapOpen=true;mapFull.style.display='flex';drawMap(mapFull.querySelector('canvas'),true)};mapFull.querySelector('#mapClose').onclick=()=>{fullMapOpen=false;mapFull.style.display='none'};
  // Clear, always-visible main objective with distance and contextual instructions.
- const objective=document.createElement('div');objective.id='mainObjective';objective.innerHTML='<small>OBJETIVO PRINCIPAL</small><strong>🏆 VE A ARENA PARTY</strong><span>Entra al edificio central para jugar minijuegos</span>';document.body.append(objective);
+ // Compact contextual navigation: no permanent objective banner obscuring the game.
+ const objective=document.createElement('div');objective.id='mainObjective';objective.innerHTML='<span>🏆 Los minijuegos están en ARENA PARTY</span>';document.body.append(objective);
  const objectiveStyle=document.createElement('style');objectiveStyle.textContent=`
- #mainObjective{position:fixed;top:16px;left:50%;transform:translateX(-50%);z-index:5;width:min(335px,54vw);padding:10px 13px;border:1px solid #5ceaf1a0;border-radius:15px;background:linear-gradient(130deg,#ffffffeb,#e8f5ffeb);box-shadow:0 9px 25px #0007,0 0 18px #43eaff25;color:#19354a;text-align:center;pointer-events:none;display:none;flex-direction:column;gap:3px;backdrop-filter:blur(10px)}
- #mainObjective small{font-size:9px;letter-spacing:1.5px;color:#287c9a;font-weight:900}#mainObjective strong{font-size:clamp(12px,2.8vw,16px);color:#315e8a;text-shadow:0 0 12px #ffc96666}#mainObjective span{font-size:11px;line-height:1.25;color:#385367}
- @media(max-width:600px){#mainObjective{top:120px;left:50%;width:60vw;padding:7px 9px}#mainObjective span{font-size:10px}}
+ #mainObjective{position:fixed;left:50%;bottom:22%;transform:translateX(-50%);z-index:5;max-width:74vw;padding:9px 15px;border-radius:24px;background:#ffffffec;border:1px solid #c4dfe7;box-shadow:0 5px 18px #1c3d5060;color:#25475e;font:700 12px system-ui;text-align:center;pointer-events:none;display:none;backdrop-filter:blur(8px)}
+ @media(max-width:600px){#mainObjective{bottom:19%;font-size:11px;max-width:70vw;padding:7px 12px}}
  `;document.head.append(objectiveStyle);
- let lastObjectiveText='';
- function updateObjective(){objective.style.display=active&&mode==='city'?'flex':'none';if(mode!=='city')return;const d=Math.round(Math.hypot(player.position.x,player.position.z+24));const close=d<9;
- const msg=close?'Pulsa USAR para entrar a jugar':d<24?'¡Ya casi estás! Sigue hacia el edificio iluminado':'Sigue el camino blanco hacia la arena · '+d+' m';
- if(lastObjectiveText!==msg){objective.querySelector('span').textContent=msg;lastObjectiveText=msg}
+ let lastObjectiveText='',guideStarted=0;
+ function updateObjective(){if(!active||mode!=='city'){objective.style.display='none';return}
+  if(!guideStarted)guideStarted=performance.now();
+  const d=Math.round(Math.hypot(player.position.x,player.position.z+24));
+  const nearArena=d<11;
+  const show=nearArena||performance.now()-guideStarted<9500;
+  objective.style.display=show?'block':'none';
+  if(!show)return;
+  const msg=nearArena?'🏆 ARENA PARTY · Pulsa USAR para jugar':d<24?'✨ ¡Ya estás cerca de los minijuegos!':'🎮 ¡Bienvenido! Sigue el camino hasta ARENA PARTY';
+  if(lastObjectiveText!==msg){objective.querySelector('span').textContent=msg;lastObjectiveText=msg}
  }
  const mapPoints=shops.map(sh=>({name:sh.name,x:sh.x,z:sh.z+5,active:sh.name==='TK SHOP'||sh.name==='ARENA PARTY'||sh.name==='PARKOUR',icon:sh.name==='TK SHOP'?'🛍️':sh.name==='ARENA PARTY'?'🏆':sh.name==='PARKOUR'?'🧗':sh.name==='CLUB AMIGOS'?'👥':'🏅'}));
  function drawMap(canvas,large=false){
