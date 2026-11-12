@@ -23,17 +23,17 @@ export function crearBarbasV4(){
  const arms=[],elbows=[],legs=[],knees=[],baseShorts=[];
  for(const side of [-1,1]){
   const arm=new T.Group();arm.position.set(side*.385,1.94,0);body.add(arm);arms.push(arm);
-  ell(arm,skin,0,-.12,0,.14,.23,.14);
+  ell(arm,skin,0,-.12,0,.135,.205,.135);
   garment(skin,[[-.36,.117,.12],[-.25,.132,.135],[-.10,.142,.142],[.02,.135,.135]],arm);
   const elbow=new T.Group();elbow.position.y=-.33;arm.add(elbow);elbows.push(elbow);
-  ell(elbow,skin,0,-.12,0,.113,.20,.115);
+  ell(elbow,skin,0,-.12,0,.108,.18,.11);
   ell(elbow,skin,0,-.30,.01,.103,.105,.10);
   const leg=new T.Group();leg.position.set(side*.184,1.35,0);body.add(leg);legs.push(leg);
   garment(skin,[[-.61,.169,.166],[-.39,.183,.178],[-.16,.205,.198],[.02,.195,.194]],leg);
   baseShorts.push(garment(shorts,[[-.23,.208,.199],[-.17,.217,.208],[-.02,.22,.211],[.065,.205,.205]],leg));
   const knee=new T.Group();knee.position.y=-.53;leg.add(knee);knees.push(knee);
-  ell(knee,skin,0,-.17,0,.15,.29,.153);
-  ell(knee,dark,0,-.49,.07,.19,.09,.245);
+  ell(knee,skin,0,-.17,0,.145,.26,.15);
+  ell(knee,dark,0,-.49,.095,.205,.105,.27);
  }
  ell(body,shorts,0,1.33,0,.34,.15,.235);
  let t=0,blend=0,stride=0,land=0,wasAir=false,runBlend=0,turnLean=0;
@@ -47,7 +47,7 @@ export function crearBarbasV4(){
   // Speed-sensitive step cycle with smooth transitions between standing, walking and sprinting.
   const locomotionSpeed=Math.max(0,state.velocidad||0);const frequency=1.15+locomotionSpeed*.18;
   stride+=dt*Math.PI*2*frequency*Math.max(.15,blend);
-  const phase=stride,amp=(.38+.34*runBlend)*blend;
+  const phase=stride,amp=(.56+.30*runBlend)*blend;
   if(wasAir&&!air)land=1;wasAir=air;land=damp(land,0,6.8,dt);
   const ease=(obj,axis,target,speed=9)=>{obj.rotation[axis]=damp(obj.rotation[axis],target,speed,dt)};
   const footLift=Math.max(0,Math.sin(phase));
@@ -58,14 +58,14 @@ export function crearBarbasV4(){
    // The planted leg stays straighter; the swinging leg folds and rises.
    const hip=air?(state.subiendo?-.32:.26):swing*amp+Math.max(0,forward)*.10*blend;
    ease(legs[i],'x',hip,9);
-   ease(legs[i],'z',air?side*.12:side*(.032+.022*runBlend)*blend,8);
+   ease(legs[i],'z',air?side*.12:side*(.045+.035*runBlend)*blend,8);
    ease(legs[i],'y',side*.022*blend,8);
-   ease(knees[i],'x',air?(state.subiendo?.68:.38):Math.pow(lift,1.3)*(.58+.27*runBlend)*blend+.19*land,11);
+   ease(knees[i],'x',air?(state.subiendo?.68:.38):Math.pow(lift,1.2)*(.82+.26*runBlend)*blend+.19*land,11);
    // Arms counter-swing to legs, with elbow flex and a subtle wrist-side sway.
-   ease(arms[i],'x',air?-.55:-swing*amp*.72-.09*runBlend*blend+Math.sin(t*1.6+i*2.1)*.012*(1-blend),8);
-   ease(arms[i],'z',air?side*.25:side*(.10+.055*runBlend*blend)+Math.cos(cycle)*.018*blend,7);
+   ease(arms[i],'x',air?-.55:-swing*amp*.95-.09*runBlend*blend+Math.sin(t*1.6+i*2.1)*.012*(1-blend),8);
+   ease(arms[i],'z',air?side*.25:side*(.19+.045*runBlend*blend)+Math.cos(cycle)*.028*blend,7);
    ease(arms[i],'y',-side*.065*blend+Math.sin(cycle)*.02*blend,7);
-   ease(elbows[i],'x',air?-.72:-.10-(.19+.37*runBlend)*blend-lift*.13*blend,9);
+   ease(elbows[i],'x',air?-.72:-.17-(.28+.33*runBlend)*blend-lift*.19*blend,9);
    ease(elbows[i],'z',side*.028*blend,7);
   }
   const bounce=(Math.cos(phase*2)-1)*.014*(1+.5*runBlend)*blend;
