@@ -1,227 +1,90 @@
 import * as T from 'three';
+// Barbas Minigames: enclosed science-fiction megadome hub.
 export function crearCiudad(scene){
- const mat=(c,r=.83,metal=0)=>new T.MeshStandardMaterial({color:c,roughness:r,metalness:metal});
-
- // Replace these file paths with your own seamless image assets.
- // Images load asynchronously; procedural textures remain as fallback.
- const TEXTURE_FILES={stone:'assets/suelo_piedra.jpg',road:'assets/carretera.jpg',wall:'assets/pared.jpg',grass:'assets/cesped.jpg'};
- const loadedTextures={};
- for(const [kind,url] of Object.entries(TEXTURE_FILES)){
-   const image=new Image();image.decoding='async';image.onload=()=>{
-     const canvas=document.createElement('canvas');canvas.width=512;canvas.height=512;
-     const ctx=canvas.getContext('2d');ctx.drawImage(image,0,0,512,512);
-     const t=new T.CanvasTexture(canvas);t.colorSpace=T.SRGBColorSpace;t.wrapS=t.wrapT=T.RepeatWrapping;t.anisotropy=8;
-     loadedTextures[kind]=t;
-     for(const entry of pendingTextures){if(entry.kind!==kind)continue;const copy=t.clone();copy.needsUpdate=true;copy.repeat.set(entry.rx,entry.ry);entry.material.map=copy;entry.material.needsUpdate=true}
-   };image.onerror=()=>{};image.src=url;
+ const make=(c,metal=.3,rough=.48,emissive=null)=>new T.MeshStandardMaterial({color:c,metalness:metal,roughness:rough,emissive:emissive||'#000000',emissiveIntensity:emissive?.75:0,side:T.DoubleSide});
+ const steel=make('#17283d',.75,.32),panel=make('#283d57',.66,.4),dark=make('#0b1426',.55,.43),floor=make('#20334b',.35,.65),chrome=make('#a3c3d5',.83,.21),glass=make('#327ba1',.45,.17,'#0a253d');
+ const cyan=new T.MeshBasicMaterial({color:'#48efff',side:T.DoubleSide}),violet=new T.MeshBasicMaterial({color:'#a177ff',side:T.DoubleSide}),gold=new T.MeshBasicMaterial({color:'#ffd57b',side:T.DoubleSide}),pink=new T.MeshBasicMaterial({color:'#ff77d2',side:T.DoubleSide});
+ const mesh=(geo,mat,x=0,y=0,z=0,parent=scene)=>{const m=new T.Mesh(geo,mat);m.position.set(x,y,z);m.castShadow=false;m.receiveShadow=true;parent.add(m);return m};
+ const box=(w,h,d,m,x,y,z,p=scene)=>mesh(new T.BoxGeometry(w,h,d),m,x,y,z,p);
+ const cyl=(rt,rb,h,m,x,y,z,n=24,p=scene)=>mesh(new T.CylinderGeometry(rt,rb,h,n),m,x,y,z,p);
+ const ball=(r,m,x,y,z,p=scene)=>mesh(new T.SphereGeometry(r,16,10),m,x,y,z,p);
+ const torus=(r,t,m,x,y,z,p=scene)=>{const a=mesh(new T.TorusGeometry(r,t,8,64),m,x,y,z,p);a.rotation.x=Math.PI/2;return a};
+ const sign=(txt,x,y,z,w=10,color='#a6f8ff')=>{const c=document.createElement('canvas');c.width=1024;c.height=160;const ctx=c.getContext('2d');ctx.fillStyle='#081729';ctx.fillRect(0,0,1024,160);ctx.strokeStyle=color;ctx.lineWidth=10;ctx.strokeRect(5,5,1014,150);ctx.fillStyle=color;ctx.textAlign='center';ctx.textBaseline='middle';ctx.font='bold 75px system-ui';ctx.fillText(txt,512,82,980);const t=new T.CanvasTexture(c);t.colorSpace=T.SRGBColorSpace;return mesh(new T.PlaneGeometry(w,1.55),new T.MeshBasicMaterial({map:t,transparent:true,side:T.DoubleSide}),x,y,z)};
+ // Entire environment is INSIDE a sealed metallic capsule. No outdoor sky.
+ box(124,.5,124,floor,0,-.42,0);
+ cyl(61.8,61.8,46,dark,0,23,0,96);
+ const interior=mesh(new T.CylinderGeometry(60.7,60.7,46,96,1,true),steel,0,23,0);
+ interior.material.side=T.BackSide;
+ const roof=mesh(new T.SphereGeometry(61,64,20,0,Math.PI*2,0,Math.PI/2),dark,0,43,0);
+ roof.material.side=T.BackSide;roof.scale.y=.42;
+ // Luminous ceiling ribs and radial ring systems.
+ for(let h of [9,19,31,43])torus(60.5,.18,h%2?cyan:violet,0,h,0);
+ for(let k=0;k<32;k++){const a=k*Math.PI/16,x=Math.sin(a)*60,z=Math.cos(a)*60;
+  box(.32,42,.32,k%4===0?cyan:panel,x,22,z);
+  if(k%4===0)ball(.5,gold,x,39,z);
  }
- const pendingTextures=[];
- const texture=(kind,base,seed=1)=>{
-   const c=document.createElement('canvas');c.width=512;c.height=512;const q=c.getContext('2d');
-   let rnd=()=>{seed=(seed*1664525+1013904223)>>>0;return seed/4294967296};
-   q.fillStyle=base;q.fillRect(0,0,512,512);
-   if(kind==='stone'||kind==='road'){
-     const rows=kind==='stone'?12:20,cell=512/rows;
-     for(let j=0;j<rows;j++)for(let i=0;i<rows;i++){
-       let v=Math.floor(rnd()*24),a=kind==='stone'?`rgba(117,81,65,${.035+rnd()*.07})`:`rgba(230,218,200,${.02+rnd()*.04})`;
-       q.fillStyle=a;q.fillRect(i*cell+1+(j%2)*cell*.25,j*cell+1,cell-2,cell-2);
-     }
-     q.strokeStyle=kind==='stone'?'rgba(106,75,65,.13)':'rgba(245,240,228,.06)';
-     q.lineWidth=1;for(let j=0;j<rows;j++){q.beginPath();q.moveTo(0,j*cell);q.lineTo(512,j*cell);q.stroke()}
-   }else if(kind==='wall'){
-     for(let j=0;j<34;j++)for(let i=0;i<18;i++){q.fillStyle=`rgba(255,255,255,${rnd()*.065})`;q.fillRect(i*30+(j%2)*15,j*15,29,14)}
-     for(let k=0;k<4500;k++){q.fillStyle=`rgba(66,49,52,${rnd()*.065})`;q.fillRect(rnd()*512,rnd()*512,1+rnd()*2,1+rnd()*2)}
-   }else if(kind==='grass'){
-     for(let k=0;k<14000;k++){q.fillStyle=rnd()>.5?'rgba(255,235,155,.12)':'rgba(20,80,47,.12)';q.fillRect(rnd()*512,rnd()*512,1+rnd()*3,2+rnd()*5)}
-   }
-   let t=new T.CanvasTexture(c);t.colorSpace=T.SRGBColorSpace;t.wrapS=t.wrapT=T.RepeatWrapping;t.anisotropy=4;return t;
- };
- const textured=(kind,color,repeatX=1,repeatY=1)=>{let t=texture(kind,color,Math.floor(color.length*1337+repeatX*19));t.repeat.set(repeatX,repeatY);const material=new T.MeshStandardMaterial({map:t,roughness:.82});pendingTextures.push({kind,rx:repeatX,ry:repeatY,material});if(loadedTextures[kind]){const copy=loadedTextures[kind].clone();copy.needsUpdate=true;copy.repeat.set(repeatX,repeatY);material.map=copy}return material};
- const masonry=textured('stone','#d9c5ad',10,10),lawn=textured('grass','#77a879',15,15),asphalt=textured('road','#5b6271',8,8);
- const stone=mat('#f3dcca'),ivory=mat('#fff0d7'),terracotta=mat('#c77c76'),navy=mat('#333a61'),grass=mat('#6ba77a'),darkGrass=mat('#428d72'),wood=mat('#a16e54'),gold=mat('#efc477',.35,.2),glass=new T.MeshPhysicalMaterial({color:'#80d8e6',roughness:.13,metalness:.2,transparent:true,opacity:.73,side:T.DoubleSide}),water=new T.MeshPhysicalMaterial({color:'#47c4d5',roughness:.1,metalness:.18,transparent:true,opacity:.85});
- const mesh=(geo,m,x=0,y=0,z=0,parent=scene)=>{let o=new T.Mesh(geo,m);o.position.set(x,y,z);o.castShadow=true;o.receiveShadow=true;parent.add(o);return o};
- const cyl=(r1,r2,h,m,x,y,z,n=24)=>mesh(new T.CylinderGeometry(r1,r2,h,n),m,x,y,z);
- const sphere=(r,m,x,y,z,detail=1)=>mesh(new T.IcosahedronGeometry(r,detail),m,x,y,z);
- const box=(w,h,d,m,x,y,z)=>mesh(new T.BoxGeometry(w,h,d),m,x,y,z);
- const ring=(r,t,m,x,y,z)=>{let o=mesh(new T.TorusGeometry(r,t,7,64),m,x,y,z);o.rotation.x=Math.PI/2;return o};
- const curved=(points,r,m)=>mesh(new T.TubeGeometry(new T.CatmullRomCurve3(points.map(p=>new T.Vector3(...p))),Math.max(16,points.length*6),r,7,false),m);
- const sign=(name,x,y,z,w=8)=>{let c=document.createElement('canvas');c.width=1024;c.height=192;let q=c.getContext('2d');q.fillStyle='#252c4b';q.fillRect(0,0,1024,192);q.fillStyle='#ffe5a2';q.textAlign='center';q.textBaseline='middle';q.font='900 84px system-ui';q.fillText(name,512,98,940);let tex=new T.CanvasTexture(c);tex.colorSpace=T.SRGBColorSpace;return mesh(new T.PlaneGeometry(w,1.55),new T.MeshBasicMaterial({map:tex,side:T.DoubleSide}),x,y,z)};
- // Soft organic terrain and broad avenues: curved shapes instead of square tiled platforms.
- box(146,.45,146,lawn,0,-.45,0);
- const road=asphalt;
- for(let z of [-42,42]){box(142,.065,10,road,0,-.14,z);for(let x=-65;x<65;x+=11)box(4,.012,.12,ivory,x,-.097,z)}
- for(let x of [-42,42]){box(10,.065,142,road,x,-.13,0);for(let z=-65;z<65;z+=11)box(.12,.012,4,ivory,x,-.09,z)}
- // Oval plaza with smooth concentric rings and inlaid mosaic arcs.
- cyl(20,20,.18,masonry,0,-.04,0,96);cyl(18.7,18.7,.025,textured('stone','#e7cfc0',8,8),0,.064,0,96);
- for(let r of [10.2,15.1,18.4])ring(r,.075,ivory,0,.087,0);
- for(let i=0;i<32;i++){let a=i*Math.PI/16;let o=mesh(new T.TorusGeometry(16.8,.095,5,7,Math.PI/9),i%2?terracotta:gold,0,.091,0);o.rotation.set(Math.PI/2,0,a)}
- // Sculptural fountain: curved layered basins, bowl profiles, moving water droplets.
- const bowlProfile=[[0,0],[4.3,0],[4.7,.22],[4.6,.58],[4.3,.79],[3.8,.81],[3.72,.69],[0,.69]].map(p=>new T.Vector2(...p));
- mesh(new T.LatheGeometry(bowlProfile,64),stone,0,.18,0);cyl(3.74,3.74,.025,water,0,.875,0,64);
- const column=mesh(new T.LatheGeometry([[0,0],[.85,0],[.72,.2],[.52,.5],[.38,1.7],[.6,2.05],[.43,2.22],[0,2.22]].map(p=>new T.Vector2(...p)),48),ivory,0,.87,0);
- mesh(new T.LatheGeometry([[0,0],[1.8,0],[2.0,.12],[1.9,.38],[1.7,.48],[0,.48]].map(p=>new T.Vector2(...p)),48),stone,0,3.02,0);cyl(1.67,1.67,.035,water,0,3.49,0,48);sphere(.5,gold,0,4.25,0,2);
- const jets=[];for(let i=0;i<14;i++){let a=i*Math.PI/7,rr=2.5;curved([[Math.sin(a)*.95,3.52,Math.cos(a)*.95],[Math.sin(a)*1.8,3.88,Math.cos(a)*1.8],[Math.sin(a)*rr,1.05,Math.cos(a)*rr]],.038,mat('#a5eff7',.17));jets.push(sphere(.045,mat('#c6f9ff',.15),Math.sin(a)*rr,1.12,Math.cos(a)*rr))}
- // Curved architecture: elliptical multi-storey rotundas, round roof domes, arched glass windows.
- const shops=[{name:'ARENA PARTY',x:0,z:-29,color:'#9c83d4',desc:'¡Suelo falso! Cruza las baldosas sin caer.'},{name:'TK SHOP',x:-29,z:0,color:'#e6a0b8',desc:'Entra y descubre la colección de ropa.'},{name:'CLUB AMIGOS',x:29,z:0,color:'#80c6b7',desc:'Próximamente: salas multijugador y grupos.'},{name:'TROFEOS',x:-29,z:-29,color:'#edc98c',desc:'Próximamente: victorias y medallas.'},{name:'PARKOUR',x:29,z:-29,color:'#9cc99c',desc:'Prueba tus saltos en la plaza.'}];
- const palettes=['#8c7ac0','#cf8ba8','#66adae','#dbb47d','#83b38d'];
+ for(let radius of [14,29,45,57])torus(radius,.18,radius===29?gold:cyan,0,44,0);
+ for(let k=0;k<24;k++){const a=k*Math.PI/12;const x=Math.sin(a)*49,z=Math.cos(a)*49;const light=box(4,.12,.4,cyan,x,45,z);light.rotation.y=a}
+ // Futuristic dark plaza with high-contrast luminous navigation.
+ cyl(19,19,.13,panel,0,.05,0,64);
+ for(let radius of [8,13.5,18.6])torus(radius,.095,cyan,0,.13,0);
+ cyl(4.2,4.2,.22,steel,0,.17,0,40);torus(4.0,.17,gold,0,.31,0);
+ const core=ball(1.5,glass,0,3.2,0);core.scale.y=1.5;torus(2.4,.11,cyan,0,3.2,0);
+ // Five dedicated futuristic buildings. All gameplay entrances keep their original coordinates.
+ const shops=[{name:'ARENA PARTY',x:0,z:-29,color:'#55efff',desc:'Edificio principal: entra a jugar minijuegos.'},{name:'TK SHOP',x:-29,z:0,color:'#ff79d7',desc:'Compra y equipa ropa.'},{name:'CLUB AMIGOS',x:29,z:0,color:'#9b8aff',desc:'Online próximamente.'},{name:'TROFEOS',x:-29,z:-29,color:'#ffd57b',desc:'Próximamente.'},{name:'PARKOUR',x:29,z:-29,color:'#9af8b3',desc:'Salta y gana monedas.'}];
  shops.forEach((s,i)=>{
-  const radius=i===0?8.3:6.5,height=i===0?12.5:9.5,wall=textured('wall',palettes[i],5,3),roof=mat(['#68548d','#a75d7e','#4b8e94','#a4755a','#688a6e'][i]);
-  // 20-sided smooth circular buildings, not cuboid blocks.
-  cyl(radius,radius,height,wall,s.x,height/2,s.z,40);
-  cyl(radius+.38,radius+.38,.42,ivory,s.x,.32,s.z,48);
-  for(let floor=0;floor<2;floor++){let yy=3.6+floor*3.7;ring(radius+.16,.17,ivory,s.x,yy,s.z)}
-  // Domed roof with decorative ribs and a spire.
-  const dome=mesh(new T.SphereGeometry(radius+.18,40,16,0,Math.PI*2,0,Math.PI/2),roof,s.x,height,s.z);dome.scale.y=.43;
-  ring(radius+.1,.29,gold,s.x,height+.03,s.z);cyl(.19,.32,1.35,gold,s.x,height+radius*.43+.5,s.z);sphere(.33,gold,s.x,height+radius*.43+1.3,s.z,2);
-  // Tall rounded windows wrapping around the curved facade.
-  for(let floor=0;floor<2;floor++)for(let j=0;j<12;j++){
-   const a=j*Math.PI/6,rad=radius+.045,x=s.x+Math.sin(a)*rad,z=s.z+Math.cos(a)*rad,y=1.8+floor*3.75;
-   let pane=mesh(new T.PlaneGeometry(1.55,2.25),glass,x,y,z);pane.rotation.y=a;
-   curved([[x-Math.cos(a)*.73,y+1.13,z+Math.sin(a)*.73],[x-Math.cos(a)*.52,y+1.62,z+Math.sin(a)*.52],[x,y+1.79,z],[x+Math.cos(a)*.52,y+1.62,z-Math.sin(a)*.52],[x+Math.cos(a)*.73,y+1.13,z-Math.sin(a)*.73]],.075,ivory);
-   let mull=mesh(new T.CylinderGeometry(.035,.035,2.1,6),ivory,x,y,z);mull.position.add(new T.Vector3(Math.sin(a)*.12,0,Math.cos(a)*.12));
+  const main=i===0,r=main?8.3:6.5,h=main?19:14.5,accent=[cyan,pink,violet,gold,cyan][i];
+  cyl(r,r,h,steel,s.x,h/2,s.z,12);
+  cyl(r+.8,r+.8,.65,chrome,s.x,.32,s.z,12);
+  for(const level of [2.4,6.7,11.2,h-.55])torus(r+.12,.18,accent,s.x,level,s.z);
+  // Faceted towers with huge glass window modules, vertical luminous seams.
+  for(let j=0;j<12;j++){const a=j*Math.PI/6,x=s.x+Math.sin(a)*(r+.11),z=s.z+Math.cos(a)*(r+.11);
+   const pane=box(2.5,main?9:7,.12,glass,x,h*.54,z);pane.rotation.y=a;
+   const strip=box(.13,h-.9,.15,j%3===0?accent:chrome,x,h/2,z);strip.rotation.y=a;
+   const lamp=ball(.22,accent,x,h-1,z);
   }
-
-  // Architectural detailing: pilasters, warm interior light, curved cornices, awnings.
-  for(let j=0;j<16;j++){
-    let a=j*Math.PI/8,xx=s.x+Math.sin(a)*(radius+.13),zz=s.z+Math.cos(a)*(radius+.13);
-    let pil=mesh(new T.CylinderGeometry(.105,.12,height-.9,8),ivory,xx,height/2,zz);
-    pil.castShadow=false;
-    let cap=mesh(new T.SphereGeometry(.19,10,6),gold,xx,height-.55,zz);
-    cap.scale.y=.4;
-  }
-  for(let level of [1.1,3.75,7.45,height-.6]){
-    let corn=mesh(new T.TorusGeometry(radius+.25,.12,8,72),level===height-.6?gold:ivory,s.x,level,s.z);
-    corn.rotation.x=Math.PI/2;
-  }
-  for(let j=0;j<8;j++){
-    let a=(j+.5)*Math.PI/4;
-    let xx=s.x+Math.sin(a)*(radius+.3),zz=s.z+Math.cos(a)*(radius+.3);
-    let awning=mesh(new T.ConeGeometry(1.7,.75,4),mat(i%2?'#f0d6c4':'#f6e3c3'),xx,3.15,zz);
-    awning.rotation.y=a+Math.PI/4;
-    awning.scale.z=.48;
-  }
-  // Arched entrance on the near side, with steps and curved marquee.
-  let front=s.z+radius+.16;
-  mesh(new T.PlaneGeometry(3.15,4.1),navy,s.x,2.1,front);
-  mesh(new T.PlaneGeometry(2.55,3.35),glass,s.x,1.9,front+.04);
-  curved([[s.x-1.6,3.95,front],[s.x-1.1,4.55,front],[s.x,4.8,front],[s.x+1.1,4.55,front],[s.x+1.6,3.95,front]],.19,ivory);
-  for(let k=0;k<3;k++)cyl(radius*.52+k*.12,radius*.52+k*.12,.12,stone,s.x,.08+k*.1,front+1.0+k*.28,32);
-  sign(s.name,s.x,height-1.4,front+.12,i===0?9:7);
-  for(let k=0;k<14;k++){let a=k*Math.PI/7;let x=s.x+Math.sin(a)*(radius+.9),z=s.z+Math.cos(a)*(radius+.9);cyl(.1,.1,.85,ivory,x,.5,z,8);sphere(.13,gold,x,.99,z)}
+  cyl(r*.76,r*.95,3.3,panel,s.x,h+1.65,s.z,12);
+  torus(r*.78,.27,accent,s.x,h+3.2,s.z);
+  cyl(1.0,2.5,3.3,glass,s.x,h+4.9,s.z,8);
+  ball(.72,accent,s.x,h+7.1,s.z);
+  // Bright portal: visible entrance on the side facing the plaza.
+  const front=s.z+r+.12;
+  box(4.8,5.8,.4,dark,s.x,3.0,front);
+  box(3.65,4.7,.42,glass,s.x,2.7,front+.23);
+  for(const x of [-2.3,2.3])box(.24,5.7,.4,accent,s.x+x,3,front+.36);
+  box(5.0,.26,.4,accent,s.x,5.8,front+.35);
+  sign(main?'MINIJUEGOS · ENTRA AQUI':s.name,s.x,h-2,front+.5,main?11:8,s.color);
+  // Floating marker above each building; arena is by far the largest.
+  const beacon=torus(main?3.1:1.55,.19,accent,s.x,h+9.5,s.z);beacon.rotation.x=.2;
  });
- // Organic woodland: tapered twisted trunks and overlapping uneven leaf masses.
- const trunk=mat('#86644c'),leaf=[mat('#4b9469'),mat('#6caf79'),mat('#8bbd7e')];
- function tree(x,z,s=1){let g=new T.Group();g.position.set(x,0,z);g.scale.setScalar(s);scene.add(g);let main=mesh(new T.CylinderGeometry(.17,.38,3.6,9),trunk,0,1.8,0,g);main.rotation.z=.07;
-  for(let i=0;i<5;i++){let a=i*2.4,xx=Math.cos(a)*.92,zz=Math.sin(a)*.9;let crown=mesh(new T.SphereGeometry(1.08+(i%3)*.2,12,9),leaf[i%3],xx,3.5+(i%3)*.45,zz,g);crown.scale.set(1.22,.87,1.15)}mesh(new T.SphereGeometry(1.12,12,9),leaf[1],0,4.9,0,g)}
- for(let i=0;i<18;i++){let a=i*Math.PI/9;tree(Math.sin(a)*23,Math.cos(a)*23,.9+(i%3)*.1)}
- for(let i=0;i<35;i++){let x=-63+(i*37%126),z=-63+(i*53%126);if(Math.hypot(x,z)<26||Math.abs(x+29)<10&&Math.abs(z)<10||Math.abs(x-29)<10&&Math.abs(z)<10)continue;tree(x,z,.8+(i%4)*.15)}
- // V37 art pass: layered architecture, landscaped planters, canopies, and warm shopfronts.
- const bronze=mat('#c49a6a',.28,.52),windowGlow=new T.MeshStandardMaterial({color:'#9cc9d8',emissive:'#528fa5',emissiveIntensity:.43,roughness:.15,metalness:.22});
- const paleStone=mat('#eee1ce',.9),brick=mat('#b98473',.92);
- for(const [bi,b] of shops.entries()){
-  const radius=bi===0?8.3:6.5,yy=bi===0?12.5:9.5;
-  for(let k=0;k<18;k++){const a=(k+.5)*Math.PI/9,xx=b.x+Math.sin(a)*(radius+.25),zz=b.z+Math.cos(a)*(radius+.25);
-   // Small luminous balcony sconces between windows.
-   if(k%3===0){sphere(.19,mat('#ffdc9a',.24),xx,4.55,zz,2);sphere(.16,mat('#ffdc9a',.24),xx,8.2,zz,2)}
-   if(k%2===0){const bal=mesh(new T.BoxGeometry(1.25,.13,.55),paleStone,xx,3.45,zz);bal.rotation.y=a;const rail=mesh(new T.BoxGeometry(1.22,.45,.06),bronze,xx,3.77,zz);rail.rotation.y=a}
-  }
-  for(let k=0;k<8;k++){const a=k*Math.PI/4,xx=b.x+Math.sin(a)*(radius+.44),zz=b.z+Math.cos(a)*(radius+.44);
-   const flower=sphere(.35,mat(k%2?'#d98b9f':'#f5cf89'),xx,1.05,zz,1);flower.scale.set(1,.42,.8)}
-  // Additional subtle vertical façade lines give the buildings visual scale.
-  for(let k=0;k<20;k++){let a=k*Math.PI/10;let x=b.x+Math.sin(a)*(radius+.17),z=b.z+Math.cos(a)*(radius+.17);let pil=mesh(new T.BoxGeometry(.08,2.6,.08),bronze,x,5.6,z);pil.castShadow=false}
+ // Raised holographic arrows guide players from spawn to the main arena.
+ for(let i=0;i<7;i++){const z=-3.2-i*3.05;
+  const arrow=mesh(new T.ConeGeometry(.65,1.6,3),gold,0,.23,z);arrow.rotation.x=-Math.PI/2;arrow.rotation.z=Math.PI/2;
+  for(const x of [-2.4,2.4])box(.13,.025,2.2,cyan,x,.12,z);
  }
- // Recessed street planters with varied foliage and flowering bushes.
- for(let i=0;i<20;i++){let a=i*Math.PI/10,x=Math.sin(a)*34,z=Math.cos(a)*34;if(Math.abs(x)>28&&Math.abs(z)<12)continue;
-  cyl(.95,1.08,.35,brick,x,.18,z,12);
-  for(let j=0;j<5;j++){let theta=j*2.4,rr=.35+(j%2)*.25;let b=sphere(.44,leaf[(i+j)%3],x+Math.cos(theta)*rr,.63+(j%2)*.19,z+Math.sin(theta)*rr,2);b.scale.set(1,.7,1)}
-  for(let j=0;j<4;j++){let a=j*Math.PI/2;let f=sphere(.15,mat((i+j)%2?'#f9b5cf':'#ffdf91'),x+Math.cos(a)*.47,.98,z+Math.sin(a)*.47,1);f.scale.y=.65}
+ // Suspended skyways and futuristic infrastructure.
+ for(let i=0;i<12;i++){const a=i*Math.PI/6,r=49,x=Math.sin(a)*r,z=Math.cos(a)*r;
+  const pillar=cyl(.6,.85,22,panel,x,11,z,8);
+  for(const h of [3,11,19])torus(.82,.09,cyan,x,h,z);
+  const top=box(3.2,1.0,3.2,chrome,x,23,z);top.rotation.y=a;
  }
- // Fine concentric paving, raised road curbs and stone details.
- for(const z of [-47,-37,37,47])box(136,.085,.18,paleStone,0,-.065,z);
- for(const x of [-47,-37,37,47])box(.18,.085,136,paleStone,x,-.065,0);
- // Rounded flower beds, sculpted shrubs, benches and vintage lamps.
- for(let i=0;i<12;i++){let a=i*Math.PI/6,x=Math.sin(a)*26,z=Math.cos(a)*26;cyl(1.35,1.55,.5,stone,x,.2,z,24);for(let j=0;j<9;j++){let t=j*2.4;let f=sphere(.22,mat(['#f7a7bf','#f9d48e','#a9c7ed'][j%3]),x+Math.cos(t)*(.4+(j%3)*.25),.6+(j%2)*.1,z+Math.sin(t)*(.4+(j%3)*.25));f.scale.y=.6}}
- function lamp(x,z){cyl(.09,.16,4.6,navy,x,2.3,z);sphere(.4,mat('#ffe5a6',.22),x,4.65,z,2);cyl(.52,.52,.15,navy,x,5.05,z)}
- for(let a=0;a<8;a++){let t=a*Math.PI/4;lamp(Math.sin(t)*31,Math.cos(t)*31)}
- // Park is a curved lawn, natural pond and winding paths, not a square green patch.
- cyl(14,14,.07,darkGrass,29,-.01,32,64);let pond=mesh(new T.SphereGeometry(6.1,48,16),water,30,.05,36);pond.scale.set(1,.03,.66);
- for(let i=0;i<48;i++){let a=i*Math.PI/24;let r=6.2+(i%3)*.1;sphere(.28,stone,30+Math.cos(a)*r,.12,36+Math.sin(a)*r*.65,1)}
- curved([[17,.12,25],[20,.13,23],[24,.13,24],[28,.13,27],[34,.13,29],[40,.13,27]],1.15,stone);
- for(let i=0;i<12;i++){let a=i*Math.PI/6;tree(29+Math.sin(a)*11,32+Math.cos(a)*11,.68)}
- // Round pavilion with vaulted canopy.
- cyl(3.3,3.3,.27,stone,19,.2,36,32);for(let i=0;i<8;i++){let a=i*Math.PI/4;cyl(.13,.17,3.1,ivory,19+Math.sin(a)*2.7,1.85,36+Math.cos(a)*2.7,10)}
- let gazebo=mesh(new T.SphereGeometry(3.35,32,12,0,Math.PI*2,0,Math.PI/2),terracotta,19,3.4,36);gazebo.scale.y=.55;
- // Small outer houses use rounded cylinders and conical / curved roofs, avoiding box houses.
- for(let i=0;i<13;i++){let a=i*Math.PI*2/13,x=Math.sin(a)*55,z=Math.cos(a)*55,r=3.7+(i%3)*.6,h=5.5+(i%4)*1.1;
-  cyl(r,r,h,mat(['#e9b9ac','#b5d4c8','#d2c3e0','#e8d3a7'][i%4]),x,h/2,z,20);
-  let roof=mesh(new T.ConeGeometry(r+1,2.5,24),mat(['#ac7770','#678c91','#93728a'][i%3]),x,h+1.3,z);roof.rotation.y=.2;
-  for(let j=0;j<7;j++){let t=j*Math.PI*2/7;let px=x+Math.sin(t)*(r+.06),pz=z+Math.cos(t)*(r+.06);let p=mesh(new T.PlaneGeometry(1.15,1.8),glass,px,h*.55,pz);p.rotation.y=t}
+ // Futuristic billboards and display pods along the inner ring.
+ for(let i=0;i<10;i++){const a=i*Math.PI/5,r=46,x=Math.sin(a)*r,z=Math.cos(a)*r;
+  cyl(1.6,2.0,.5,panel,x,.3,z,8);
+  cyl(.12,.2,4.2,chrome,x,2.5,z,8);
+  const screen=box(3.1,2.0,.18,i%2?glass:panel,x,5,z);screen.rotation.y=a;
+  box(3.2,.1,.22,i%2?pink:cyan,x,6.05,z).rotation.y=a;
  }
-
- // Planted garden borders, varied hedges and a curved walking promenade.
- const pathmat=textured('stone','#d8c1a8',6,3);
- for(let i=0;i<42;i++){
-   const a=i*Math.PI*2/42,r=36.5,xx=Math.sin(a)*r,zz=Math.cos(a)*r;
-   let p=mesh(new T.CylinderGeometry(1.25,1.25,.06,12),pathmat,xx,.025,zz);
-   p.scale.z=.7;p.rotation.y=-a;
+ // Small flying ships orbit below the capsule ceiling, animated in update().
+ const ships=[];
+ for(let i=0;i<7;i++){const g=new T.Group();scene.add(g);const body=mesh(new T.SphereGeometry(1.8,16,8),panel,0,0,0,g);body.scale.set(1,.25,.65);
+  const cockpit=ball(.72,glass,0,.32,0,g);cockpit.scale.set(1,.38,.8);
+  for(const side of [-1,1]){box(2.3,.12,.8,steel,side*1.65,0,0,g);ball(.25,cyan,side*2.6,.06,0,g)}
+  box(.65,.22,.15,pink,0,0,1.2,g);
+  ships.push({g,r:18+i*4.8,phase:i*Math.PI*2/7,speed:(i%2?-.12:.14)+i*.008,height:31+(i%3)*3});
  }
- for(let i=0;i<28;i++){
-   let a=i*2.39996,rr=27+(i%4)*1.4,xx=Math.sin(a)*rr,zz=Math.cos(a)*rr;
-   if(Math.hypot(xx-29,zz-32)<15)continue;
-   let bush=mesh(new T.SphereGeometry(.55+(i%3)*.18,12,9),leaf[i%3],xx,.5,zz);
-   bush.scale.y=.7;
- }
- // Low-profile curved benches with legs and slatted seats.
- for(let i=0;i<9;i++){
-   let a=i*Math.PI*2/9,rr=20.8,x=Math.sin(a)*rr,z=Math.cos(a)*rr;
-   let bench=new T.Group();bench.position.set(x,0,z);bench.rotation.y=a;scene.add(bench);
-   for(let k=-1;k<=1;k++){
-     let plank=mesh(new T.BoxGeometry(2.5,.13,.23),wood,k*0,.63,.24+k*.29,bench);
-     plank.castShadow=true;
-   }
-   for(let k of [-.95,.95])mesh(new T.CylinderGeometry(.085,.085,.6,8),navy,k,.32,.3,bench);
-   let back=mesh(new T.BoxGeometry(2.5,.8,.12),wood,0,1.03,.9,bench);back.rotation.x=-.16;
- }
- // Clouds of flowers in landscaped patches.
- for(let i=0;i<170;i++){
-   let a=i*2.39996,r=24+(i%11)*.42,x=Math.sin(a)*r,z=Math.cos(a)*r;
-   if(Math.hypot(x-29,z-32)<16)continue;
-   let blossom=mesh(new T.SphereGeometry(.09+(i%3)*.025,6,5),mat(['#f9d1a2','#f3b3c3','#f9f1d0','#b9c9fa'][i%4]),x,.22,z);
-   blossom.castShadow=false;
- }
- // V41: enclosed futuristic minigame campus. All interactive buildings remain reachable.
- const wallMat=new T.MeshStandardMaterial({color:'#182942',metalness:.48,roughness:.4});
- const neonCyan=new T.MeshBasicMaterial({color:'#4de8f1'}),neonGold=new T.MeshBasicMaterial({color:'#ffd37a'});
- const deck=new T.MeshStandardMaterial({color:'#28394d',metalness:.3,roughness:.6});
- // Perimeter walls with lit architectural frames: a defined campus rather than open countryside.
- for(const side of [-1,1]){
-   box(118,10,1.8,wallMat,0,5,side*60);
-   box(1.8,10,118,wallMat,side*60,5,0);
-   box(118,.16,.28,neonCyan,0,9.8,side*58.9);
-   box(.28,.16,118,neonCyan,side*58.9,9.8,0);
-   for(let k=-5;k<=5;k++){let n=k*10.5;
-     box(.22,9.6,.3,neonCyan,n,5,side*58.85);
-     box(.3,9.6,.22,neonCyan,side*58.85,5,n);
-   }
- }
- // Ground-level illuminated guidance strips lead from spawn to ARENA PARTY.
- for(const x of [-2.3,2.3]){box(.16,.025,23,neonCyan,x,.14,-14.5)}
- for(let i=0;i<6;i++){const z=-4.8-i*3.55;const arrow=new T.Group();arrow.position.set(0,.18,z);scene.add(arrow);
-  const m=mesh(new T.ConeGeometry(.64,1.55,3),neonGold,0,0,0,arrow);m.rotation.x=-Math.PI/2;m.rotation.z=Math.PI/2;m.castShadow=false}
- // The central entrance is deliberately more monumental than the secondary venues.
- const arena=shops[0],az=arena.z+9.1;
- for(const xx of [-5.9,5.9]){cyl(.43,.5,8.5,wallMat,xx,4.25,az,12);sphere(.48,neonCyan,xx,8.5,az,2)}
- box(12.5,.55,1.1,neonCyan,0,8.5,az);
- box(12.9,1.45,.6,wallMat,0,9.45,az);
- const arenaTitle=sign('★ JUEGA AQUÍ · MINIJUEGOS ★',0,9.5,az+.39,12);
- const arenaBeacon=new T.Mesh(new T.CylinderGeometry(.18,.18,12,12),new T.MeshBasicMaterial({color:'#57eaff',transparent:true,opacity:.48,depthWrite:false}));
- arenaBeacon.position.set(0,18,-29);scene.add(arenaBeacon);
- const arenaRing=mesh(new T.TorusGeometry(2.5,.18,8,48),neonGold,0,22,-29);arenaRing.rotation.x=Math.PI/2;
- // Secondary routes are marked but visually quieter than the main arena.
- for(const sh of shops.slice(1)){const color=sh.name==='TK SHOP'?'#f2a9dd':sh.name==='PARKOUR'?'#b7e991':'#8da3c7';
-   const glow=new T.MeshBasicMaterial({color});
-   const ring=mesh(new T.TorusGeometry(1.6,.13,6,32),glow,sh.x,12.9,sh.z);ring.rotation.x=Math.PI/2;
- }
- // Animated fountain only: avoid hundreds of active lights for mobile performance.
- return {shops,update(t){for(let i=0;i<jets.length;i++)jets[i].position.y=1.12+Math.sin(t*2.8+i*.7)*.14}};
+ // Lights tuned for mobile: emissive materials do most of the work.
+ const centerLight=new T.PointLight('#65dfff',35,45,2);centerLight.position.set(0,20,0);scene.add(centerLight);
+ const arenaLight=new T.PointLight('#8b9fff',20,24,2);arenaLight.position.set(0,14,-29);scene.add(arenaLight);
+ return {shops,update(t){for(const s of ships){const a=s.phase+t*s.speed;s.g.position.set(Math.sin(a)*s.r,s.height+Math.sin(t*1.2+s.phase)*.5,Math.cos(a)*s.r);s.g.rotation.y=a+Math.PI/2;s.g.rotation.z=Math.sin(t*1.3+s.phase)*.055}}};
 }
