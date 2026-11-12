@@ -9,7 +9,7 @@ start.disabled=true;start.style.opacity='.5';
 function report(message){status.textContent=message}
 async function loadProfile(user){const ref=doc(db,'players',user.uid);let snapshot;try{snapshot=await getDoc(ref)}catch(e){report('No se pudo leer la partida: revisa Firestore y sus reglas. '+e.code);return}
 let data=snapshot.exists()?snapshot.data():null;
-if(!data){data={coins:0,owned:[],equipped:{},createdAt:new Date().toISOString()};try{await setDoc(ref,data)}catch(e){report('No se pudo crear la partida: '+e.code);return}}
+if(!data){data={coins:0,owned:['starterRagTop','starterRagShorts'],equipped:{jacket:'starterRagTop',pants:'starterRagShorts'},createdAt:new Date().toISOString()};try{await setDoc(ref,data)}catch(e){report('No se pudo crear la partida: '+e.code);return}}
 window.barbasAccount={ready:true,user,profile:data,save:async payload=>{await setDoc(ref,{...payload,updatedAt:new Date().toISOString()},{merge:true})}};
 window.dispatchEvent(new CustomEvent('barbas-profile-ready',{detail:data}));
 login.style.display='none';logout.style.display='inline-block';start.disabled=false;start.style.opacity='1';report('✓ Sesión iniciada: '+(user.displayName||user.email||'Jugador'))}
