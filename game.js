@@ -1,4 +1,4 @@
-import * as T from 'three';import {crearCiudad} from './world.js?v=detail47';import {crearBarbasV4} from './barbas_v5.js?v=rig48';import {iniciarExtras} from './features.js?v=wardrobe49';
+import * as T from 'three';import {crearCiudad} from './world.js?v=detail47';import {crearBarbasV4} from './barbas_v5.js?v=rig48';import {iniciarExtras} from './features.js?v=premium50';
 function iniciarBarbasParty(){
 const $=id=>document.getElementById(id), scene=new T.Scene();scene.background=new T.Color('#e99588');scene.fog=new T.FogExp2('#d99c94',.0035);// Skybox image path: replace with your own panoramic sky asset.
  const SKY_IMAGE='assets/cielo_ciudad.jpg';
@@ -44,7 +44,7 @@ for(const z of [-46,-34,-22,-10,2,14,26,38,50])for(const x of [-11,-3.6,3.6,11])
 for(const z of [-36,0,36]){const l=new T.PointLight('#ffe9cf',110,42,1.5);l.position.set(0,6,z);shop.add(l)}
 function label(text,x,y,z,width=5){const canvas=document.createElement('canvas');canvas.width=768;canvas.height=144;const c=canvas.getContext('2d');c.fillStyle='#28253e';c.fillRect(0,0,768,144);c.fillStyle='#ffe4ac';c.textAlign='center';c.font='900 66px system-ui';c.fillText(text,384,94,730);const texture=new T.CanvasTexture(canvas);texture.colorSpace=T.SRGBColorSpace;item(new T.PlaneGeometry(width,width*144/768),new T.MeshBasicMaterial({map:texture,side:T.DoubleSide}),x,y,z)}
 label('TK SHOP · MEGASTORE',0,5.2,-53.65,13);
-label('GORROS',-11,4.4,-49,5);label('STREETWEAR',-3.6,4.4,-49,5);label('FALDAS Y VESTIDOS',3.6,4.4,-49,6);label('BAMBAS',11,4.4,-49,5);
+label('EXCLUSIVOS',-7.3,4.4,-49,10);label('BOLSOS',7.3,4.4,-49,6);label('STREETWEAR',0,4.4,-41,8);
 label('SALIDA',0,5.4,53.6,7);
 bx(0,.9,-51,7,1.8,2.2,oak);bx(0,1.85,-51,7,.16,2.2,ivory);
 for(const x of [-14.4,14.4])for(const z of [-32,0,32]){bx(x,2.9,z,1.4,5.8,.16,pink);bx(x,5.8,z,1.6,.18,1.2,gold)}
@@ -58,12 +58,16 @@ for(let i=0;i<shopCatalog.length;i++){
  const cloth=new T.MeshStandardMaterial({color:product.color,roughness:.85});
  const display=new T.Group();display.position.y=1.65;stand.add(display);
  const part=(w,h,d,px,py,pz)=>{const mesh=new T.Mesh(new T.BoxGeometry(w,h,d),cloth);mesh.position.set(px,py,pz);display.add(mesh)};
+ if(product.kind==='bag'){part(.8,.58,.3,0,-.08,0);const handle=new T.Mesh(new T.TorusGeometry(.32,.065,8,18,Math.PI),new T.MeshStandardMaterial({color:'#3d444a'}));handle.position.y=.29;display.add(handle)}
  if(product.kind==='cap'){const crown=new T.Mesh(new T.SphereGeometry(.42,18,10,0,Math.PI*2,0,Math.PI/2),cloth);crown.position.y=.07;display.add(crown);part(.7,.05,.36,0,-.06,.33)}
  if(product.kind==='jacket'){const short=['crop','halter','sport','corset'].includes(product.design);part(.92,short?.68:1.02,.28,0,short?.22:0,0);for(const side of [-1,1])part(.26,short?.3:.76,.3,side*.59,.12,0)}
  if(product.kind==='pants'){const skirt=['pleated','denimskirt','floral','midi'].includes(product.design);if(skirt){const skirtMesh=new T.Mesh(new T.CylinderGeometry(.35,.68,.9,16),cloth);display.add(skirtMesh)}else{part(.78,.35,.32,0,.33,0);for(const side of [-1,1])part(.33,.8,.32,side*.22,-.25,0)}}
+ if(product.design==='stonePink'){const badge=new T.Mesh(new T.BoxGeometry(.04,.18,.2),new T.MeshStandardMaterial({color:'#28352c'}));badge.position.set(.74,.05,.03);display.add(badge)}
+ if(product.design==='crtzWide'){part(.5,.13,.04,-.2,-.35,.18)}
  if(product.kind==='dress'){part(.64,.55,.3,0,.3,0);const skirt=new T.Mesh(new T.CylinderGeometry(.34,.76,.95,16),cloth);skirt.position.y=-.44;display.add(skirt)}
  if(product.kind==='shoes'){part(.51,.25,.78,-.33,0,.06);part(.51,.25,.78,.33,0,.06)}
  const canvas=document.createElement('canvas');canvas.width=512;canvas.height=160;const c=canvas.getContext('2d');c.fillStyle='#2c2741';c.fillRect(0,0,512,160);c.fillStyle='#fff4db';c.textAlign='center';c.font='bold 31px system-ui';c.fillText(product.name,256,62,490);c.fillStyle='#ffd56f';c.font='bold 40px system-ui';c.fillText(product.price.toLocaleString('es-ES')+' MONEDAS',256,126,490);
+ if(product.section==='exclusive'||product.section==='bags'){c.fillStyle='#7fe9f7';c.font='bold 22px system-ui';c.fillText(product.section==='exclusive'?'★ COLECCIÓN EXCLUSIVA':'★ BOLSOS',256,24,490)}
  const texture=new T.CanvasTexture(canvas);texture.colorSpace=T.SRGBColorSpace;
  const tag=new T.Mesh(new T.PlaneGeometry(2.85,.89),new T.MeshBasicMaterial({map:texture,side:T.DoubleSide}));tag.position.set(0,2.9,.25);stand.add(tag);
  shopItems.push({id:product.id,x,z});
