@@ -62,8 +62,6 @@ export function iniciarExtras({player,model,head,rig,showStatus}){
  const overlay=document.createElement('section');overlay.id='shopOverlay';overlay.innerHTML='<div class="shopHead"><h2>🛍️ TK SHOP · PROBADOR</h2><button id="closeShop">✕ VOLVER A LA TIENDA</button></div><p>Prenda seleccionada del expositor.</p><strong id="shopBalance"></strong><div class="shopGrid"></div>';document.body.append(overlay);
  const updateHud=()=>{hud.textContent='🪙 '+coins+' monedas';overlay.querySelector('#shopBalance').textContent='Saldo: '+coins+' 🪙'};
  // Avatar selection is purely visual; every clothing category is unisex.
- const hairGroup=new T.Group();rig.head.add(hairGroup);
- const hairMat=new T.MeshStandardMaterial({color:'#292028',roughness:.91});
  const stylePanel=document.createElement('div');stylePanel.id='avatarStylePanel';
  stylePanel.innerHTML='<div class="avatarStyleCard"><small>BARBAS · TU PERSONAJE</small><h2>¿Qué personaje quieres?</h2><p>Elige el aspecto que prefieras. Toda la ropa es para los dos personajes y podrás cambiar cuando quieras.</p><div class="avatarChoices"><button data-style="man">👨 PERSONAJE CHICO</button><button data-style="woman">👩 PERSONAJE CHICA</button></div></div>';
  document.body.append(stylePanel);
@@ -78,19 +76,7 @@ export function iniciarExtras({player,model,head,rig,showStatus}){
  `;document.head.append(styleCSS);
  function setAvatarStyle(style,persist=true){
   avatarStyle=style==='woman'?'woman':'man';
-  hairGroup.clear();
-  const addHair=(x,y,z,sx,sy,sz)=>{const m=new T.Mesh(new T.SphereGeometry(1,18,12),hairMat);m.position.set(x,y,z);m.scale.set(sx,sy,sz);hairGroup.add(m)};
-  // Both avatars share the same fully articulated skeleton and outfit rig.
-  if(avatarStyle==='woman'){
-   addHair(0,.21,-.04,.302,.21,.26);
-   for(const side of [-1,1]){addHair(side*.23,-.06,-.09,.105,.29,.13);addHair(side*.19,-.22,-.16,.125,.21,.14)}
-   addHair(0,.18,.16,.25,.075,.12);
-   // Hide facial beard components but preserve the rest of the face.
-   rig.head.children.forEach(c=>{if(c!==hairGroup&&c.userData?.beard)c.visible=false});
-  }else{
-   rig.head.children.forEach(c=>{if(c!==hairGroup&&c.userData?.beard)c.visible=true});
-   addHair(0,.315,-.05,.29,.075,.24);
-  }
+  rig.setAvatarStyle?.(avatarStyle);
   stylePanel.style.display='none';
   if(persist)save();
   if(typeof drawGenderButtons==='function')drawGenderButtons();
