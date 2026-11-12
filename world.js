@@ -129,6 +129,44 @@ export function crearCiudad(scene){
   const ring=mesh(new T.TorusGeometry(i===0?2.8:1.7,.075,8,40),chrome,0,0,0,g);
   holo.push({g,icon,ring,phase:i*.9});
  }
+ // V46 landmark architecture: lively centerpiece, light sculpture and transit pods.
+ const pearl=make('#f8f2e5',.24,.25),water=make('#61c9e5',.2,.18),copper=make('#e6ad7c',.45,.35);
+ // Circular landmark fountain with cascading water layers, visible at spawn.
+ cyl(5.4,5.4,.65,chrome,0,.36,0,48);
+ cyl(4.95,4.95,.12,water,0,.75,0,48);
+ for(let i=0;i<8;i++){const a=i*Math.PI/4,x=Math.sin(a)*4,z=Math.cos(a)*4;
+  const jet=cyl(.09,.13,1.1,water,x,1.35,z,8);jet.rotation.z=Math.sin(a)*.15;
+  ball(.22,pearl,x,2.03,z);
+ }
+ cyl(1.4,1.9,1.0,chrome,0,1.4,0,24);
+ const crystal=mesh(new T.OctahedronGeometry(2.15,0),glass,0,5.1,0);
+ const orbitA=torus(3.25,.11,copper,0,5.1,0);orbitA.rotation.x=.8;
+ const orbitB=torus(2.7,.09,cyan,0,5.1,0);orbitB.rotation.z=.7;
+ // Colorful high-level transit lines and floating glass platforms.
+ const transit=[];
+ for(let i=0;i<8;i++){const a=i*Math.PI/4,r=39,x=Math.sin(a)*r,z=Math.cos(a)*r;
+  const pod=new T.Group();scene.add(pod);
+  const hull=mesh(new T.SphereGeometry(1.5,16,10),i%2?glass:pearl,0,0,0,pod);hull.scale.set(1,.55,.8);
+  box(2.1,.13,1.4,chrome,0,-.36,0,pod);
+  for(const xx of [-.85,.85])ball(.16,i%2?pink:cyan,xx,-.36,.75,pod);
+  transit.push({pod,a,r,height:14+i%3*2});
+ }
+ // Architectural ribbons and banners to distinguish the attractions.
+ for(let i=0;i<shops.length;i++){const sh=shops[i],accent=[cyan,pink,violet,gold,cyan][i],front=sh.z+(i===0?8.3:6.5)+3;
+  for(const dx of [-6.4,6.4]){
+   cyl(.16,.22,7,chrome,sh.x+dx,3.5,front,10);
+   const banner=box(1.3,3.5,.12,accent,sh.x+dx,5.0,front);
+   box(1.5,.18,.2,chrome,sh.x+dx,6.85,front);
+  }
+  // Glass pavement display pads create depth at each entrance.
+  for(let j=-2;j<=2;j++)box(.7,.05,1.1,j%2?water:chrome,sh.x+j*1.1,.13,front+3);
+ }
+ // Decorative street gardens with colorful flowering lights.
+ for(let i=0;i<30;i++){const a=i*2.39996,r=25+(i%5)*3.6,x=Math.sin(a)*r,z=Math.cos(a)*r;
+  if(Math.hypot(x,z)>53)continue;
+  cyl(.08,.12,.65,green1,x,.55,z,7);
+  ball(.2,[pink,gold,cyan,violet][i%4],x,.93,z);
+ }
  // Small flying ships orbit below the capsule ceiling, animated in update().
  const ships=[];
  for(let i=0;i<5;i++){const g=new T.Group();scene.add(g);const body=mesh(new T.SphereGeometry(1.8,16,8),panel,0,0,0,g);body.scale.set(1,.25,.65);
@@ -140,5 +178,5 @@ export function crearCiudad(scene){
  // Lights tuned for mobile: emissive materials do most of the work.
  const centerLight=new T.PointLight('#eaf8ff',18,45,2);centerLight.position.set(0,20,0);scene.add(centerLight);
  const arenaLight=new T.PointLight('#fff2d9',13,24,2);arenaLight.position.set(0,14,-29);scene.add(arenaLight);
- return {shops,update(t){for(const h of holo){h.g.position.y=19+(h.phase===0?4:0)+Math.sin(t*1.2+h.phase)*.38;h.icon.rotation.y=t*.48;h.ring.rotation.y=t*.27;h.ring.rotation.x=Math.sin(t*.4+h.phase)*.23}for(const s of ships){const a=s.phase+t*s.speed;s.g.position.set(Math.sin(a)*s.r,s.height+Math.sin(t*1.2+s.phase)*.5,Math.cos(a)*s.r);s.g.rotation.y=a+Math.PI/2;s.g.rotation.z=Math.sin(t*1.3+s.phase)*.055}}};
+ return {shops,update(t){crystal.rotation.y=t*.25;crystal.position.y=5.1+Math.sin(t*1.1)*.25;orbitA.rotation.y=t*.18;orbitB.rotation.y=-t*.2;for(const p of transit){const a=p.a+t*.075;p.pod.position.set(Math.sin(a)*p.r,p.height+Math.sin(t+p.a)*.22,Math.cos(a)*p.r);p.pod.rotation.y=a+Math.PI/2}for(const h of holo){h.g.position.y=19+(h.phase===0?4:0)+Math.sin(t*1.2+h.phase)*.38;h.icon.rotation.y=t*.48;h.ring.rotation.y=t*.27;h.ring.rotation.x=Math.sin(t*.4+h.phase)*.23}for(const s of ships){const a=s.phase+t*s.speed;s.g.position.set(Math.sin(a)*s.r,s.height+Math.sin(t*1.2+s.phase)*.5,Math.cos(a)*s.r);s.g.rotation.y=a+Math.PI/2;s.g.rotation.z=Math.sin(t*1.3+s.phase)*.055}}};
 }
