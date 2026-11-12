@@ -14,11 +14,40 @@ export function iniciarExtras({player,model,head,rig,showStatus}){
  #shopOverlay .product{background:#302b4c;border:1px solid #ffffff29;border-radius:15px;padding:13px 8px;display:flex;flex-direction:column;align-items:center;gap:8px;text-align:center}
  #shopOverlay .product .emoji{font-size:37px}#shopOverlay .product button{font-size:12px;padding:10px;width:100%}#shopOverlay .product small{color:#fce2a1}
  #shopOverlay .shopHead{display:flex;justify-content:space-between;align-items:center;gap:12px;width:min(640px,100%)}
+
+ #shopOverlay{background:linear-gradient(145deg,#1b1534f5,#29203ff7);padding-top:14px}
+ #shopOverlay .shopHead{position:sticky;top:0;z-index:3;background:#211a39f5;padding:8px;border-radius:16px}
+ #shopOverlay .shopGrid{width:min(880px,100%);grid-template-columns:repeat(2,minmax(0,1fr));gap:13px}
+ #shopOverlay .product{background:linear-gradient(145deg,#39314f,#252039);border:1px solid #d9bb8455;padding:10px;gap:7px}
+ #shopOverlay .product b{font-size:13px;min-height:32px}
+ #shopOverlay .product small{font-size:14px;font-weight:900;color:#ffdb79}
+ #shopFilters{display:flex;flex-wrap:nowrap;gap:7px;width:min(880px,100%);overflow-x:auto;scrollbar-width:thin;touch-action:pan-x;padding:9px 2px}
+ #shopFilters button{flex-shrink:0;padding:10px 12px;border-radius:30px;font-size:11px;background:#433753;color:#fff}
+ #shopFilters button.selected{background:#ffdc75;color:#281b36}
+ .productArt{height:126px;width:100%;border-radius:12px;background:radial-gradient(circle at 50% 20%,#e3d4d6,#97869c 68%,#66546f);display:flex;align-items:center;justify-content:center;overflow:hidden;position:relative}
+ .garmentIcon{position:relative;background:var(--fabric);width:72px;height:82px;clip-path:polygon(25% 0,75% 0,100% 18%,86% 40%,77% 35%,77% 100%,23% 100%,23% 35%,14% 40%,0 18%);box-shadow:inset 0 0 18px #0003}
+ .garmentTrim{position:absolute;inset:0;background:transparent}
+ .productArt.cap .garmentIcon{width:88px;height:48px;border-radius:55% 55% 10% 10%;clip-path:none;transform:translateY(-8px)}
+ .productArt.cap .garmentIcon:after{content:"";position:absolute;left:30%;right:-30%;bottom:-8px;height:14px;border-radius:50%;background:var(--fabric)}
+ .productArt.cap.bucket .garmentIcon,.productArt.cap.beanie .garmentIcon{border-radius:45% 45% 18% 18%;height:57px}
+ .productArt.cap.bucket .garmentIcon:after{left:-25%;right:-25%;bottom:0}
+ .productArt.pants .garmentIcon{clip-path:polygon(8% 0,92% 0,100% 100%,55% 100%,50% 40%,45% 100%,0 100%);height:88px;width:77px}
+ .productArt.pants.pleated .garmentIcon,.productArt.pants.floral .garmentIcon,.productArt.pants.denimskirt .garmentIcon,.productArt.pants.midi .garmentIcon{clip-path:polygon(24% 0,76% 0,100% 100%,0 100%);width:96px}
+ .productArt.dress .garmentIcon{clip-path:polygon(31% 0,69% 0,84% 16%,70% 42%,100% 100%,0 100%,30% 42%,16% 16%);height:108px;width:99px}
+ .productArt.shoes .garmentIcon{width:105px;height:49px;clip-path:polygon(0 50%,35% 28%,51% 0,76% 0,83% 43%,100% 66%,100% 100%,0 100%);border-bottom:8px solid #fff}
+ .productArt.stripe .garmentTrim{background:repeating-linear-gradient(0deg,transparent 0 13px,#264a76 13px 20px)}
+ .productArt.graphic .garmentTrim,.productArt.skate .garmentTrim{background:radial-gradient(circle at 50% 48%,#ffe2a9 0 14px,transparent 15px)}
+ .productArt.varsity .garmentTrim{background:linear-gradient(90deg,#f0e1b8 0 17%,transparent 17% 83%,#f0e1b8 83%)}
+ .productArt.floral .garmentTrim,.productArt.summer .garmentTrim,.productArt.garden .garmentTrim{background:radial-gradient(circle at 27% 40%,#fff2c5 0 5px,transparent 6px),radial-gradient(circle at 73% 72%,#fff2c5 0 5px,transparent 6px),radial-gradient(circle at 70% 22%,#f6d1dc 0 6px,transparent 7px)}
+ .productArt.patch .garmentTrim,.productArt.denim .garmentTrim{background:linear-gradient(90deg,transparent 44%,#ffffff66 45% 47%,transparent 48%)}
+ .productArt.party .garmentTrim,.productArt.evening .garmentTrim{background:radial-gradient(circle at 50% 20%,#fff8b5 0 3px,transparent 4px),radial-gradient(circle at 35% 63%,#fff8b5 0 3px,transparent 4px)}
+ .productArt.ribbon .garmentTrim,.productArt.blouse .garmentTrim{background:radial-gradient(ellipse at 50% 27%,#fff2e6 0 13px,transparent 14px)}
+ @media(min-width:680px){#shopOverlay .shopGrid{grid-template-columns:repeat(4,minmax(0,1fr))}}
  `;document.head.append(style);
  const hud=document.createElement('div');hud.id='coinsHud';document.body.append(hud);
  const shopButton=document.createElement('button');shopButton.id='shopButton';shopButton.textContent='🛍️ TIENDA';document.body.append(shopButton);
  const audioButton=document.createElement('button');audioButton.id='audioButton';audioButton.textContent='♫ Música: ON';document.body.append(audioButton);
- const overlay=document.createElement('section');overlay.id='shopOverlay';overlay.innerHTML='<div class="shopHead"><h2>🛍️ TK SHOP</h2><button id="closeShop">✕ CERRAR</button></div><p>Compra ropa con monedas que ganas completando actividades.</p><strong id="shopBalance"></strong><div class="shopGrid"></div>';document.body.append(overlay);
+ const overlay=document.createElement('section');overlay.id='shopOverlay';overlay.innerHTML='<div class="shopHead"><h2>🛍️ TK SHOP · ATELIER</h2><button id="closeShop">✕ CERRAR</button></div><p>57 diseños para crear tu propio estilo. Las prendas compradas se guardan en tu armario.</p><strong id="shopBalance"></strong><div class="shopGrid"></div>';document.body.append(overlay);
  const updateHud=()=>{hud.textContent='🪙 '+coins+' monedas';overlay.querySelector('#shopBalance').textContent='Saldo: '+coins+' 🪙'};
  const accessories=new T.Group();model.add(accessories);const headwear=new T.Group();(head||model).add(headwear);
  function itemMesh(geo,color,x,y,z,parent=accessories){const m=new T.Mesh(geo,new T.MeshStandardMaterial({color,roughness:.92}));m.position.set(x,y,z);parent.add(m);return m}
@@ -70,11 +99,30 @@ export function iniciarExtras({player,model,head,rig,showStatus}){
  wardrobe.querySelector('#wardrobeClose').onclick=closeWardrobe;wardrobe.querySelector('#wardrobeClear').onclick=()=>{equipped={};applyOutfit();save();drawWardrobe();refreshWardrobePreview()};
  let turnStart=null;wardrobe.querySelector('#wardrobeCanvas').addEventListener('pointerdown',e=>{turnStart=e.clientX;e.currentTarget.setPointerCapture(e.pointerId)});wardrobe.querySelector('#wardrobeCanvas').addEventListener('pointermove',e=>{if(turnStart!==null){wardrobeAngle+=(e.clientX-turnStart)*.009;turnStart=e.clientX}});wardrobe.querySelector('#wardrobeCanvas').addEventListener('pointerup',()=>turnStart=null);
  window.barbasOpenWardrobe=openWardrobe;
- let selectedItem=null;function drawShop(){const grid=overlay.querySelector('.shopGrid');grid.replaceChildren();for(const it of inventory){if(selectedItem&&it.id!==selectedItem)continue;const card=document.createElement('div');card.className='product';card.dataset.itemId=it.id;const emoji=document.createElement('div');emoji.className='emoji';emoji.textContent=it.emoji;const name=document.createElement('b');name.textContent=it.name;const price=document.createElement('small');price.textContent=it.price+' 🪙';const btn=document.createElement('button');const have=owned.has(it.id),wearing=equipped[it.kind]===it.id;btn.textContent=wearing?'✓ EQUIPADO':have?'PONER':'COMPRAR';btn.disabled=wearing;btn.onclick=()=>{if(!owned.has(it.id)){if(coins<it.price){showStatus('No tienes monedas suficientes');sound('error');return}coins-=it.price;owned.add(it.id);sound('buy')}else sound('equip');equipped[it.kind]=it.id;if(it.kind==='dress'){delete equipped.jacket;delete equipped.pants}else if(it.kind==='jacket'||it.kind==='pants')delete equipped.dress;applyOutfit();save();updateHud();drawShop()};card.append(emoji,name,price,btn);grid.append(card)}}
+ let selectedItem=null,shopCategory='all';
+ const categoryNames={all:'✨ TODO',cap:'🧢 GORROS',jacket:'👕 TOPS Y CHAQUETAS',pants:'👖 PANTALONES Y FALDAS',dress:'👗 VESTIDOS',shoes:'👟 BAMBAS'};
+ const filters=document.createElement('div');filters.id='shopFilters';overlay.querySelector('.shopGrid').before(filters);
+ function drawShop(){
+  const grid=overlay.querySelector('.shopGrid');grid.replaceChildren();filters.replaceChildren();filters.style.display=selectedItem?'none':'flex';
+  for(const [kind,label] of Object.entries(categoryNames)){const f=document.createElement('button');f.textContent=label;f.className=shopCategory===kind?'selected':'';f.onclick=()=>{shopCategory=kind;drawShop()};filters.append(f)}
+  for(const it of inventory){
+   if(selectedItem&&it.id!==selectedItem)continue;
+   if(!selectedItem&&shopCategory!=='all'&&it.kind!==shopCategory)continue;
+   const card=document.createElement('div');card.className='product';card.dataset.itemId=it.id;
+   const art=document.createElement('div');art.className='productArt '+it.kind+' '+it.design;art.style.setProperty('--fabric',it.color);
+   const shape=document.createElement('div');shape.className='garmentIcon';const trim=document.createElement('div');trim.className='garmentTrim';shape.append(trim);art.append(shape);
+   const name=document.createElement('b');name.textContent=it.name;
+   const price=document.createElement('small');price.textContent=it.price.toLocaleString('es-ES')+' 🪙';
+   const btn=document.createElement('button');const have=owned.has(it.id),wearing=equipped[it.kind]===it.id;
+   btn.textContent=wearing?'✓ EQUIPADO':have?'PONER':'COMPRAR';btn.disabled=wearing;
+   btn.onclick=()=>{if(!owned.has(it.id)){if(coins<it.price){showStatus('Necesitas '+(it.price-coins).toLocaleString('es-ES')+' monedas más');sound('error');return}coins-=it.price;owned.add(it.id);sound('buy')}else sound('equip');equipped[it.kind]=it.id;if(it.kind==='dress'){delete equipped.jacket;delete equipped.pants}else if(it.kind==='jacket'||it.kind==='pants')delete equipped.dress;applyOutfit();save();updateHud();drawShop()};
+   card.append(art,name,price,btn);grid.append(card)
+  }
+ }
  let shopOpen=false;
- function openShop(itemId){if(!itemId)return;selectedItem=itemId;shopOpen=true;overlay.style.display='flex';drawShop();updateHud();sound('open')}
+ function openShop(itemId){selectedItem=itemId||null;shopCategory='all';shopOpen=true;overlay.style.display='flex';drawShop();updateHud();sound('open')}
  function closeShop(){shopOpen=false;selectedItem=null;overlay.style.display='none';sound('close')}
- shopButton.onclick=()=>showStatus('Entra en TK SHOP para comprar ropa');overlay.querySelector('#closeShop').onclick=closeShop;
+ shopButton.onclick=()=>openShop(null);overlay.querySelector('#closeShop').onclick=closeShop;
  let ctx,musicBus,sfxBus,musicTimer,musicOn=true,step=0,ambience;
  const audioPrefsKey='barbas-audio-settings-v1';
  let audioPrefs={music:42,effects:55};try{audioPrefs={...audioPrefs,...JSON.parse(localStorage.getItem(audioPrefsKey)||'{}')}}catch{}
