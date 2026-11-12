@@ -77,6 +77,58 @@ export function crearCiudad(scene){
   cyl(.13,.17,3.5,chrome,x,2.2,z,10);
   const light=ball(.55,cyan,x,4,z);light.scale.y=.5;
  }
+ // V44 visual overhaul: patterned paving, sculpted gardens, architectural depth and animated holograms.
+ const stoneTile=make('#dbe8ee',.12,.78),darkTile=make('#9cb6c7',.18,.66),warm=make('#ffebce',.12,.55);
+ // Distinct paved avenues and inset floor panels instead of an empty flat surface.
+ for(let x=-54;x<=54;x+=6)for(let z=-54;z<=54;z+=6){
+  if(Math.hypot(x,z)>56)continue;
+  const m=((Math.round(x/6)+Math.round(z/6))%3===0)?stoneTile:floor;
+  const tile=box(5.82,.012,5.82,m,x,-.145,z);
+  if((Math.round(x/6)+Math.round(z/6))%7===0)box(1.6,.018,.06,chrome,x,-.128,z);
+ }
+ // Flowing cyan inlaid routes to each activity, with directional chevrons.
+ const paths=[{x:0,z:-22,w:5.7,d:31},{x:-21,z:0,w:31,d:5.7},{x:21,z:0,w:31,d:5.7},{x:-20,z:-29,w:29,d:5.7},{x:20,z:-29,w:29,d:5.7}];
+ for(const p of paths){box(p.w,.025,p.d,stoneTile,p.x,.09,p.z);
+  if(p.w>p.d){for(const z of [p.z-2.65,p.z+2.65])box(p.w,.028,.065,cyan,p.x,.112,z)}
+  else{for(const x of [p.x-2.65,p.x+2.65])box(.065,.028,p.d,cyan,x,.112,p.z)}
+ }
+ // Floating garden terraces, decorative planting and flower-like light pods.
+ const green1=make('#69ad8f',0,.9),green2=make('#a2c7a7',0,.9),wood=make('#b99c7b',.08,.82);
+ for(let i=0;i<16;i++){const a=i*Math.PI*2/16,rr=33+(i%3)*2.5,x=Math.sin(a)*rr,z=Math.cos(a)*rr;
+  cyl(2.05,2.25,.6,chrome,x,.31,z,20);
+  cyl(1.82,1.82,.12,green1,x,.66,z,20);
+  for(let j=0;j<3;j++){const ang=j*2.09+i;const xx=x+Math.sin(ang)*.87,zz=z+Math.cos(ang)*.87;
+   const shrub=ball(.64,j%2?green2:green1,xx,1.2,zz);shrub.scale.y=.75;
+  }
+  if(i%2===0){cyl(.09,.11,2.0,wood,x,1.65,z,8);const crown=ball(.8,green2,x,2.7,z);crown.scale.y=.8}
+ }
+ // Elegant elevated bridge rails and detailed shopfronts.
+ for(const [i,sh] of shops.entries()){
+  const r=i===0?8.3:6.5,h=i===0?15.5:12.5,accent=[cyan,pink,violet,gold,cyan][i];
+  for(let j=0;j<12;j++){const a=j*Math.PI/6,x=sh.x+Math.sin(a)*(r+.28),z=sh.z+Math.cos(a)*(r+.28);
+   for(const y of [2.4,6.8,10.5]){const lamp=box(1.0,.10,.13,accent,x,y,z);lamp.rotation.y=a}
+   const balcony=box(2.3,.15,.5,chrome,x,8.1,z);balcony.rotation.y=a;
+  }
+  for(const y of [4.2,8.8]){const band=torus(r+.42,.1,chrome,sh.x,y,sh.z);band.castShadow=false}
+  // Front plaza signage and projecting light canopy.
+  const front=sh.z+r+1.1;
+  box(6.6,.26,2.3,chrome,sh.x,5.3,front);
+  box(6.1,.08,2.3,accent,sh.x,5.12,front);
+  for(const xx of [-2.8,2.8])cyl(.12,.12,4.7,chrome,sh.x+xx,2.4,front+1,10);
+  for(const xx of [-4.7,4.7]){cyl(.55,.62,.48,chrome,sh.x+xx,.25,front+1.8);ball(.43,accent,sh.x+xx,.85,front+1.8)}
+ }
+ // Landmark sculptures and seating make the hub feel inhabited.
+ for(let i=0;i<8;i++){const a=i*Math.PI/4,rr=26,x=Math.sin(a)*rr,z=Math.cos(a)*rr;
+  const seat=box(3.5,.36,1.0,wood,x,.47,z);seat.rotation.y=a;
+  for(const v of [-1.2,1.2]){const leg=box(.17,.4,.8,chrome,x+Math.cos(a)*v,.23,z-Math.sin(a)*v);leg.rotation.y=a}
+ }
+ const holo=[];
+ for(let i=0;i<5;i++){const sh=shops[i],g=new T.Group();scene.add(g);
+  g.position.set(sh.x,19+(i===0?4:0),sh.z);
+  const icon=mesh(new T.OctahedronGeometry(i===0?1.7:1.0),[gold,pink,violet,gold,cyan][i],0,0,0,g);
+  const ring=mesh(new T.TorusGeometry(i===0?2.8:1.7,.075,8,40),chrome,0,0,0,g);
+  holo.push({g,icon,ring,phase:i*.9});
+ }
  // Small flying ships orbit below the capsule ceiling, animated in update().
  const ships=[];
  for(let i=0;i<5;i++){const g=new T.Group();scene.add(g);const body=mesh(new T.SphereGeometry(1.8,16,8),panel,0,0,0,g);body.scale.set(1,.25,.65);
@@ -88,5 +140,5 @@ export function crearCiudad(scene){
  // Lights tuned for mobile: emissive materials do most of the work.
  const centerLight=new T.PointLight('#eaf8ff',18,45,2);centerLight.position.set(0,20,0);scene.add(centerLight);
  const arenaLight=new T.PointLight('#fff2d9',13,24,2);arenaLight.position.set(0,14,-29);scene.add(arenaLight);
- return {shops,update(t){for(const s of ships){const a=s.phase+t*s.speed;s.g.position.set(Math.sin(a)*s.r,s.height+Math.sin(t*1.2+s.phase)*.5,Math.cos(a)*s.r);s.g.rotation.y=a+Math.PI/2;s.g.rotation.z=Math.sin(t*1.3+s.phase)*.055}}};
+ return {shops,update(t){for(const h of holo){h.g.position.y=19+(h.phase===0?4:0)+Math.sin(t*1.2+h.phase)*.38;h.icon.rotation.y=t*.48;h.ring.rotation.y=t*.27;h.ring.rotation.x=Math.sin(t*.4+h.phase)*.23}for(const s of ships){const a=s.phase+t*s.speed;s.g.position.set(Math.sin(a)*s.r,s.height+Math.sin(t*1.2+s.phase)*.5,Math.cos(a)*s.r);s.g.rotation.y=a+Math.PI/2;s.g.rotation.z=Math.sin(t*1.3+s.phase)*.055}}};
 }
