@@ -189,6 +189,39 @@ export function crearCiudad(scene){
    let blossom=mesh(new T.SphereGeometry(.09+(i%3)*.025,6,5),mat(['#f9d1a2','#f3b3c3','#f9f1d0','#b9c9fa'][i%4]),x,.22,z);
    blossom.castShadow=false;
  }
+ // V41: enclosed futuristic minigame campus. All interactive buildings remain reachable.
+ const wallMat=new T.MeshStandardMaterial({color:'#182942',metalness:.48,roughness:.4});
+ const neonCyan=new T.MeshBasicMaterial({color:'#4de8f1'}),neonGold=new T.MeshBasicMaterial({color:'#ffd37a'});
+ const deck=new T.MeshStandardMaterial({color:'#28394d',metalness:.3,roughness:.6});
+ // Perimeter walls with lit architectural frames: a defined campus rather than open countryside.
+ for(const side of [-1,1]){
+   box(118,10,1.8,wallMat,0,5,side*60);
+   box(1.8,10,118,wallMat,side*60,5,0);
+   box(118,.16,.28,neonCyan,0,9.8,side*58.9);
+   box(.28,.16,118,neonCyan,side*58.9,9.8,0);
+   for(let k=-5;k<=5;k++){let n=k*10.5;
+     box(.22,9.6,.3,neonCyan,n,5,side*58.85);
+     box(.3,9.6,.22,neonCyan,side*58.85,5,n);
+   }
+ }
+ // Ground-level illuminated guidance strips lead from spawn to ARENA PARTY.
+ for(const x of [-2.3,2.3]){box(.16,.025,23,neonCyan,x,.14,-14.5)}
+ for(let i=0;i<6;i++){const z=-4.8-i*3.55;const arrow=new T.Group();arrow.position.set(0,.18,z);scene.add(arrow);
+  const m=mesh(new T.ConeGeometry(.64,1.55,3),neonGold,0,0,0,arrow);m.rotation.x=-Math.PI/2;m.rotation.z=Math.PI/2;m.castShadow=false}
+ // The central entrance is deliberately more monumental than the secondary venues.
+ const arena=shops[0],az=arena.z+9.1;
+ for(const xx of [-5.9,5.9]){cyl(.43,.5,8.5,wallMat,xx,4.25,az,12);sphere(.48,neonCyan,xx,8.5,az,2)}
+ box(12.5,.55,1.1,neonCyan,0,8.5,az);
+ box(12.9,1.45,.6,wallMat,0,9.45,az);
+ const arenaTitle=sign('★ JUEGA AQUÍ · MINIJUEGOS ★',0,9.5,az+.39,12);
+ const arenaBeacon=new T.Mesh(new T.CylinderGeometry(.18,.18,12,12),new T.MeshBasicMaterial({color:'#57eaff',transparent:true,opacity:.48,depthWrite:false}));
+ arenaBeacon.position.set(0,18,-29);scene.add(arenaBeacon);
+ const arenaRing=mesh(new T.TorusGeometry(2.5,.18,8,48),neonGold,0,22,-29);arenaRing.rotation.x=Math.PI/2;
+ // Secondary routes are marked but visually quieter than the main arena.
+ for(const sh of shops.slice(1)){const color=sh.name==='TK SHOP'?'#f2a9dd':sh.name==='PARKOUR'?'#b7e991':'#8da3c7';
+   const glow=new T.MeshBasicMaterial({color});
+   const ring=mesh(new T.TorusGeometry(1.6,.13,6,32),glow,sh.x,12.9,sh.z);ring.rotation.x=Math.PI/2;
+ }
  // Animated fountain only: avoid hundreds of active lights for mobile performance.
  return {shops,update(t){for(let i=0;i<jets.length;i++)jets[i].position.y=1.12+Math.sin(t*2.8+i*.7)*.14}};
 }
