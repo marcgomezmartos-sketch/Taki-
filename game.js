@@ -1,8 +1,8 @@
-import * as T from 'three';import {crearCiudad} from './world.js?v=detail47';import {crearBarbasV4} from './barbas_v5.js?v=rig51';import {iniciarExtras} from './features.js?v=fit51';
+import * as T from 'three';import {crearCiudad} from './world.js?v=brooklyn52';import {crearBarbasV4} from './barbas_v5.js?v=avatars52';import {iniciarExtras} from './features.js?v=avatars52';
 function iniciarBarbasParty(){
 const $=id=>document.getElementById(id), scene=new T.Scene();scene.background=new T.Color('#e99588');scene.fog=new T.FogExp2('#d99c94',.0035);// Skybox image path: replace with your own panoramic sky asset.
  const SKY_IMAGE='assets/cielo_ciudad.jpg';
- const skyImage=new Image();skyImage.decoding='async';skyImage.onload=()=>{const c=document.createElement('canvas');c.width=2048;c.height=1024;const q=c.getContext('2d');q.drawImage(skyImage,0,0,c.width,c.height);const t=new T.CanvasTexture(c);t.colorSpace=T.SRGBColorSpace;scene.userData.citySky=t;if(mode!=='parkour')scene.background=new T.Color('#b4dcf0')};skyImage.onerror=()=>{};skyImage.src=SKY_IMAGE;
+ const skyImage=new Image();skyImage.decoding='async';skyImage.onload=()=>{const c=document.createElement('canvas');c.width=2048;c.height=1024;const q=c.getContext('2d');q.drawImage(skyImage,0,0,c.width,c.height);const t=new T.CanvasTexture(c);t.colorSpace=T.SRGBColorSpace;scene.userData.citySky=t;if(mode!=='parkour')scene.background=new T.Color('#b2cfe2')};skyImage.onerror=()=>{};skyImage.src=SKY_IMAGE;
  const camera=new T.PerspectiveCamera(65,innerWidth/innerHeight,.1,180);const renderer=new T.WebGLRenderer({antialias:true,powerPreference:'high-performance'});renderer.setPixelRatio(Math.min(devicePixelRatio,1.6));renderer.setSize(innerWidth,innerHeight);renderer.outputColorSpace=T.SRGBColorSpace;renderer.toneMapping=T.ACESFilmicToneMapping;renderer.toneMappingExposure=1.06;document.body.prepend(renderer.domElement);
 scene.add(new T.HemisphereLight('#f5f6ff','#7895a2',2.05));const sun=new T.DirectionalLight('#fff2dc',3.4);sun.position.set(-65,16,-45);sun.castShadow=true;sun.shadow.mapSize.set(2048,2048);sun.shadow.camera.left=-70;sun.shadow.camera.right=70;sun.shadow.camera.top=70;sun.shadow.camera.bottom=-70;sun.shadow.bias=-.0003;scene.add(sun);renderer.shadowMap.enabled=true;renderer.shadowMap.type=T.PCFSoftShadowMap;const amb=new T.AmbientLight('#e9e4ff',.68);scene.add(amb);
 const mat=(color,emissive)=>new T.MeshStandardMaterial({color,roughness:.8,emissive:emissive||'#000000',emissiveIntensity:emissive?.5:0});function block(w,h,d,m,x,y,z){const o=new T.Mesh(new T.BoxGeometry(w,h,d),m);o.position.set(x,y,z);scene.add(o);return o}function ball(r,m,x,y,z){let o=new T.Mesh(new T.SphereGeometry(r,12,8),m);o.position.set(x,y,z);scene.add(o);return o}function cyl(r1,r2,h,m,x,y,z){let o=new T.Mesh(new T.CylinderGeometry(r1,r2,h,24),m);o.position.set(x,y,z);scene.add(o);return o}function sign(label,x,y,z,color='#fff'){let c=document.createElement('canvas');c.width=512;c.height=128;let q=c.getContext('2d');q.fillStyle='#282447';q.fillRect(0,0,512,128);q.fillStyle=color;q.font='bold 53px system-ui';q.textAlign='center';q.fillText(label,256,81);let tex=new T.CanvasTexture(c);tex.colorSpace=T.SRGBColorSpace;let p=new T.Mesh(new T.PlaneGeometry(6,1.5),new T.MeshBasicMaterial({map:tex,side:T.DoubleSide}));p.position.set(x,y,z);scene.add(p);return p}
@@ -14,7 +14,7 @@ const mat=(color,emissive)=>new T.MeshStandardMaterial({color,roughness:.8,emiss
  let cloudSeed=318;const random=()=>{cloudSeed=(cloudSeed*1664525+1013904223)>>>0;return cloudSeed/4294967296};
  for(let i=0;i<95;i++){const x=random()*2048,y=270+random()*460,sz=18+random()*70;skyCtx.fillStyle='rgba(255,250,242,'+(.045+random()*.14)+')';for(let j=0;j<5;j++){skyCtx.beginPath();skyCtx.ellipse(x+(j-2)*sz*.5,y+Math.sin(j*2)*sz*.18,sz*.9,sz*.22,0,0,Math.PI*2);skyCtx.fill()}}
  const generatedSky=new T.CanvasTexture(skyCanvas);generatedSky.colorSpace=T.SRGBColorSpace;generatedSky.mapping=T.EquirectangularReflectionMapping;
- scene.userData.citySky=new T.Color('#b4dcf0');scene.background=new T.Color('#b4dcf0');scene.fog=new T.FogExp2('#c3e0ee',.001);
+ scene.userData.citySky=new T.Color('#b2cfe2');scene.background=scene.userData.citySky;scene.fog=new T.FogExp2('#b8c9d1',.0015);
 const sunset=new T.Mesh(new T.SphereGeometry(11,32,24),new T.MeshBasicMaterial({color:'#ffd08a',fog:false,depthWrite:false}));sunset.position.set(-100,27,-100);scene.add(sunset);const world=crearCiudad(scene);const shops=world.shops;
 const player=new T.Group();scene.add(player);const visual=new T.Group();player.add(visual);// V4 integrada: se construye directamente desde el código del taller.
 const personajeV4=crearBarbasV4();
@@ -137,7 +137,7 @@ player.position.set(0,0,11);$('hud').style.display='none';let dragging=false,las
   const show=nearArena||performance.now()-guideStarted<9500;
   objective.style.display=show?'block':'none';
   if(!show)return;
-  const msg=nearArena?'🏆 ARENA PARTY · Pulsa USAR para jugar':d<24?'✨ ¡Ya estás cerca de los minijuegos!':'🎮 ¡Bienvenido! Sigue el camino hasta ARENA PARTY';
+  const msg=nearArena?'🏆 ARENA PARTY · Pulsa USAR para jugar':d<24?'✨ ¡Ya estás cerca de los minijuegos!':'🎮 ¡Bienvenido! Sigue las calles hasta ARENA PARTY';
   if(lastObjectiveText!==msg){objective.querySelector('span').textContent=msg;lastObjectiveText=msg}
  }
  const mapPoints=shops.map(sh=>({name:sh.name,x:sh.x,z:sh.z+5,active:sh.name==='TK SHOP'||sh.name==='ARENA PARTY'||sh.name==='PARKOUR',icon:sh.name==='TK SHOP'?'🛍️':sh.name==='ARENA PARTY'?'🏆':sh.name==='PARKOUR'?'🧗':sh.name==='CLUB AMIGOS'?'👥':'🏅'}));
