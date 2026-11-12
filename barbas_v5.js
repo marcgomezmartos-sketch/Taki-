@@ -12,10 +12,11 @@ export function crearBarbasV4(){
  garment(skin,[[1.27,.28,.21],[1.37,.33,.235],[1.62,.365,.255],[1.83,.35,.24],[2.04,.235,.18],[2.10,.13,.12]]);
  ell(body,skin,0,1.35,0,.34,.17,.245);
  ell(body,skin,0,2.075,0,.12,.16,.12);
+ const torsoCore=body.children[0],hipsCore=body.children[1];
  const head=new T.Group();head.position.set(0,2.34,.025);body.add(head);const face={eyes:[],brows:[]};
  ell(head,skin,0,.01,0,.28,.315,.26);
  for(const side of [-1,1]){ell(head,skin,side*.277,-.015,0,.055,.079,.054);ell(head,white,side*.113,.082,.238,.054,.048,.026);face.eyes.push(ell(head,iris,side*.11,.083,.263,.025,.029,.013));const brow=ell(head,hair,side*.115,.188,.245,.086,.019,.022);brow.rotation.z=side*.1;face.brows.push(brow)}
- ell(head,shade,0,-.025,.255,.062,.068,.07);
+ const nose=ell(head,shade,0,-.025,.255,.062,.068,.07);
  const beardChin=ell(head,dark,0,-.182,.126,.247,.174,.187);beardChin.userData.beard=true;
  const beardFront=ell(head,dark,0,-.214,.232,.184,.107,.078);beardFront.userData.beard=true;
  for(const side of [-1,1]){const sideburn=ell(head,dark,side*.21,-.125,.137,.058,.138,.1);sideburn.userData.beard=true;const moustache=ell(head,dark,side*.07,-.086,.285,.09,.034,.029);moustache.userData.beard=true}
@@ -89,6 +90,46 @@ export function crearBarbasV4(){
   for(const eye of face.eyes)eye.scale.y=.029*openness;
   body.scale.x=1+Math.sin(t*2.05)*.005;
  }
+
+ const facialHair=head.children.filter(o=>o.userData?.beard);
+ const mouth=ell(head,mat('#9a575b'),0,-.166,.258,.085,.018,.014);
+ const cheeks=[-1,1].map(side=>ell(head,mat('#d99a80'),side*.19,-.09,.218,.086,.039,.02));
+ const lashes=[];
+ for(const side of [-1,1])for(let i=0;i<2;i++){
+  const lash=ell(head,hair,side*(.09+i*.048),.145,.263,.013,.035,.012);
+  lash.rotation.z=side*(i?.55:.24);lashes.push(lash);
+ }
+ const avatarHair=new T.Group();head.add(avatarHair);
+ const hairPiece=(x,y,z,sx,sy,sz,rot=0)=>{const o=ell(avatarHair,hair,x,y,z,sx,sy,sz);o.rotation.z=rot;return o};
+ function setAvatarStyle(style){
+  const woman=style==='woman';
+  facialHair.forEach(o=>o.visible=!woman);
+  mouth.visible=woman;cheeks.forEach(o=>o.visible=woman);lashes.forEach(o=>o.visible=woman);
+  const skull=head.children.find(o=>o.material===skin&&Math.abs(o.position.y-.01)<.02);
+  if(skull)skull.scale.set(woman?.295:.28,woman?.333:.315,woman?.265:.26);
+  nose.scale.set(woman?.052:.062,woman?.057:.068,woman?.055:.07);
+  head.scale.set(woman?1.065:1,woman?1.04:1,1);
+  head.position.y=woman?2.36:2.34;
+  torsoCore.scale.set(woman?.87:1,1,woman?.97:1);
+  hipsCore.scale.set(woman?1.19:1,1,woman?1.08:1);
+  arms.forEach((arm,i)=>{const side=i===0?-1:1;arm.position.x=side*(woman?.335:.38);arm.scale.set(woman?.88:1,1,woman?.9:1)});
+  legs.forEach((leg,i)=>{const side=i===0?-1:1;leg.position.x=side*(woman?.195:.185);leg.scale.x=woman?1.08:1});
+  avatarHair.clear();
+  if(woman){
+   hairPiece(0,.255,-.07,.305,.18,.28);
+   hairPiece(0,-.13,-.215,.29,.38,.145);
+   for(const side of [-1,1]){
+    hairPiece(side*.247,-.145,-.04,.115,.36,.16,side*.06);
+    hairPiece(side*.228,-.34,-.105,.13,.21,.145,side*.09);
+    hairPiece(side*.115,.21,.18,.16,.09,.14,side*.22);
+   }
+   hairPiece(0,.285,.05,.28,.10,.22);
+  }else{
+   hairPiece(0,.303,-.025,.287,.105,.252);
+   hairPiece(0,.255,-.14,.28,.10,.16);
+  }
+ }
+ setAvatarStyle('man');
  root.scale.setScalar(.64);
- return {root,body,head,arms,elbows,wrists,legs,knees,feet,garment,baseShorts,baseWaist,actualizar};
+ return {root,body,head,arms,elbows,wrists,legs,knees,feet,garment,baseShorts,baseWaist,actualizar,setAvatarStyle};
 }
