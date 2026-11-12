@@ -56,27 +56,34 @@ export function iniciarExtras({player,model,head,rig,showStatus}){
  const fitted=(rings,color,parent)=>{const mesh=rig.garment(new T.MeshStandardMaterial({color,roughness:1,side:T.DoubleSide}),rings,parent,28);wearableParts.push(mesh);return mesh};
  const get=kind=>inventory.find(x=>x.id===equipped[kind]);
  const cap=get('cap');if(cap){const material=new T.MeshStandardMaterial({color:cap.color,roughness:1});const crown=new T.Mesh(new T.SphereGeometry(1,32,16,0,Math.PI*2,0,Math.PI/2),material);crown.scale.set(.305,.155,.278);crown.position.set(0,.30,0);headwear.add(crown);const brim=new T.Mesh(new T.SphereGeometry(1,24,10,0,Math.PI*2,0,Math.PI),material);brim.scale.set(.22,.018,.15);brim.position.set(0,.30,.275);headwear.add(brim)}
- const dress=get('dress');const jacket=get('jacket');if(jacket&&!dress){const c=jacket.color;const shortSleeve=['graphic','skate','stripe','polo','crop','halter','corset','sport','blouse'].includes(jacket.design);fitted([[1.29,.302,.215],[1.41,.348,.239],[1.63,.38,.253],[1.83,.366,.242],[1.99,.287,.203],[2.035,.233,.17]],c,rig.body);for(let i=0;i<rig.arms.length;i++){const arm=rig.arms[i],elbow=rig.elbows[i];fitted(shortSleeve?[[-.15,.145,.145],[-.06,.151,.152],[.045,.147,.147]]:[[-.34,.125,.127],[-.22,.141,.142],[-.08,.15,.151],[.045,.147,.147]],c,arm);if(!shortSleeve)fitted([[-.31,.117,.119],[-.23,.125,.126],[-.10,.128,.13],[.04,.137,.138]],c,elbow);const cuff=new T.Mesh(new T.CylinderGeometry(.13,.13,.035,20),new T.MeshStandardMaterial({color:c,roughness:1}));cuff.position.y=-.30;elbow.add(cuff);cuff.visible=!shortSleeve;wearableParts.push(cuff)}
- // Sleeve badge belongs to the purchased jacket, never to bare skin.
- const arm=rig.arms[1];if(jacket.design==='patch'){const badgeCanvas=document.createElement('canvas');badgeCanvas.width=128;badgeCanvas.height=128;const b=badgeCanvas.getContext('2d');b.fillStyle='#161a1c';b.fillRect(0,0,128,128);b.strokeStyle='#c9c34d';b.lineWidth=5;b.beginPath();b.arc(64,64,43,0,Math.PI*2);b.stroke();b.beginPath();b.moveTo(64,27);b.lineTo(75,53);b.lineTo(101,64);b.lineTo(75,75);b.lineTo(64,101);b.lineTo(53,75);b.lineTo(27,64);b.lineTo(53,53);b.closePath();b.stroke();const tex=new T.CanvasTexture(badgeCanvas);tex.colorSpace=T.SRGBColorSpace;const patch=new T.Mesh(new T.PlaneGeometry(.18,.18),new T.MeshStandardMaterial({map:tex,side:T.DoubleSide,roughness:1}));patch.position.set(.17,-.24,0);patch.rotation.y=Math.PI/2;arm.add(patch);wearableParts.push(patch)}}
- const pants=get('pants');for(const piece of rig.baseShorts)piece.visible=!(pants||dress);if(pants&&!dress){for(const leg of rig.legs)fitted([[-.53,.177,.174],[-.36,.193,.19],[-.15,.216,.21],[.06,.212,.21]],pants.color,leg);if(!['denimshort','cargoShort','sportShort','tailoredShort','pleated','denimskirt','floral','midi'].includes(pants.design))for(const knee of rig.knees)fitted([[-.47,.161,.166],[-.25,.177,.18],[-.01,.194,.197]],pants.color,knee)}
-
-// Dresses and skirts have actual flared silhouettes, not recolored trousers.
- if(dress){
-  fitted([[1.31,.34,.26],[1.42,.345,.252],[1.65,.377,.252],[1.85,.36,.242],[2.01,.245,.18]],dress.color,rig.body);
-  const hem=dress.design==='party'||dress.design==='evening'?.67:.54;
-  fitted([[.66,hem,.51],[.78,hem*.98,.48],[1.05,.45,.35],[1.33,.34,.25]],dress.color,rig.body);
-  for(const arm of rig.arms){if(dress.design==='denim'||dress.design==='garden')fitted([[-.20,.151,.15],[-.09,.161,.158],[.03,.15,.15]],dress.color,arm)}
-  if(['ribbon','summer','garden'].includes(dress.design)){for(const side of [-1,1]){const bow=itemMesh(new T.SphereGeometry(.085,10,8),'#fff2d9',side*.18,1.65,.26,rig.body);wearableParts.push(bow)}}
+ const dress=get('dress'),jacket=get('jacket'),pants=get('pants');
+ // Every garment is attached to the animated body rig. Overlapping cuffs and
+ // generous joints avoid exposed skin at shoulder, elbow, waist and knee.
+ const meshBall=(parent,color,x,y,z,sx,sy,sz)=>{const m=new T.Mesh(new T.SphereGeometry(1,20,14),new T.MeshStandardMaterial({color,roughness:.91}));m.position.set(x,y,z);m.scale.set(sx,sy,sz);m.castShadow=true;parent.add(m);wearableParts.push(m);return m};
+ const coverTorso=(color)=>fitted([[1.265,.348,.257],[1.34,.363,.263],[1.44,.369,.267],[1.66,.395,.273],[1.83,.389,.269],[1.96,.336,.235],[2.07,.235,.184],[2.105,.14,.13]],color,rig.body);
+ const sleeve=(color,long=true)=>{for(let i=0;i<2;i++){const arm=rig.arms[i],elbow=rig.elbows[i];meshBall(arm,color,0,-.09,0,.164,.205,.162);fitted([[-.385,.142,.146],[-.28,.159,.161],[-.11,.166,.167],[.09,.165,.165]],color,arm);
+ if(long){meshBall(elbow,color,0,-.08,0,.144,.17,.146);fitted([[-.34,.124,.13],[-.25,.142,.146],[-.09,.148,.15],[.09,.15,.151]],color,elbow);meshBall(elbow,color,0,-.30,0,.128,.055,.133)}
+ }};
+ const skirtTypes=['pleated','denimskirt','floral','midi'];
+ const shortTypes=['denimshort','cargoShort','sportShort','tailoredShort'];
+ for(const piece of rig.baseShorts)piece.visible=!(pants||dress);
+ if(jacket&&!dress){coverTorso(jacket.color);const isShort=['graphic','skate','stripe','polo','crop','halter','corset','sport','blouse'].includes(jacket.design);sleeve(jacket.color,!isShort);
+ // Waistband overlaps trousers and torso; cropped tops intentionally leave waist exposed.
+ if(!['crop','halter','corset','sport'].includes(jacket.design))meshBall(rig.body,jacket.color,0,1.34,0,.35,.08,.253);
+ if(jacket.design==='patch'){const patch=new T.Mesh(new T.BoxGeometry(.012,.17,.16),new T.MeshStandardMaterial({color:'#1c2422',roughness:1}));patch.position.set(.172,-.22,0);rig.arms[1].add(patch);wearableParts.push(patch)}
  }
- if(pants&&['pleated','denimskirt','floral','midi'].includes(pants.design)&&!dress){
-  const skirtLength=pants.design==='midi'?.67:.95;
-  fitted([[skirtLength,.49,.43],[skirtLength+.11,.51,.43],[1.18,.41,.32],[1.34,.34,.24]],pants.color,rig.body);
-  // Hide pants geometry under skirt
-  for(const m of wearableParts.filter(m=>rig.legs.includes(m.parent)||rig.knees.includes(m.parent))){m.parent.remove(m)}
+ if(pants&&!dress){const isSkirt=skirtTypes.includes(pants.design),isShort=shortTypes.includes(pants.design);
+ // Hip cover joins both legs to the torso; avoids skin-colored crotch gaps.
+ meshBall(rig.body,pants.color,0,1.33,0,.358,.175,.255);
+ if(isSkirt){const hem=pants.design==='midi'?.65:.91;fitted([[hem,.47,.39],[hem+.13,.49,.41],[1.12,.405,.32],[1.35,.352,.26]],pants.color,rig.body)}
+ else{for(let i=0;i<2;i++){const leg=rig.legs[i];fitted([[-.56,.193,.187],[-.39,.211,.208],[-.16,.233,.225],[.10,.229,.222]],pants.color,leg);meshBall(leg,pants.color,0,-.06,0,.226,.15,.219);
+ if(!isShort){const knee=rig.knees[i];meshBall(knee,pants.color,0,-.10,0,.177,.24,.18);fitted([[-.55,.173,.177],[-.39,.181,.184],[-.19,.192,.197],[.10,.196,.197]],pants.color,knee);meshBall(knee,pants.color,0,-.43,0,.173,.09,.18)}
+ }}
  }
- if(dress){fitted([[1.31,.34,.26],[1.42,.345,.252],[1.65,.377,.252],[1.85,.36,.242],[2.01,.245,.18]],dress.color,rig.body);const hem=['party','evening'].includes(dress.design)?.67:.54;fitted([[.66,hem,.51],[.78,hem*.98,.48],[1.05,.45,.35],[1.33,.34,.25]],dress.color,rig.body);if(['denim','garden'].includes(dress.design))for(const arm of rig.arms)fitted([[-.20,.151,.15],[-.09,.161,.158],[.03,.15,.15]],dress.color,arm)}
- if(pants&&['pleated','denimskirt','floral','midi'].includes(pants.design)&&!dress){fitted([[pants.design==='midi'?.67:.95,.49,.43],[1.06,.51,.43],[1.18,.41,.32],[1.34,.34,.24]],pants.color,rig.body);for(const m of wearableParts.filter(m=>rig.legs.includes(m.parent)||rig.knees.includes(m.parent)))m.parent.remove(m)}
+ if(dress){coverTorso(dress.color);const hem=['party','evening'].includes(dress.design)?.65:.55;fitted([[hem,hem,.52],[hem+.12,hem*.96,.49],[1.06,.45,.36],[1.35,.35,.26]],dress.color,rig.body);meshBall(rig.body,dress.color,0,1.33,0,.355,.13,.26);
+ if(['denim','garden'].includes(dress.design))sleeve(dress.color,false);
+ if(['ribbon','summer','garden'].includes(dress.design))for(const side of [-1,1])meshBall(rig.body,'#fff2d9',side*.18,1.65,.277,.085,.085,.04)
+ }
  const shoes=get('shoes');if(shoes){for(const knee of rig.knees){const shoe=new T.Mesh(new T.SphereGeometry(1,20,12),new T.MeshStandardMaterial({color:shoes.color,roughness:1}));shoe.position.set(0,-.545,.095);shoe.scale.set(.213,.092,.29);knee.add(shoe);wearableParts.push(shoe)}}
  }
  const wearableParts=[];
