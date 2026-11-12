@@ -1,4 +1,4 @@
-import * as T from 'three';import {crearCiudad} from './world.js?v=brooklyn52';import {crearBarbasV4} from './barbas_v5.js?v=avatars53';import {iniciarExtras} from './features.js?v=avatars53';
+import * as T from 'three';import {crearCiudad} from './world.js?v=brooklyn52';import {crearBarbasV4} from './barbas_v5.js?v=avatars54';import {iniciarExtras} from './features.js?v=avatars53';
 function iniciarBarbasParty(){
 const $=id=>document.getElementById(id), scene=new T.Scene();scene.background=new T.Color('#e99588');scene.fog=new T.FogExp2('#d99c94',.0035);// Skybox image path: replace with your own panoramic sky asset.
  const SKY_IMAGE='assets/cielo_ciudad.jpg';
