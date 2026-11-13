@@ -208,7 +208,7 @@ export function createTournament(T,scene,player,extras,ui){
    // Save progress at solid sections; falling in a gap returns to last checkpoint.
    const crossing=gaps.find(g=>p.z<g.a&&p.z>g.b);
    if(!crossing&&p.z<raceLastZ-2){raceLastZ=p.z;if(p.z< -18&&raceRespawn> -18)raceRespawn=-18;if(p.z< -42&&raceRespawn> -42)raceRespawn=-42;if(p.z< -83&&raceRespawn> -83)raceRespawn=-83}
-   if(crossing&&p.y<.45){p.set(0,0,raceRespawn);hitCooldown=1;ui.status('💦 ¡Caída! Vuelves al último checkpoint')}
+   if(crossing&&p.y< -3){p.set(0,0,raceRespawn);hitCooldown=1;ui.status('💦 ¡Caída! Vuelves al último checkpoint')}
    for(const o of obstacles){
      const ox=o.type==='moving'?Math.sin(time*o.speed+o.phase)*5:o.x;
      if(Math.abs(p.z-o.z)<o.d*.5+.48&&Math.abs(p.x-ox)<o.w*.5+.4&&p.y<o.h+.15){
@@ -270,5 +270,5 @@ export function createTournament(T,scene,player,extras,ui){
   }
   return true;
  }
- return {start,stop,update,kick,use,get running(){return !!current},get started(){return started}};
+ return {start,stop,update,kick,use,hasGround:()=>!(current==='race'||current==='water'||current==='future')||!gaps.some(g=>player.position.z<g.a&&player.position.z>g.b),get running(){return !!current},get started(){return started}};
 }
