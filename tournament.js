@@ -15,6 +15,29 @@ export function createTournament(T,scene,player,extras,ui){
  #roundDirector.show{display:flex;flex-direction:column}#roundDirector #roundTitle{animation:roundPop .5s cubic-bezier(.1,1.4,.3,1)}@keyframes roundPop{from{transform:scale(.4);opacity:0}to{transform:scale(1);opacity:1}}
  #roundHUD{position:fixed;top:33%;left:50%;transform:translateX(-50%);z-index:19;display:none;white-space:nowrap;max-width:95vw;background:#143a73e8;border:2px solid #ffffffae;color:#fff;padding:9px 15px;border-radius:17px;font:900 13px system-ui;text-align:center;pointer-events:none}
  #roundActions{position:fixed;right:12px;bottom:175px;z-index:18;display:none;gap:8px}#roundActions button{border:2px solid white;border-radius:16px;background:#ffd350;color:#1c3363;padding:13px;font:900 14px system-ui}
+
+ #roundDirector{background:radial-gradient(ellipse at 50% 38%,#80dfff 0%,#3e9fe0 38%,#174a91 100%);overflow:hidden}
+ .roundPark{position:absolute;inset:0;pointer-events:none;background:linear-gradient(0deg,#40c985 0 19%,transparent 19%);overflow:hidden}
+ .roundFerris{position:absolute;bottom:13%;left:-65px;width:260px;height:260px;border:18px dashed #fff2a0;border-radius:50%;box-shadow:0 0 0 12px #e875b5,inset 0 0 0 12px #79e6f7;opacity:.95;animation:wheelRotate 14s linear infinite}
+ .roundFerris:after{content:'';position:absolute;left:50%;top:50%;width:18px;height:18px;border-radius:50%;background:#fff;transform:translate(-50%,-50%);box-shadow:0 0 0 10px #ffcf49}
+ .roundTent{position:absolute;right:-38px;bottom:14%;width:220px;height:180px;background:repeating-linear-gradient(90deg,#f85e99 0 32px,#ffe18c 32px 64px);clip-path:polygon(50% 0,100% 62%,100% 100%,0 100%,0 62%);filter:drop-shadow(0 12px 0 #a13d85)}
+ .roundLights{position:absolute;left:0;right:0;top:7%;height:22px;background:repeating-radial-gradient(circle at 10px 10px,#ffed76 0 5px,transparent 6px 30px);opacity:.85}
+ .roundContent{position:relative;z-index:2;width:min(95vw,480px);padding:22px 18px 28px;background:linear-gradient(165deg,#204b9aef,#251c69ed);border:4px solid #fff3b6;border-radius:30px;box-shadow:0 12px 0 #17245d,0 24px 70px #14205c88}
+ #roundWheel{width:190px;height:190px;position:relative;margin:15px auto 5px;filter:drop-shadow(0 7px 0 #102b6e)}
+ .roundWheelFace{width:100%;height:100%;border-radius:50%;border:10px solid #ffde70;background:conic-gradient(#ff6b99 0deg 60deg,#6fd3f7 60deg 120deg,#ffd260 120deg 180deg,#67dc9c 180deg 240deg,#a687fa 240deg 300deg,#ff9559 300deg);box-shadow:inset 0 0 0 5px #ffffffa8;display:grid;place-items:center;animation:wheelRotate .9s cubic-bezier(.25,.1,.3,1) infinite}
+ .wheelIcon{font-size:54px;background:#254f9c;border:5px solid #fff4c1;width:88px;height:88px;border-radius:50%;display:grid;place-items:center}
+ .wheelPointer{position:absolute;top:-26px;left:calc(50% - 18px);font-size:37px;color:#fff4b0;text-shadow:0 3px #aa5d2a}
+ @keyframes wheelRotate{to{transform:rotate(360deg)}}
+ #roundDirector.result{background:linear-gradient(145deg,#74d8f9,#8d7af2 58%,#56d7a1)}
+ #roundDirector.result .roundContent{width:58%;margin-left:auto;margin-right:0;padding:26px 12px}
+ #roundDirector.result #roundWheel{display:none}
+ #roundDirector.result #roundAvatar{display:block}
+ #roundAvatar{display:none;position:absolute;z-index:3;left:7%;bottom:20%;width:110px;height:205px;background:linear-gradient(#e6b18b 0 23%,#1577d2 23% 61%,#424c70 61% 100%);border-radius:52px 52px 20px 20px;border:5px solid #fff;box-shadow:0 8px 0 #1e4281;animation:avatarBounce .9s ease-in-out infinite alternate}
+ #roundAvatar:before{content:'●  ●';position:absolute;top:25px;left:19px;color:#162a44;font-size:18px;letter-spacing:8px}
+ #roundAvatar:after{content:'';position:absolute;left:23px;top:53px;width:54px;height:15px;background:#272338;border-radius:0 0 20px 20px}
+ @keyframes avatarBounce{to{transform:translateY(-12px) rotate(-3deg)}}
+ #roundDirector.result #roundTitle{font-size:clamp(24px,6vw,40px)}
+ #roundDirector.result #roundSub{font-size:14px}
  `;document.head.append(style);
  const hud=document.createElement('div');hud.id='roundHUD';document.body.append(hud);
  const useButton=document.querySelector('[data-key="KeyE"]')||document.querySelector('[data-key="KeyF"]');
@@ -24,7 +47,7 @@ export function createTournament(T,scene,player,extras,ui){
  const prelim=['futsal','hide','race'],finals=['water','robot','future'];
  const labels={futsal:'FÚTBOL SALA 5 VS 5',hide:'ESCONDITE EN EL PARQUE',race:'CARRERA DE OBSTÁCULOS',water:'FINAL · PARQUE ACUÁTICO',robot:'FINAL · ROBOT LANZADOR',future:'FINAL · CARRERA FUTURISTA'};
  const intro={futsal:'Primer equipo en marcar 2 goles o el que gane al terminar 5 minutos.',hide:'5 buscan y 5 se esconden. Sobrevive o encuentra a tus rivales.',race:'¡Los primeros 5 en cruzar la meta se clasifican!',water:'Solo uno puede ganar: llega primero a la meta.',robot:'Evita los proyectiles del robot. ¡El último en pie gana!',future:'Una carrera entre portales y obstáculos. Solo gana el primero.'};
- const show=(label,title,sub,button)=>{banner.classList.add('show');banner.querySelector('#roundLabel').textContent=label;banner.querySelector('#roundTitle').textContent=title;banner.querySelector('#roundSub').textContent=sub;const b=banner.querySelector('button');b.style.display=button?'block':'none';b.onclick=button||null};
+ const show=(label,title,sub,button)=>{banner.classList.add('show');banner.classList.toggle('result',showResult);banner.querySelector('#roundLabel').textContent=label;banner.querySelector('#roundTitle').textContent=title;banner.querySelector('#roundSub').textContent=sub;const b=banner.querySelector('button');b.style.display=button?'block':'none';b.onclick=button||null};
  const hideBanner=()=>banner.classList.remove('show');
  function reset(){hiding=false;hideSpot=null;roundRewarded=false;showResult=false;while(root.children.length>10){let x=root.children[root.children.length-1];root.remove(x);if(x.geometry)x.geometry.dispose()}for(let b of bots){b.visible=true;b.position.set(0,0,0)}ball.visible=false;ballVelocity.set(0,0,0);hitCooldown=0;throwTimer=0;finishers=0;score=enemy=0;time=0;actions.style.display='none';}
 
@@ -114,15 +137,15 @@ export function createTournament(T,scene,player,extras,ui){
   }
  }
  function startRound(kind){
-  current=kind;started=false;makeWorld(kind);
+  showResult=false;current=kind;started=false;makeWorld(kind);
   root.visible=false;hud.style.display='none';const token=++roundToken;let count=3;
   const countdown=()=>{if(token!==roundToken)return;if(count>0){show('RONDA '+(stage+1),String(count),labels[kind],null);count--;setTimeout(countdown,850)}else{hideBanner();root.visible=true;hud.style.display='block';started=true;time=0}};
   let spins=0;const options=stage===0?prelim:finals;const spin=()=>{if(token!==roundToken)return;if(spins<9){show('RULETA DEL PARQUE',labels[options[spins%options.length]],'Girando la ruleta de minijuegos…',null);spins++;setTimeout(spin,130)}else{show('¡MODO SELECCIONADO!',labels[kind],intro[kind],null);setTimeout(countdown,1100)}};spin();
  }
  function next(){stage++;if(stage===1){alive=5;startRound(finals[Math.floor(Math.random()*finals.length)])}else end(true)}
  function end(won){if(roundRewarded)return;roundRewarded=true;started=false;roundToken++;const prize=won?150:25;if(extras.reward)extras.reward(prize,won?'🏆 CAMPEÓN':'Ronda terminada');showResult=true;root.visible=false;banner.classList.add('result');show(won?'🏆 ¡VICTORIA!':'ELIMINADO',won?'¡ERES EL CAMPEÓN!':'¡BUEN INTENTO!',(won?'Has ganado la final. ':'Has quedado fuera del torneo. ')+'+'+prize+' monedas',()=>{hideBanner();stop();ui.returnMap()});}
- function qualify(){if(!started)return;started=false;roundToken++;root.visible=false;show('¡CLASIFICADO!','¡PASAS DE RONDA!','Quedan 5 participantes. Prepárate para la gran final.',()=>{hideBanner();next()})}
- function start(){stage=0;alive=10;show('TORNEO DE 10 JUGADORES','¡PREPÁRATE!','9 bots competirán contigo. Clasifícate entre los 5 mejores para disputar una final.',()=>{hideBanner();startRound(prelim[Math.floor(Math.random()*prelim.length)])});}
+ function qualify(){if(!started)return;showResult=false;started=false;roundToken++;root.visible=false;show('¡CLASIFICADO!','¡PASAS DE RONDA!','Quedan 5 participantes. Prepárate para la gran final.',()=>{hideBanner();next()})}
+ function start(){showResult=false;stage=0;alive=10;show('TORNEO DE 10 JUGADORES','¡PREPÁRATE!','9 bots competirán contigo. Clasifícate entre los 5 mejores para disputar una final.',()=>{hideBanner();startRound(prelim[Math.floor(Math.random()*prelim.length)])});}
  function stop(){roundToken++;current=null;started=false;root.visible=false;banner.classList.remove('result');actions.style.display='none';hud.style.display='none';hideBanner()}
  function kick(shoot){
   if(current!=='futsal'||!started)return;
@@ -158,7 +181,7 @@ export function createTournament(T,scene,player,extras,ui){
   }else if(current==='hide'){
    bots.forEach((b,i)=>{const hunter=seekers.includes(i);const target=hunter?(hiding?b.position:p):new T.Vector3(Math.sin(time*.3+i)*26,0,Math.cos(time*.2+i)*26);let v=target.clone().sub(b.position);v.y=0;if(v.length()>.5)b.position.addScaledVector(v.normalize(),dt*(hunter?2.3:2.3));if(hunter&&!isSeeker&&!hiding&&b.position.distanceTo(p)<1.2)end(false);if(isSeeker&&!hunter&&b.position.distanceTo(p)<1.4){b.visible=false;seekers.push(i)}});
    hud.textContent='🫣 '+(isSeeker?'TE TOCA BUSCAR':'TE TOCA ESCONDERTE')+(hiding?' · OCULTO':' · USAR PARA ESCONDERTE')+' · '+Math.max(0,60-Math.floor(time))+'s';
-   if(time>=60)qualify();
+   if(time>=60){if(isSeeker){bots.filter((b,i)=>!seekers.includes(i)&&b.visible).length===0?qualify():end(false)}else qualify()}
   }else if(current==='robot'){
    throwTimer+=dt;
    if(throwTimer>1.2){throwTimer=0;const b=bots[Math.floor(Math.random()*bots.length)];if(b.visible){b.position.set((Math.random()-.5)*20,0,(Math.random()-.5)*20)}}
