@@ -121,16 +121,17 @@ export function crearBarbasV4(){
   root.scale.setScalar(woman?.57:.72);
   avatarHair.clear();
   if(woman){
-   hairPiece(0,.255,-.07,.305,.18,.28);
-   hairPiece(0,-.16,-.22,.30,.42,.16);
-   hairPiece(0,-.46,-.23,.19,.30,.14);
-   hairPiece(0,-.67,-.24,.145,.20,.12);
+   // Rounded, layered bob: no dangling sphere-chain ponytail or hair penetrating the body.
+   hairPiece(0,.285,-.06,.31,.155,.29);
+   hairPiece(0,.24,.11,.295,.115,.205);
+   hairPiece(0,.02,-.245,.305,.27,.13);
    for(const side of [-1,1]){
-    hairPiece(side*.247,-.145,-.04,.115,.36,.16,side*.06);
-    hairPiece(side*.228,-.34,-.105,.13,.21,.145,side*.09);
-    hairPiece(side*.115,.21,.18,.16,.09,.14,side*.22);
+    hairPiece(side*.235,.07,-.085,.125,.30,.18,side*.07);
+    hairPiece(side*.247,-.16,-.08,.11,.22,.15,side*.04);
+    hairPiece(side*.14,.255,.19,.16,.09,.13,side*.12);
    }
-   hairPiece(0,.285,.05,.28,.10,.22);
+   // Distinct side-swept fringe; facial features remain unobstructed.
+   hairPiece(-.095,.30,.19,.20,.08,.115,-.22);
   }else{
    hairPiece(0,.303,-.025,.287,.105,.252);
    hairPiece(0,.255,-.14,.28,.10,.16);
