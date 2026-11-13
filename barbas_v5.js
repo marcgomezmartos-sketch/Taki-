@@ -116,13 +116,15 @@ export function crearBarbasV4(){
   head.position.y=woman?2.36:2.34;
   torsoCore.scale.set(woman?.91:1,1,woman?.96:1);
   hipsCore.scale.set(woman?.365:.34,.17,woman?.255:.245);
-  arms.forEach((arm,i)=>{const side=i===0?-1:1;arm.position.x=side*(woman?.335:.38);arm.scale.set(woman?.88:1,1,woman?.9:1)});
-  legs.forEach((leg,i)=>{const side=i===0?-1:1;leg.position.x=side*(woman?.195:.185);leg.scale.x=woman?1.08:1});
+  arms.forEach((arm,i)=>{const side=i===0?-1:1;arm.position.x=side*(woman?.315:.38);arm.scale.set(woman?.83:1,woman?.95:1,woman?.88:1)});
+  legs.forEach((leg,i)=>{const side=i===0?-1:1;leg.position.x=side*(woman?.185:.185);leg.scale.x=woman?1.01:1});
   root.scale.setScalar(woman?.57:.72);
   avatarHair.clear();
   if(woman){
    hairPiece(0,.255,-.07,.305,.18,.28);
-   hairPiece(0,-.13,-.215,.29,.38,.145);
+   hairPiece(0,-.16,-.22,.30,.42,.16);
+   hairPiece(0,-.46,-.23,.19,.30,.14);
+   hairPiece(0,-.67,-.24,.145,.20,.12);
    for(const side of [-1,1]){
     hairPiece(side*.247,-.145,-.04,.115,.36,.16,side*.06);
     hairPiece(side*.228,-.34,-.105,.13,.21,.145,side*.09);
