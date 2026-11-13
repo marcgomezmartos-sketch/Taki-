@@ -115,7 +115,7 @@ export function crearBarbasV4(){
   head.scale.set(woman?1.065:1,woman?1.04:1,1);
   head.position.y=woman?2.36:2.34;
   torsoCore.scale.set(woman?.87:1,1,woman?.97:1);
-  hipsCore.scale.set(woman?.72:.66,.30,woman?.53:.48);
+  hipsCore.scale.set(woman?.365:.34,.17,woman?.255:.245);
   arms.forEach((arm,i)=>{const side=i===0?-1:1;arm.position.x=side*(woman?.335:.38);arm.scale.set(woman?.88:1,1,woman?.9:1)});
   legs.forEach((leg,i)=>{const side=i===0?-1:1;leg.position.x=side*(woman?.195:.185);leg.scale.x=woman?1.08:1});
   avatarHair.clear();
