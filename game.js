@@ -172,6 +172,28 @@ function leaveShop(){shop.visible=false;goIsland('map')}
  const parkAdventure=adventureBackdrop(parkour,0,-17,1);
  let parkCheckpoint=0,parkDone=false,parkFails=0;
  function parkRespawn(){const p=parkPlatforms[parkCheckpoint];player.position.set(p.x,p.y+.08,375+p.z);vel=0;onGround=true;keys.clear();joystick.x=0;joystick.y=0}
+ let parkLevel='easy',parkReward=10,parkFinish=8,parkCheckpointIndex=4;
+ const parkOriginal=parkLayout.map(p=>p.slice());
+ const parkLevelModal=document.createElement('div');parkLevelModal.id='parkLevelModal';
+ parkLevelModal.innerHTML='<div class="parkLevelCard"><h2>ELIGE TU PARKOUR</h2><p>Supera los saltos y llega a la meta para ganar monedas.</p><button data-level="easy">FÁCIL <b>+10 monedas</b><small>Plataformas amplias</small></button><button data-level="normal">NORMAL <b>+25 monedas</b><small>Saltos más largos y precisos</small></button><button data-level="hard">DIFÍCIL <b>+50 monedas</b><small>Plataformas pequeñas y saltos exigentes</small></button><button id="parkLevelBack">← VOLVER AL MAPA</button></div>';
+ document.body.append(parkLevelModal);
+ const parkLevelCSS=document.createElement('style');parkLevelCSS.textContent='#parkLevelModal{display:none;position:fixed;inset:0;z-index:35;align-items:center;justify-content:center;background:#07152eea;padding:20px;font-family:system-ui}#parkLevelModal .parkLevelCard{width:min(450px,100%);background:linear-gradient(155deg,#23497d,#122443);border:3px solid #a3ecff;border-radius:28px;padding:24px;color:white;box-shadow:0 20px 70px #0008}#parkLevelModal h2{font-size:29px;color:#ffdf74;margin:0 0 12px}#parkLevelModal p{color:#d4e6ff}#parkLevelModal button{display:flex;width:100%;flex-direction:column;align-items:flex-start;gap:4px;border:2px solid #ffffff88;border-radius:16px;padding:15px;margin-top:12px;background:#447dc3;color:white;font-weight:900;font-size:18px}#parkLevelModal button[data-level="normal"]{background:#8560c3}#parkLevelModal button[data-level="hard"]{background:#c4546e}#parkLevelModal button b{color:#ffe783}#parkLevelModal button small{font-size:12px}#parkLevelModal #parkLevelBack{background:#24354d;align-items:center;font-size:14px}';document.head.append(parkLevelCSS);
+ function showParkourLevels(){parkLevelModal.style.display='flex'}
+ parkLevelModal.querySelector('#parkLevelBack').onclick=()=>{parkLevelModal.style.display='none';showIslands()};
+ parkLevelModal.querySelectorAll('[data-level]').forEach(button=>button.onclick=()=>{parkLevelModal.style.display='none';configureParkour(button.dataset.level);enterParkour()});
+ function configureParkour(level){
+  parkLevel=level;parkReward=level==='hard'?50:level==='normal'?25:10;
+  const shift=level==='hard'?1.85:level==='normal'?1.15:0;
+  parkPlatforms.forEach((p,i)=>{
+   const original=parkOriginal[i];
+   const x=original[0]+(i===0||i===8?0:(i%2?1:-1)*shift);
+   const z=original[2]-(level==='hard'?i*.34:level==='normal'?i*.17:0);
+   const w=level==='hard'?(i===0||i===8?original[3]:2.4):level==='normal'?(i===0||i===8?original[3]:3.1):original[3];
+   const d=level==='hard'?(i===0||i===8?original[4]:2.5):level==='normal'?(i===0||i===8?original[4]:3.1):original[4];
+   p.x=x;p.y=original[1];p.z=z;p.w=w;p.d=d;
+   p.mesh.position.set(x,p.y-.19,z);p.mesh.scale.set(w/original[3],1,d/original[4]);
+  });
+ }
  function enterParkour(){mode='parkour';parkour.visible=true;scene.background=parkSky;scene.fog=parkFog;parkCheckpoint=0;parkDone=false;parkFails=0;angle=0;targetAngle=0;targetPitch=.28;parkRespawn();$('status').textContent='🧗 PARKOUR · Salta de plataforma en plataforma. ¡Checkpoint a mitad!'}
  function leaveParkour(message){parkour.visible=false;scene.background=scene.userData.citySky||new T.Color('#b4dcf0');scene.fog=cityFog;goIsland('map');if(message)$('status').textContent=message}
 const arenaScenery=new T.Group();scene.add(arenaScenery);arenaScenery.visible=false;adventureBackdrop(arenaScenery,0,72,1.15);
@@ -256,7 +278,7 @@ player.position.set(0,0,11);$('hud').style.display='none';let dragging=false,las
  #islandSelect .islandClose{margin-top:12px!important}
  @media(max-height:720px){#islandSelect .islandChoices button{min-height:65px!important}#islandSelect .islandChoices button[data-island="arena"]{min-height:116px!important}#islandSelect .islandPanel{padding:10px 14px!important}}
  `;document.head.append(islandCSS);
- const islandSelect=document.createElement('div');islandSelect.id='islandSelect';islandSelect.innerHTML='<div class="islandPanel"><h2>ELIGE TU DESTINO</h2><p>Selecciona una zona y entra directamente.</p><div class="islandChoices"><button data-island="arena"><span>🏆</span>MINIJUEGOS<small>Torneo · 10 jugadores</small></button><button data-island="parkour"><span>🧗</span>PARKOUR<small>Saltos y desafíos</small></button><button data-island="shop"><span>🛍️</span>TIENDA<small>TK SHOP · ropa</small></button><button data-island="online"><span>👥</span>ONLINE<small>Próximamente</small></button><button data-island="wardrobe"><span>👕</span>VESTUARIO<small>Cambiar ropa y personaje</small></button><button data-island="profile"><span>👤</span>PERFIL<small>Skin, victorias y nombre</small></button><button data-island="group"><span>👥</span>GRUPO<small>Amigos e invitaciones</small></button></div><button class="islandClose">✕ CERRAR MAPA</button></div>';document.body.append(islandSelect);
+ const islandSelect=document.createElement('div');islandSelect.id='islandSelect';islandSelect.innerHTML='<div class="islandPanel"><h2>ELIGE TU DESTINO</h2><p>Selecciona una zona y entra directamente.</p><div class="islandChoices"><button data-island="arena"><span>🏆</span>MINIJUEGOS<small>Torneo · 10 jugadores</small></button><button data-island="parkour"><span>🧗</span>PARKOUR<small>Saltos y desafíos</small></button><button data-island="shop"><span>🛍️</span>TIENDA<small>TK SHOP · ropa</small></button><button data-island="wardrobe"><span>👕</span>VESTUARIO<small>Cambiar ropa y personaje</small></button><button data-island="profile"><span>👤</span>PERFIL<small>Skin, victorias y nombre</small></button><button data-island="group"><span>👥</span>GRUPO<small>Amigos e invitaciones</small></button></div><button class="islandClose">✕ CERRAR MAPA</button></div>';document.body.append(islandSelect);
  const showIslands=()=>{if(!active)return;islandSelect.style.display='flex';joystick.x=joystick.y=0;keys.clear()};
  islandSelect.querySelector('.islandClose').textContent='← VOLVER AL MENÚ';islandSelect.querySelector('.islandClose').onclick=()=>{if(mode==='islands')$('topbtn').click();else islandSelect.style.display='none'};
  islandSelect.querySelectorAll('[data-island]').forEach(b=>b.onclick=()=>goIsland(b.dataset.island));
@@ -287,9 +309,9 @@ player.position.set(0,0,11);$('hud').style.display='none';let dragging=false,las
   if(destination==='profile'||destination==='group'){mode='islands';player.position.set(0,0,5);showIslands();social.open(destination);return}
   if(destination==='wardrobe'){mode='islands';player.position.set(0,0,5);showIslands();window.barbasOpenWardrobe?.();return}
   if(destination==='shop'){enterShop();return}
-  if(destination==='parkour'){enterParkour();return}
+  if(destination==='parkour'){showParkourLevels();return}
   if(destination==='arena'){mode='tournament';player.position.set(0,0,0);$('status').textContent='🏆 TORNEO · 10 jugadores, 3 modos y finales';tournament.start();return}
-  if(destination==='online'){mode='online';onlineIsland.visible=true;player.position.set(0,0,-234);$('status').textContent='👥 ISLA ONLINE · Las partidas multijugador estarán disponibles próximamente';return}
+  
   mode='islands';islandHub.visible=false;player.position.set(0,0,5);$('status').textContent='Pulsa MAPA para elegir una zona';showIslands();
  }
  islandHub.visible=false;
@@ -331,7 +353,7 @@ player.position.set(0,0,11);$('hud').style.display='none';let dragging=false,las
 const clock=new T.Clock();function loop(){player.visible=mode!=='islands';refreshPlayerTag();requestAnimationFrame(loop);let dt=Math.min(clock.getDelta(),.04);if(active&&mode!=='islands'&&!extras.shopOpen){let v=new T.Vector3(joystick.x+(keys.has('KeyD')?1:0)-(keys.has('KeyA')?1:0),0,joystick.y+(keys.has('KeyS')?1:0)-(keys.has('KeyW')?1:0));let strength=Math.min(1,v.length());let moving=strength>.12;v.normalize().multiplyScalar(moving?strength:0).applyAxisAngle(new T.Vector3(0,1,0),angle);let speed=keys.has('ShiftLeft')?8.4:5;const desiredVelocity=v.clone().multiplyScalar(speed);const responsiveness=1-Math.exp(-(moving?11:15)*dt);movementVelocity.lerp(desiredVelocity,responsiveness);if(movementVelocity.lengthSq()<.001)movementVelocity.set(0,0,0);player.position.addScaledVector(movementVelocity,dt);const actualSpeed=movementVelocity.length();const isMoving=actualSpeed>.17;extras.update(dt,isMoving,actualSpeed);if(isMoving){const desiredYaw=Math.atan2(-movementVelocity.x,-movementVelocity.z);visual.rotation.y+=Math.atan2(Math.sin(desiredYaw-visual.rotation.y),Math.cos(desiredYaw-visual.rotation.y))*(1-Math.exp(-12*dt));}visual.position.y=0;visual.rotation.z=T.MathUtils.damp(visual.rotation.z,0,12,dt);vel-=23*dt;player.position.y+=vel*dt;let prevY=player.position.y-(vel+23*dt)*dt;let support=(mode==='islands'||mode==='online'||mode==='shop'||mode==='tournament')||(player.position.z>80&&player.position.z<92)||(player.position.z>51&&player.position.z<61);if(mode==='tournament'){tournament.update(dt);support=tournament.hasGround()}if(mode==='parkour'){
   support=false;let floor=null;
   for(let k=0;k<parkPlatforms.length;k++){const p=parkPlatforms[k];if(Math.abs(player.position.x-p.x)<p.w/2+.08&&Math.abs(player.position.z-(375+p.z))<p.d/2+.08&&vel<=0&&prevY>=p.y-.25&&player.position.y<=p.y+.20){if(floor===null||p.y>floor.y)floor={...p,k}}}
-  if(floor){player.position.y=floor.y;vel=0;onGround=true;support=true;if(floor.k>=4&&parkCheckpoint===0){parkCheckpoint=4;extras.sound('buy');$('status').textContent='🚩 ¡Checkpoint conseguido!'}if(floor.k===8&&!parkDone){parkDone=true;extras.reward(10,'🏆 ¡Parkour completado! +10 monedas');leaveParkour('🏆 ¡Parkour superado! Has ganado 10 monedas')}}
+  if(floor){player.position.y=floor.y;vel=0;onGround=true;support=true;if(floor.k>=parkCheckpointIndex&&parkCheckpoint===0){parkCheckpoint=parkCheckpointIndex;extras.sound('buy');$('status').textContent='🚩 ¡Checkpoint conseguido!'}if(floor.k===parkFinish&&!parkDone){parkDone=true;extras.reward(parkReward,'🏆 ¡Parkour '+parkLevel+' completado! +'+parkReward+' monedas');leaveParkour('🏆 ¡Parkour superado! Has ganado '+parkReward+' monedas')}}
   else if(player.position.y < -9){parkFails++;parkRespawn();$('status').textContent='💨 Caída '+parkFails+' · Reapareces en el checkpoint'}
   if(mode==='parkour'&&!floor&&player.position.y<-.02)onGround=false;if(mode==='parkour'){$('status').textContent=parkCheckpoint===0?'🧗 PARKOUR · Salta a la siguiente plataforma':'🚩 CHECKPOINT · ¡Ya queda poco!';}
  }if(mode==='arena'){
