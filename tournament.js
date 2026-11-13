@@ -54,6 +54,14 @@ export function createTournament(T,scene,player,extras,ui){
   g.userData.lastPosition=new T.Vector3();g.userData.rig=rig;g.userData.name=preset.name;
   root.add(g);bots.push(g);botRigs.push(rig);botPrev.push(new T.Vector3());
  }
+ // Individual personalities and tactical positions prevent the nine bots from forming one swarm.
+ const botBrain=bots.map((b,i)=>({phase:i*1.73,pace:.86+(i%4)*.09,decision:0,target:new T.Vector3(),lane:(i%5-2)*2.6,role:i%4}));
+ const kitBlue=outfitMaterial('#176eea'),kitRed=outfitMaterial('#ef414f');
+ const botShirts=bots.map(b=>b.userData.rig.body.children.filter(o=>o.isMesh&&o.material?.color&&o.material.color.getHexString()===botStyles[bots.indexOf(b)].top.slice(1).toLowerCase()));
+ const goalSplash=document.createElement('div');goalSplash.style.cssText='position:fixed;left:50%;top:22%;transform:translate(-50%,-50%) scale(.7);z-index:9998;pointer-events:none;display:none;text-align:center;color:white;font:900 clamp(30px,9vw,70px) system-ui;text-shadow:0 5px 0 #152b64,0 9px 28px #001a43;transition:transform .24s';document.body.appendChild(goalSplash);
+ let goalToken=0,lastTouch='TÚ',goalPause=0;
+ function celebrateGoal(who,ours){goalPause=2.1;goalToken++;const token=goalToken;goalSplash.innerHTML='<div style="font-size:65px">⚽</div><div>¡GOOOOL!</div><div style="font-size:23px;background:'+(ours?'#176eea':'#e94350')+';border-radius:18px;padding:10px 20px">'+who.replace(/</g,'&lt;')+'</div>';goalSplash.style.display='block';requestAnimationFrame(()=>goalSplash.style.transform='translate(-50%,-50%) scale(1)');setTimeout(()=>{if(token===goalToken){goalSplash.style.display='none';goalSplash.style.transform='translate(-50%,-50%) scale(.7)'}},1950)}
+ function setFutsalKits(){bots.forEach((b,i)=>{const color=i<4?kitBlue:kitRed;for(const o of botShirts[i])o.material=color;const tag=b.children.find(o=>o.isSprite);if(tag)tag.material.color.set(i<4?'#a8cbff':'#ffc2c8')})}
  const ball=sphere(.4,material('#fff8df'),0,.5,0);ball.visible=false;
  const banner=document.createElement('div');banner.id='roundDirector';banner.innerHTML='<div class="roundPark"><div class="roundFerris"></div><div class="roundTent"></div><div class="roundLights"></div></div><div class="roundContent"><div id="roundLabel"></div><div id="roundWheel"><div class="roundWheelFace"><div class="wheelIcon">🎡</div></div><div class="wheelPointer">▼</div></div><div id="roundTitle"></div><div id="roundSub"></div><button id="roundContinue">CONTINUAR</button></div><div id="roundAvatar"></div>';document.body.append(banner);
  const style=document.createElement('style');style.textContent=`
@@ -96,7 +104,7 @@ export function createTournament(T,scene,player,extras,ui){
  const intro={futsal:'Primer equipo en marcar 2 goles o el que gane al terminar 5 minutos.',hide:'5 buscan y 5 se esconden. Sobrevive o encuentra a tus rivales.',race:'¡Los primeros 5 en cruzar la meta se clasifican!',water:'Solo uno puede ganar: llega primero a la meta.',robot:'Evita los proyectiles del robot. ¡El último en pie gana!',future:'Una carrera entre portales y obstáculos. Solo gana el primero.'};
  const show=(label,title,sub,button)=>{banner.classList.add('show');banner.classList.toggle('result',showResult);banner.querySelector('#roundLabel').textContent=label;banner.querySelector('#roundTitle').textContent=title;banner.querySelector('#roundSub').textContent=sub;const b=banner.querySelector('button');b.style.display=button?'block':'none';b.onclick=button||null};
  const hideBanner=()=>banner.classList.remove('show');
- function reset(){hiding=false;hideSpot=null;roundRewarded=false;showResult=false;robotParts=null;shots=[];obstacles=[];gaps=[];raceRespawn=8;raceLastZ=8;robotClock=0;while(root.children.length>10){let x=root.children[root.children.length-1];root.remove(x);if(x.geometry)x.geometry.dispose()}for(let b of bots){b.visible=true;b.position.set(0,0,0);b.userData.lastPosition.copy(b.position)}ball.visible=false;ballVelocity.set(0,0,0);hitCooldown=0;throwTimer=0;finishers=0;score=enemy=0;time=0;actions.style.display='none';}
+ function reset(){goalToken++;goalSplash.style.display='none';goalPause=0;lastTouch='TÚ';hiding=false;hideSpot=null;roundRewarded=false;showResult=false;robotParts=null;shots=[];obstacles=[];gaps=[];raceRespawn=8;raceLastZ=8;robotClock=0;while(root.children.length>10){let x=root.children[root.children.length-1];root.remove(x);if(x.geometry)x.geometry.dispose()}for(let b of bots){b.visible=true;b.position.set(0,0,0);b.userData.lastPosition.copy(b.position)}ball.visible=false;ballVelocity.set(0,0,0);hitCooldown=0;throwTimer=0;finishers=0;score=enemy=0;time=0;actions.style.display='none';}
 
  const lightMat=material('#ffdf74'),darkMat=material('#252f56'),whiteMat=material('#f8f7f1');
  function buildArena(){
@@ -156,9 +164,9 @@ export function createTournament(T,scene,player,extras,ui){
   reset();root.visible=true;
   const race=kind==='race'||kind==='water'||kind==='future';
   if(kind==='futsal'){
-   buildArena();
+   buildArena();setFutsalKits();
    ball.visible=true;ball.position.set(0,.5,0);
-   bots.forEach((b,i)=>b.position.set((i%5-2)*3,0,i<4?-6:7));
+   bots.forEach((b,i)=>b.position.set((i%5-2)*3,0,i<4?3: -5));
    player.position.set(0,0,9);actions.style.display='flex';
   }else if(kind==='hide'){
    buildAmusement();
@@ -224,12 +232,12 @@ export function createTournament(T,scene,player,extras,ui){
  function end(won){if(roundRewarded)return;roundRewarded=true;started=false;roundToken++;const prize=won?150:25;if(extras.reward)extras.reward(prize,won?'🏆 CAMPEÓN':'Ronda terminada');showResult=true;root.visible=false;banner.classList.add('result');const portrait=ui.captureAvatar?.();const avatar=banner.querySelector('#roundAvatar');if(portrait){avatar.style.backgroundImage='url('+portrait+')';avatar.style.borderRadius='24px'}else{avatar.style.backgroundImage='none'}show(won?'🏆 ¡VICTORIA!':'ELIMINADO',won?'¡ERES EL CAMPEÓN!':'¡BUEN INTENTO!',(won?'Has ganado la final. ':'Has quedado fuera del torneo. ')+'+'+prize+' monedas',()=>{hideBanner();stop();ui.returnMap()});}
  function qualify(){if(!started)return;showResult=false;started=false;roundToken++;root.visible=false;show('¡CLASIFICADO!','¡PASAS DE RONDA!','Quedan 5 participantes. Prepárate para la gran final.',()=>{hideBanner();next()})}
  function start(){showResult=false;stage=0;alive=10;show('TORNEO DE 10 JUGADORES','¡PREPÁRATE!','9 bots competirán contigo. Clasifícate entre los 5 mejores para disputar una final.',()=>{hideBanner();startRound(prelim[Math.floor(Math.random()*prelim.length)])});}
- function stop(){roundToken++;current=null;started=false;root.visible=false;banner.classList.remove('result');actions.style.display='none';hud.style.display='none';hideBanner()}
+ function stop(){goalToken++;goalSplash.style.display='none';roundToken++;current=null;started=false;root.visible=false;banner.classList.remove('result');actions.style.display='none';hud.style.display='none';hideBanner()}
  function kick(shoot){
   if(current!=='futsal'||!started)return;
   if(Math.hypot(player.position.x-ball.position.x,player.position.z-ball.position.z)>3.2){ui.status('Acércate al balón');return}
   const yaw=ui.getYaw(),speed=shoot?24:13;
-  ballVelocity.set(-Math.sin(yaw)*speed,0,-Math.cos(yaw)*speed);
+  lastTouch='TÚ';ballVelocity.set(-Math.sin(yaw)*speed,0,-Math.cos(yaw)*speed);
   ui.status(shoot?'⚽ ¡CHUT!':'⚽ ¡PASE!')
  }
  actions.querySelector('#roundPass').onclick=()=>kick(false);
@@ -266,12 +274,41 @@ export function createTournament(T,scene,player,extras,ui){
    if(p.z<=-105){if(stage===0){rank<=5?qualify():end(false)}else end(rank===1)}
    else if(time>105){if(stage===0){rank<=5?qualify():end(false)}else end(false)}
   }else if(current==='futsal'){
+   if(goalPause>0){goalPause-=dt;hud.textContent='⚽ AZUL '+score+' - '+enemy+' ROJO · ¡GOOOL!';return true}
    ball.position.addScaledVector(ballVelocity,dt);ballVelocity.multiplyScalar(Math.exp(-1.8*dt));
    if(Math.abs(ball.position.x)>11){ball.position.x=T.MathUtils.clamp(ball.position.x,-11,11);ballVelocity.x*=-.8}
-   if(Math.abs(ball.position.z)>19){if(Math.abs(ball.position.x)<4){if(ball.position.z<0)score++;else enemy++}ball.position.set(0,.5,0);ballVelocity.set(0,0,0)}
-   bots.forEach((b,i)=>{const target=i<4?ball.position:p;let v=target.clone().sub(b.position);v.y=0;if(v.length()>1)b.position.addScaledVector(v.normalize(),dt*(i<4?2.8:2.2));if(i>=4&&b.position.distanceTo(ball.position)<1.1&&Math.random()<dt*.6){ballVelocity.set(Math.sin(i)*5,0,8)}});
-   hud.textContent='⚽ '+score+' - '+enemy+' · '+Math.max(0,300-Math.floor(time))+'s · PASE / CHUTAR';
-   if(score>=2||enemy>=2||time>=300){score>enemy?qualify():end(false)}
+   if(Math.abs(ball.position.z)>19){
+    if(Math.abs(ball.position.x)<4){
+     const ours=ball.position.z<0;if(ours)score++;else enemy++;
+     celebrateGoal(lastTouch,ours);
+     bots.forEach((b,i)=>{b.position.set(botBrain[i].lane,0,i<4?4:-4);b.userData.lastPosition.copy(b.position)});
+    }
+    ball.position.set(0,.5,0);ballVelocity.set(0,0,0);
+   }
+   bots.forEach((b,i)=>{
+    const brain=botBrain[i],teammate=i<4,attack=teammate?-1:1;
+    const nearest=bots.reduce((best,other,j)=>{if(i===j||!other.visible||(j<4)!==teammate)return best;return Math.min(best,other.position.distanceTo(ball.position))},100);
+    const distance=b.position.distanceTo(ball.position),chase=distance<nearest+.4&&distance<9;
+    // Defenders hold their half; wingers open up, attackers make runs.
+    const lane=brain.lane+Math.sin(time*.55+brain.phase)*1.1;
+    const desiredX=chase?ball.position.x:lane;
+    const desiredZ=chase?ball.position.z:Math.max(-16,Math.min(16,ball.position.z*.30+attack*(brain.role===0?8:brain.role===1?3:0)));
+    const dx=desiredX-b.position.x,dz=desiredZ-b.position.z,d=Math.hypot(dx,dz);
+    if(d>.35){const pace=(chase?3.4:2.2)*brain.pace;b.position.x+=dx/d*Math.min(d,pace*dt);b.position.z+=dz/d*Math.min(d,pace*dt)}
+    // Separation avoids obvious overlapping conga-lines.
+    for(let j=0;j<i;j++){const other=bots[j];const ox=b.position.x-other.position.x,oz=b.position.z-other.position.z,dd=Math.hypot(ox,oz);if(dd<1.15&&dd>.01){b.position.x+=ox/dd*dt*1.8;b.position.z+=oz/dd*dt*1.8}}
+    b.position.x=T.MathUtils.clamp(b.position.x,-10.5,10.5);b.position.z=T.MathUtils.clamp(b.position.z,-17.5,17.5);
+    brain.decision-=dt;
+    if(distance<1.15&&brain.decision<=0){
+     const targetX=teammate?Math.sin(time+i)*2:Math.sin(time+i*2)*2;
+     const aimX=targetX-b.position.x,aimZ=(teammate?-19:19)-b.position.z;
+     const length=Math.hypot(aimX,aimZ)||1;
+     ballVelocity.set(aimX/length*(9+Math.random()*7),0,aimZ/length*(9+Math.random()*7));
+     lastTouch=botStyles[i].name;brain.decision=1.2+Math.random()*.9;
+    }
+   });
+   hud.textContent='⚽ AZUL '+score+' - '+enemy+' ROJO · '+Math.max(0,300-Math.floor(time))+'s';
+   if(goalPause<=0&&(score>=2||enemy>=2||time>=300)){score>enemy?qualify():end(false)}
   }else if(current==='hide'){
    bots.forEach((b,i)=>{const hunter=seekers.includes(i);const target=hunter?(hiding?b.position:p):new T.Vector3(Math.sin(time*.3+i)*26,0,Math.cos(time*.2+i)*26);let v=target.clone().sub(b.position);v.y=0;if(v.length()>.5)b.position.addScaledVector(v.normalize(),dt*(hunter?2.3:2.3));if(hunter&&!isSeeker&&!hiding&&b.position.distanceTo(p)<1.2)end(false);if(isSeeker&&!hunter&&b.position.distanceTo(p)<1.4){b.visible=false;seekers.push(i)}});
    hud.textContent='🫣 '+(isSeeker?'TE TOCA BUSCAR':'TE TOCA ESCONDERTE')+(hiding?' · OCULTO':' · USAR PARA ESCONDERTE')+' · '+Math.max(0,60-Math.floor(time))+'s';
