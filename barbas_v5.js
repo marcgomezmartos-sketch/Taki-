@@ -7,7 +7,7 @@ export function crearBarbasV4(){
  const mat=(c,r=.84)=>new T.MeshStandardMaterial({color:c,roughness:r,side:T.DoubleSide});
  const skin=mat('#e7aa80'),shade=mat('#c98b65'),dark=mat('#1b1b21'),hair=mat('#17161a'),shorts=mat('#202633'),white=mat('#fff9ed'),iris=mat('#32221c');
  const sphere=new T.SphereGeometry(1,32,24);
- const rounded=new RoundedBoxGeometry(1,1,1,4,.22);
+ const rounded=new RoundedBoxGeometry(1,1,1,4,.36);
  const capsule=(p,m,x,y,z,w,h,d)=>{const o=new T.Mesh(rounded,m);o.position.set(x,y,z);o.scale.set(w,h,d);o.castShadow=true;o.receiveShadow=true;p.add(o);return o};
  const ell=(p,m,x,y,z,sx,sy,sz)=>{const o=new T.Mesh(sphere,m);o.position.set(x,y,z);o.scale.set(sx,sy,sz);o.castShadow=true;p.add(o);return o};
  function garment(m,rings,p=body,n=28){const pos=[],idx=[];for(const [y,rx,rz,cz=0] of rings){for(let i=0;i<n;i++){const a=i/n*Math.PI*2;pos.push(Math.sin(a)*rx,y,Math.cos(a)*rz+cz)}}for(let j=0;j<rings.length-1;j++)for(let i=0;i<n;i++){const a=j*n+i,b=j*n+(i+1)%n,c=(j+1)*n+i,d=(j+1)*n+(i+1)%n;idx.push(a,c,b,b,c,d)}const g=new T.BufferGeometry();g.setAttribute('position',new T.Float32BufferAttribute(pos,3));g.setIndex(idx);g.computeVertexNormals();const o=new T.Mesh(g,m);o.castShadow=true;o.receiveShadow=true;p.add(o);return o}
@@ -27,29 +27,29 @@ export function crearBarbasV4(){
  const arms=[],elbows=[],wrists=[],legs=[],knees=[],feet=[],baseShorts=[];
  for(const side of [-1,1]){
   const arm=new T.Group();arm.position.set(side*.38,1.93,0);body.add(arm);arms.push(arm);
-  capsule(arm,skin,0,-.065,0,.315,.32,.3);
+  ell(arm,skin,0,-.075,0,.153,.245,.15);
   garment(skin,[[-.355,.105,.111],[-.27,.126,.128],[-.12,.143,.145],[.035,.145,.146]],arm);
   const elbow=new T.Group();elbow.position.y=-.34;arm.add(elbow);elbows.push(elbow);
-  capsule(elbow,skin,0,-.035,0,.232,.235,.232);
+  ell(elbow,skin,0,-.04,0,.125,.19,.125);
   garment(skin,[[-.29,.091,.098],[-.21,.112,.115],[-.06,.123,.126],[.055,.114,.117]],elbow);
   const wrist=new T.Group();wrist.position.y=-.29;elbow.add(wrist);wrists.push(wrist);
   ell(wrist,skin,0,-.082,.012,.105,.145,.095);
   ell(wrist,skin,side*.07,-.058,.07,.045,.098,.049);
   for(let f=0;f<3;f++)ell(wrist,skin,(f-1)*.053,-.196,.028,.029,.055,.035);
   const leg=new T.Group();leg.position.set(side*.185,1.35,0);body.add(leg);legs.push(leg);
-  capsule(leg,skin,0,-.10,0,.415,.40,.40);
+  ell(leg,skin,0,-.16,0,.208,.31,.205);
   garment(skin,[[-.56,.153,.157],[-.41,.18,.182],[-.20,.207,.207],[.06,.20,.203]],leg);
   baseShorts.push(garment(shorts,[[-.235,.211,.208],[-.15,.223,.218],[.045,.22,.218]],leg));
   const knee=new T.Group();knee.position.y=-.54;leg.add(knee);knees.push(knee);
-  capsule(knee,skin,0,-.01,.018,.335,.26,.335);
+  ell(knee,skin,0,-.08,.018,.158,.23,.158);
   garment(skin,[[-.38,.113,.12],[-.24,.14,.149],[-.07,.157,.162],[.065,.164,.168]],knee);
   const foot=new T.Group();foot.position.y=-.42;knee.add(foot);feet.push(foot);
-  capsule(foot,dark,0,-.10,.125,.385,.245,.58);
-  capsule(foot,dark,0,-.12,.30,.38,.18,.32);
+  capsule(foot,dark,0,-.10,.125,.34,.21,.49);
+  capsule(foot,dark,0,-.12,.26,.34,.16,.26);
   ell(foot,white,0,-.194,.155,.19,.027,.285);
  }
  // Waist geometry is concealed by equipped clothing.
- const baseWaist=capsule(body,shorts,0,1.31,0,.66,.30,.48);
+ const baseWaist=ell(body,shorts,0,1.285,0,.345,.17,.258);
  let t=0,blend=0,runBlend=0,phase=0,landing=0,wasAir=false,look=0,lookGoal=0,lookTimer=0;
  const damp=(v,target,speed,dt)=>T.MathUtils.damp(v,target,speed,dt);
  function actualizar(dt,mode='quieto',state={}){
@@ -112,12 +112,13 @@ export function crearBarbasV4(){
   const skull=head.children.find(o=>o.material===skin&&Math.abs(o.position.y-.015)<.02);
   if(skull)skull.scale.set(woman?.59:.565,woman?.66:.635,woman?.53:.515);
   nose.scale.set(woman?.052:.062,woman?.057:.068,woman?.055:.07);
-  head.scale.set(woman?1.065:1,woman?1.04:1,1);
+  head.scale.set(woman?1.04:1,woman?1.03:1,1);
   head.position.y=woman?2.36:2.34;
-  torsoCore.scale.set(woman?.87:1,1,woman?.97:1);
+  torsoCore.scale.set(woman?.91:1,1,woman?.96:1);
   hipsCore.scale.set(woman?.365:.34,.17,woman?.255:.245);
   arms.forEach((arm,i)=>{const side=i===0?-1:1;arm.position.x=side*(woman?.335:.38);arm.scale.set(woman?.88:1,1,woman?.9:1)});
   legs.forEach((leg,i)=>{const side=i===0?-1:1;leg.position.x=side*(woman?.195:.185);leg.scale.x=woman?1.08:1});
+  root.scale.setScalar(woman?.57:.72);
   avatarHair.clear();
   if(woman){
    hairPiece(0,.255,-.07,.305,.18,.28);
@@ -134,6 +135,6 @@ export function crearBarbasV4(){
   }
  }
  setAvatarStyle('man');
- root.scale.setScalar(.64);
+ root.scale.setScalar(woman?.59:.72);
  return {root,body,head,arms,elbows,wrists,legs,knees,feet,garment,baseShorts,baseWaist,actualizar,setAvatarStyle};
 }
