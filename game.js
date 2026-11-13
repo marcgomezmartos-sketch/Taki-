@@ -258,7 +258,7 @@ player.position.set(0,0,11);$('hud').style.display='none';let dragging=false,las
  `;document.head.append(islandCSS);
  const islandSelect=document.createElement('div');islandSelect.id='islandSelect';islandSelect.innerHTML='<div class="islandPanel"><h2>ELIGE TU DESTINO</h2><p>Selecciona una zona y entra directamente.</p><div class="islandChoices"><button data-island="arena"><span>🏆</span>MINIJUEGOS<small>Torneo · 10 jugadores</small></button><button data-island="parkour"><span>🧗</span>PARKOUR<small>Saltos y desafíos</small></button><button data-island="shop"><span>🛍️</span>TIENDA<small>TK SHOP · ropa</small></button><button data-island="online"><span>👥</span>ONLINE<small>Próximamente</small></button><button data-island="wardrobe"><span>👕</span>VESTUARIO<small>Cambiar ropa y personaje</small></button><button data-island="profile"><span>👤</span>PERFIL<small>Skin, victorias y nombre</small></button><button data-island="group"><span>👥</span>GRUPO<small>Amigos e invitaciones</small></button></div><button class="islandClose">✕ CERRAR MAPA</button></div>';document.body.append(islandSelect);
  const showIslands=()=>{if(!active)return;islandSelect.style.display='flex';joystick.x=joystick.y=0;keys.clear()};
- islandSelect.querySelector('.islandClose').onclick=()=>islandSelect.style.display='none';
+ islandSelect.querySelector('.islandClose').textContent='← VOLVER AL MENÚ';islandSelect.querySelector('.islandClose').onclick=()=>{if(mode==='islands')$('topbtn').click();else islandSelect.style.display='none'};
  islandSelect.querySelectorAll('[data-island]').forEach(b=>b.onclick=()=>goIsland(b.dataset.island));
  const captureProfileAvatar=()=>{
   try{
@@ -284,8 +284,8 @@ player.position.set(0,0,11);$('hud').style.display='none';let dragging=false,las
   islandSelect.style.display='none';tournament.stop();shop.visible=false;parkour.visible=false;arenaGroup.visible=false;arenaScenery.visible=false;onlineIsland.visible=false;islandHub.visible=false;worldRoot.visible=false;
   scene.background=new T.Color('#86d4ff');scene.fog=new T.FogExp2('#c1eeff',.0017);
   vel=0;onGround=true;keys.clear();joystick.x=joystick.y=0;movementVelocity.set(0,0,0);angle=0;targetAngle=0;sun.shadow.needsUpdate=true;
-  if(destination==='profile'||destination==='group'){mode='islands';player.position.set(0,0,5);social.open(destination);return}
-  if(destination==='wardrobe'){mode='islands';player.position.set(0,0,5);window.barbasOpenWardrobe?.();return}
+  if(destination==='profile'||destination==='group'){mode='islands';player.position.set(0,0,5);showIslands();social.open(destination);return}
+  if(destination==='wardrobe'){mode='islands';player.position.set(0,0,5);showIslands();window.barbasOpenWardrobe?.();return}
   if(destination==='shop'){enterShop();return}
   if(destination==='parkour'){enterParkour();return}
   if(destination==='arena'){mode='tournament';player.position.set(0,0,0);$('status').textContent='🏆 TORNEO · 10 jugadores, 3 modos y finales';tournament.start();return}
