@@ -39,6 +39,6 @@ export function installSocial({extras,avatar}){
   panel.querySelector('.socialClose').onclick=close;
  }
  function open(tab){render(tab);panel.classList.add('open')}
- function close(){panel.classList.remove('open')}
+ function close(){panel.classList.remove('open');window.dispatchEvent(new Event('barbas-social-closed'))}
  return {open,close};
 }
