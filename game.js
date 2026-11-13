@@ -1,4 +1,4 @@
-import * as T from 'three';import {createGraphics} from './graphics.js?v=57';import {crearCiudad} from './world.js?v=geometry56';import {crearBarbasV4} from './barbas_v5.js?v=rig57';import {iniciarExtras} from './features.js?v=avatars53';
+import * as T from 'three';import {createGraphics} from './graphics.js?v=57';import {crearBarbasV4} from './barbas_v5.js?v=rig57';import {iniciarExtras} from './features.js?v=avatars53';
 function iniciarBarbasParty(){
 const $=id=>document.getElementById(id), scene=new T.Scene();scene.background=new T.Color('#e99588');scene.fog=new T.FogExp2('#d99c94',.0035);// Skybox image path: replace with your own panoramic sky asset.
  const SKY_IMAGE='assets/cielo_ciudad.jpg';
@@ -15,7 +15,7 @@ const mat=(color,emissive)=>new T.MeshStandardMaterial({color,roughness:.8,emiss
  for(let i=0;i<95;i++){const x=random()*2048,y=270+random()*460,sz=18+random()*70;skyCtx.fillStyle='rgba(255,250,242,'+(.045+random()*.14)+')';for(let j=0;j<5;j++){skyCtx.beginPath();skyCtx.ellipse(x+(j-2)*sz*.5,y+Math.sin(j*2)*sz*.18,sz*.9,sz*.22,0,0,Math.PI*2);skyCtx.fill()}}
  const generatedSky=new T.CanvasTexture(skyCanvas);generatedSky.colorSpace=T.SRGBColorSpace;generatedSky.mapping=T.EquirectangularReflectionMapping;
  scene.userData.citySky=new T.Color('#b2cfe2');scene.background=scene.userData.citySky;scene.fog=new T.FogExp2('#b9cbd2',.0065);
-const worldRoot=new T.Group();scene.add(worldRoot);const world=crearCiudad(worldRoot);worldRoot.visible=false;const shops=world.shops;
+const worldRoot=new T.Group();scene.add(worldRoot);worldRoot.visible=false;const world={update(){}};const shops=[{name:'ARENA PARTY',x:0,z:-29,desc:'Minijuegos'},{name:'TK SHOP',x:-29,z:0,desc:'Tienda'},{name:'PARKOUR',x:29,z:-29,desc:'Parkour'},{name:'CLUB AMIGOS',x:29,z:0,desc:'Online'}];
 const player=new T.Group();scene.add(player);const visual=new T.Group();player.add(visual);// V4 integrada: se construye directamente desde el código del taller.
 const personajeV4=crearBarbasV4();
 const model=personajeV4.root;
