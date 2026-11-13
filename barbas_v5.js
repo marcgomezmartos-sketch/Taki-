@@ -135,6 +135,6 @@ export function crearBarbasV4(){
   }
  }
  setAvatarStyle('man');
- root.scale.setScalar(woman?.59:.72);
+ root.scale.setScalar(.72);
  return {root,body,head,arms,elbows,wrists,legs,knees,feet,garment,baseShorts,baseWaist,actualizar,setAvatarStyle};
 }
