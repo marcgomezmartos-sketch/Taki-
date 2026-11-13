@@ -13,7 +13,7 @@ export function createTournament(T,scene,player,extras,ui){
  #roundDirector{position:fixed;inset:0;z-index:150;display:none;align-items:center;justify-content:center;background:#091b42de;padding:18px;color:white;font-family:system-ui;text-align:center}
  #roundDirector>div{max-width:500px}#roundLabel{font-size:16px;letter-spacing:3px;font-weight:900;color:#ffe36b}#roundTitle{font-size:clamp(34px,10vw,65px);line-height:1.02;font-weight:1000;text-shadow:0 6px #25468e;margin:16px 0}#roundSub{font-size:17px;font-weight:700;color:#e0f9ff;margin:15px auto;max-width:420px}#roundContinue{background:#ffce47;color:#172d65;border:3px solid white;border-radius:17px;padding:16px 28px;font-weight:1000;font-size:19px;box-shadow:0 6px #bb791e;display:none}
  #roundDirector.show{display:flex;flex-direction:column}#roundDirector #roundTitle{animation:roundPop .5s cubic-bezier(.1,1.4,.3,1)}@keyframes roundPop{from{transform:scale(.4);opacity:0}to{transform:scale(1);opacity:1}}
- #roundHUD{position:fixed;top:33%;left:50%;transform:translateX(-50%);z-index:19;display:none;white-space:nowrap;max-width:95vw;background:#143a73e8;border:2px solid #ffffffae;color:#fff;padding:9px 15px;border-radius:17px;font:900 13px system-ui;text-align:center;pointer-events:none}
+ #roundHUD{position:fixed;top:105px;left:50%;transform:translateX(-50%);z-index:19;display:none;white-space:nowrap;max-width:95vw;background:#143a73e8;border:2px solid #ffffffae;color:#fff;padding:9px 15px;border-radius:17px;font:900 12px system-ui;text-align:center;pointer-events:none;box-shadow:0 5px 18px #071b4b80}
  #roundActions{position:fixed;right:12px;bottom:175px;z-index:18;display:none;gap:8px}#roundActions button{border:2px solid white;border-radius:16px;background:#ffd350;color:#1c3363;padding:13px;font:900 14px system-ui}
 
  #roundDirector{background:radial-gradient(ellipse at 50% 38%,#80dfff 0%,#3e9fe0 38%,#174a91 100%);overflow:hidden}
@@ -42,14 +42,14 @@ export function createTournament(T,scene,player,extras,ui){
  const hud=document.createElement('div');hud.id='roundHUD';document.body.append(hud);
  const useButton=document.querySelector('[data-key="KeyE"]')||document.querySelector('[data-key="KeyF"]');
  const actions=document.createElement('div');actions.id='roundActions';actions.innerHTML='<button id="roundPass">PASE</button><button id="roundShoot">CHUTAR</button>';document.body.append(actions);
- let hiding=false,hideSpot=null,roundRewarded=false,showResult=false;
+ let hiding=false,hideSpot=null,roundRewarded=false,showResult=false,robotParts=null,shots=[],obstacles=[],gaps=[],raceRespawn=8,raceLastZ=8,robotClock=0;
  let current=null,stage=0,alive=10,time=0,score=0,enemy=0,seekers=[],isSeeker=false,hitCooldown=0,finishers=0,roundToken=0,started=false,ballVelocity=new T.Vector3(),throwTimer=0;
  const prelim=['futsal','hide','race'],finals=['water','robot','future'];
  const labels={futsal:'FÚTBOL SALA 5 VS 5',hide:'ESCONDITE EN EL PARQUE',race:'CARRERA DE OBSTÁCULOS',water:'FINAL · PARQUE ACUÁTICO',robot:'FINAL · ROBOT LANZADOR',future:'FINAL · CARRERA FUTURISTA'};
  const intro={futsal:'Primer equipo en marcar 2 goles o el que gane al terminar 5 minutos.',hide:'5 buscan y 5 se esconden. Sobrevive o encuentra a tus rivales.',race:'¡Los primeros 5 en cruzar la meta se clasifican!',water:'Solo uno puede ganar: llega primero a la meta.',robot:'Evita los proyectiles del robot. ¡El último en pie gana!',future:'Una carrera entre portales y obstáculos. Solo gana el primero.'};
  const show=(label,title,sub,button)=>{banner.classList.add('show');banner.classList.toggle('result',showResult);banner.querySelector('#roundLabel').textContent=label;banner.querySelector('#roundTitle').textContent=title;banner.querySelector('#roundSub').textContent=sub;const b=banner.querySelector('button');b.style.display=button?'block':'none';b.onclick=button||null};
  const hideBanner=()=>banner.classList.remove('show');
- function reset(){hiding=false;hideSpot=null;roundRewarded=false;showResult=false;while(root.children.length>10){let x=root.children[root.children.length-1];root.remove(x);if(x.geometry)x.geometry.dispose()}for(let b of bots){b.visible=true;b.position.set(0,0,0)}ball.visible=false;ballVelocity.set(0,0,0);hitCooldown=0;throwTimer=0;finishers=0;score=enemy=0;time=0;actions.style.display='none';}
+ function reset(){hiding=false;hideSpot=null;roundRewarded=false;showResult=false;robotParts=null;shots=[];obstacles=[];gaps=[];raceRespawn=8;raceLastZ=8;robotClock=0;while(root.children.length>10){let x=root.children[root.children.length-1];root.remove(x);if(x.geometry)x.geometry.dispose()}for(let b of bots){b.visible=true;b.position.set(0,0,0)}ball.visible=false;ballVelocity.set(0,0,0);hitCooldown=0;throwTimer=0;finishers=0;score=enemy=0;time=0;actions.style.display='none';}
 
  const lightMat=material('#ffdf74'),darkMat=material('#252f56'),whiteMat=material('#f8f7f1');
  function buildArena(){
@@ -119,21 +119,52 @@ export function createTournament(T,scene,player,extras,ui){
    isSeeker=Math.random()<.5;seekers=isSeeker?[0,1,2,3]:[0,1,2,3,4];ui.status(isSeeker?'🔍 BUSCAS: encuentra a los cinco escondidos':'🙈 TE ESCONDES: pulsa USAR cerca de una atracción');
    player.position.set(0,0,0);
   }else if(race){
-   cube(15,.8,130,kind==='water'?blue:kind==='future'?material('#6e64c8'):floorMat,0,-.45,-49);
-   for(let i=0;i<15;i++){let z=5-i*7.5;
-    if(kind==='water'){cube(13,.6,.6,gold,0,.3,z);sphere(1.2,pink,Math.sin(i*3)*4,1.1,z)}
-    else if(kind==='future'){cube(2,3,2,[pink,gold,blue][i%3],Math.sin(i*5)*4,1.5,z);let ring=new T.Mesh(new T.TorusGeometry(3,.24,8,24),gold);ring.position.set(0,3,z);root.add(ring)}
-    else{cube(2.8,2.6,2.8,[pink,gold,blue][i%3],Math.sin(i*3)*4,1.3,z)}
+   const track=kind==='water'?material('#38c6dc'):kind==='future'?material('#6668d8'):material('#53c5a4');
+   const trim=kind==='water'?material('#fff4ba'):material('#fff8e3');
+   const addBlock=(x,z,w,d,h=2,type='block',speed=0)=>{cube(w,h,d,[pink,blue,gold][obstacles.length%3],x,h/2,z);obstacles.push({x,z,w,d,h,type,speed,phase:obstacles.length*1.7})};
+   // Modular racecourse: real gaps, jumping pads, maze, moving gates and finish.
+   const segments=[[10,-10],[-16,-32],[-39,-52],[-58,-75],[-81,-110]];
+   for(const [a,b] of segments){
+     cube(15,.8,Math.abs(a-b),track,0,-.48,(a+b)/2);
+     cube(.35,.65,Math.abs(a-b),trim,-7.7,.05,(a+b)/2);
+     cube(.35,.65,Math.abs(a-b),trim,7.7,.05,(a+b)/2);
    }
-   cube(15,5,.3,gold,0,3,-109);
+   gaps=[{a:-10,b:-16},{a:-32,b:-39},{a:-52,b:-58},{a:-75,b:-81}];
+   for(const z of [-10,-32,-52,-75]){cube(15,.15,.45,gold,0,.05,z+.6);cube(15,.15,.45,pink,0,.05,z-.6)}
+   // Alternating zig-zag maze: walls must be navigated around.
+   for(let i=0;i<4;i++){const z=-20-i*2.8,side=i%2===0?-1:1;addBlock(side*3.1,z,8,1.15,3.4,'maze')}
+   // Slalom bumpers, timed moving blockers and revolving beams.
+   for(let i=0;i<4;i++){addBlock(Math.sin(i*2.4)*3.4,-41-i*2.4,2.3,2.3,2.5,'bumper')}
+   for(let i=0;i<3;i++){addBlock(0,-61-i*4.5,3.2,1.2,3.5,'moving',2.4+i*.35)}
+   for(let i=0;i<3;i++){addBlock(Math.sin(i*2.5)*3,-84-i*6,2.3,2.3,2.6,'bumper')}
+   for(let i=0;i<10;i++){const z=6-i*12;for(const x of [-9,9]){cube(.6,3,.6,whiteMat,x,1.5,z);sphere(.48,[pink,gold,blue][i%3],x,3.2,z)}}
+   for(const z of [-25,-48,-69,-95]){const ring=new T.Mesh(new T.TorusGeometry(5,.35,8,24),gold);ring.position.set(0,5,z);root.add(ring)}
+   cube(15,.18,.7,gold,0,.2,-106);cube(.8,7,.8,whiteMat,-7,3.5,-106);cube(.8,7,.8,whiteMat,7,3.5,-106);
+   cube(15,1,.8,pink,0,7,-106);
    bots.forEach((b,i)=>{b.visible=stage===0||i<4;b.position.set((i%5-2)*2.1,0,4+Math.floor(i/5)*2)});
    player.position.set(0,0,8);
   }else if(kind==='robot'){
-   cube(25,.8,25,material('#7e80d5'),0,-.5,0);
-   cube(5,6,3,material('#485c8b'),0,3,-16);
-   sphere(1.5,pink,0,6,-14);
-   bots.forEach((b,i)=>{b.visible=i<4;b.position.set(Math.sin(i*.7)*7,0,Math.cos(i*.7)*7)});
-   player.position.set(0,0,8);
+   const steel=material('#364766'),armor=material('#536e9b'),glow=new T.MeshStandardMaterial({color:'#50eaff',emissive:'#20bfe7',emissiveIntensity:1.6,metalness:.35,roughness:.22});
+   const danger=new T.MeshStandardMaterial({color:'#ff416e',emissive:'#ff3157',emissiveIntensity:1.5,transparent:true,opacity:.65});
+   cube(27,.8,27,material('#6867b8'),0,-.5,0);
+   for(let i=0;i<4;i++){const z=-11+i*7.3;cube(27,.12,.18,glow,0,.05,z);cube(.2,.12,27,glow,-12.6,.05,0);cube(.2,.12,27,glow,12.6,.05,0)}
+   for(let i=0;i<8;i++){const a=i*Math.PI/4;cube(1,2,1,armor,Math.cos(a)*15,1,Math.sin(a)*15);sphere(.65,glow,Math.cos(a)*15,2.3,Math.sin(a)*15)}
+   const machine=new T.Group();machine.position.set(0,0,-18);root.add(machine);
+   const part=(geo,mat,x,y,z)=>{const m=new T.Mesh(geo,mat);m.position.set(x,y,z);machine.add(m);return m};
+   part(new T.CylinderGeometry(2.4,3.5,1.2,12),steel,0,.6,0);
+   part(new T.BoxGeometry(3.5,4.8,2.5),armor,0,4,0);
+   part(new T.SphereGeometry(1.7,16,12),steel,0,7.3,0);
+   for(const x of [-.72,.72]){part(new T.SphereGeometry(.34,12,8),glow,x,7.5,1.5)}
+   part(new T.BoxGeometry(1.5,.22,.22),danger,0,6.75,1.6);
+   for(const x of [-2.6,2.6]){
+     part(new T.CylinderGeometry(.65,.8,3.1,10),armor,x,4.2,0).rotation.z=x<0?-.25:.25;
+     part(new T.SphereGeometry(.8,12,8),steel,x*1.25,2.65,0);
+   }
+   const turret=part(new T.CylinderGeometry(.75,1,3,12),steel,0,5.2,2);turret.rotation.x=Math.PI/2;
+   part(new T.CylinderGeometry(.42,.42,3.2,12),glow,0,5.2,3.3).rotation.x=Math.PI/2;
+   robotParts={machine,turret,danger,glow};
+   bots.forEach((b,i)=>{b.visible=i<4;b.position.set(Math.sin(i*1.45)*8,0,Math.cos(i*1.45)*8)});
+   player.position.set(0,0,8);ui.status('🤖 ROBOT: ¡esquiva las zonas rojas antes de que dispare!');
   }
  }
  function startRound(kind){
