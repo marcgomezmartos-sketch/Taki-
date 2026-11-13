@@ -90,18 +90,23 @@ export function iniciarExtras({player,model,head,rig,showStatus}){
  const fitted=(rings,color,parent)=>{const mesh=rig.garment(new T.MeshStandardMaterial({color,roughness:1,side:T.DoubleSide}),rings,parent,28);wearableParts.push(mesh);return mesh};
  const get=kind=>inventory.find(x=>x.id===equipped[kind]);
  const cap=get('cap');if(cap){
-  const material=new T.MeshStandardMaterial({color:cap.color,roughness:.82,side:T.DoubleSide});
-  // The crown is fitted around the actual skull (head center y=0), rather than
-  // floating as a small hemisphere over the hair.
-  const crown=new T.Mesh(new T.SphereGeometry(1,28,16,0,Math.PI*2,0,Math.PI*.57),material);
-  crown.scale.set(.294,.32,.276);crown.position.set(0,.055,0);headwear.add(crown);
-  const band=new T.Mesh(new T.CylinderGeometry(.285,.29,.085,32),material);
-  band.position.y=.09;headwear.add(band);
-  const brim=new T.Mesh(new T.SphereGeometry(1,24,10,0,Math.PI*2,0,Math.PI),material);
-  brim.scale.set(.285,.018,.175);brim.position.set(0,.075,.247);headwear.add(brim);
-  if(['beanie','wool','knit'].includes(cap.design)){brim.visible=false;band.scale.set(1,1.4,1);crown.position.y=.08}
-  if(['bucket','fisher'].includes(cap.design)){brim.scale.set(.37,.03,.36);brim.position.z=0;brim.position.y=.055}
- }
+  const material=new T.MeshStandardMaterial({color:cap.color,roughness:.83,side:T.DoubleSide});
+  const knit=['beanie','wool','knit'].includes(cap.design);
+  const bucket=['bucket','fisher'].includes(cap.design);
+  // Head geometry is centred at y=0 and reaches approximately y=.34.
+  // Place the hat ABOVE the skull, never at the centre of the face.
+  const crown=new T.Mesh(new T.SphereGeometry(1,32,20,0,Math.PI*2,0,Math.PI*.53),material);
+  crown.scale.set(.322,.265,.306);crown.position.set(0,.235,-.012);headwear.add(crown);
+  const band=new T.Mesh(new T.CylinderGeometry(.32,.325,.075,32),material);
+  band.position.set(0,.245,-.012);headwear.add(band);
+  if(!knit){
+   const brim=new T.Mesh(new T.SphereGeometry(1,28,12,0,Math.PI*2,0,Math.PI),material);
+   brim.scale.set(bucket?.405:.30,.025,bucket?.36:.18);
+   brim.position.set(0,.235,bucket?0:.29);headwear.add(brim);
+  }else{crown.position.y=.22;crown.scale.y=.29;band.scale.set(1.04,1.2,1.04)}
+  // Hair must not poke through the crown of the hat.
+  if(rig.head){const hairGroup=rig.head.children.find(o=>o.type==='Group'&&o!==headwear);if(hairGroup)hairGroup.visible=false}
+ }else if(rig.head){const hairGroup=rig.head.children.find(o=>o.type==='Group'&&o!==headwear);if(hairGroup)hairGroup.visible=true}
  const dress=get('dress'),jacket=get('jacket'),pants=get('pants'),bag=get('bag');
  // Hide the original skin torso when a garment covers it: prevents skin-coloured holes.
  if(rig.body.children[0])rig.body.children[0].visible=!(jacket||dress);
@@ -247,7 +252,7 @@ export function iniciarExtras({player,model,head,rig,showStatus}){
  function tone(freq,duration,type='sine',volume=.25,bus=sfxBus){if(!ctx||!bus)return;const o=ctx.createOscillator(),g=ctx.createGain();o.type=type;o.frequency.value=freq;const now=ctx.currentTime;g.gain.setValueAtTime(0,now);g.gain.linearRampToValueAtTime(volume,now+.055);g.gain.setValueAtTime(volume*.75,now+Math.max(.06,duration*.36));g.gain.exponentialRampToValueAtTime(.0001,now+duration+.16);o.connect(g);g.connect(bus);o.start(now);o.stop(now+duration+.18)}
  function sound(type){if(!ctx)return;const presets={jump:[[330,.13],[440,.19]],step:[[110,.05]],buy:[[440,.11],[660,.2],[880,.3]],equip:[[550,.12]],open:[[390,.12],[520,.2]],close:[[320,.1]],error:[[170,.2],[130,.2]],coin:[[620,.09],[930,.15]]};let delay=0;for(const [f,d] of presets[type]||[]){setTimeout(()=>tone(f,d,type==='step'?'triangle':'sine',type==='step'?.07:.26),delay);delay+=90}}
  audioButton.onclick=()=>{ensureAudio();musicOn=!musicOn;syncVolumes();audioButton.textContent='♫ Música: '+(musicOn?'ON':'OFF')};
- function start(){if(!avatarStyle)stylePanel.style.display='flex';ensureAudio();shopButton.style.display='none';wardrobeButton.style.display='block';audioButton.style.display='block';hud.style.display='block'}
+ function start(){if(!avatarStyle)stylePanel.style.display='flex';ensureAudio();shopButton.style.display='none';wardrobeButton.style.display='none';audioButton.style.display='block';hud.style.display='block'}
  function hide(){shopButton.style.display='none';wardrobeButton.style.display='none';audioButton.style.display='none';hud.style.display='none';closeWardrobe();closeShop()}
  let walkSound=0;
  function update(dt,moving,speed){if(!moving||shopOpen)return;walkSound+=dt;if(walkSound>.42){sound('step');walkSound=0}}
