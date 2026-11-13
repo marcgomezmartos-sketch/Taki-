@@ -88,9 +88,9 @@ function leaveShop(){shop.visible=false;goIsland('map')}
  for(let i of [0,4,8]){const p=parkPlatforms[i];const pole=new T.Mesh(new T.CylinderGeometry(.055,.055,2.4,8),mat('#ffebbc'));pole.position.set(p.x-p.w/2+.25,p.y+1.2,p.z);parkour.add(pole);const banner=new T.Mesh(new T.BoxGeometry(1.7,.68,.09),mat(i===8?'#7bdfa3':'#ffce68'));banner.position.set(p.x-p.w/2+1.08,p.y+2.1,p.z);parkour.add(banner)}
 
 // A bright blue sky with cloud islands, trees and decorative parkour challenges.
- const parkSky=new T.Color('#78b9f4'),parkFog=new T.FogExp2('#a9d8f7',.002);
+ const parkSky=new T.Color('#78cfff'),parkFog=new T.FogExp2('#b5eaff',.0018);
  const cityFog=scene.fog;
- const cloudMat=new T.MeshStandardMaterial({color:'#fff8ee',roughness:1});
+ const cloudMat=new T.MeshStandardMaterial({color:'#ffffff',roughness:1,emissive:'#c1ecff',emissiveIntensity:.08});
  const islandMat=mat('#8cb6a0'),rockMat=mat('#798a9c');
  const cloudGeo=new T.SphereGeometry(1,10,8);
  function cloud(x,y,z,size){const g=new T.Group();g.position.set(x,y,z);parkour.add(g);for(let i=0;i<5;i++){const m=new T.Mesh(cloudGeo,cloudMat);m.position.set((i-2)*size*.46,Math.sin(i*2.3)*size*.15,Math.cos(i)*size*.18);m.scale.set(size*.75,size*.36,size*.52);g.add(m)}}
@@ -102,11 +102,68 @@ function leaveShop(){shop.visible=false;goIsland('map')}
  for(const z of [-11.9,-12.6,-13.3]){const stone=new T.Mesh(new T.CylinderGeometry(.36,.36,.08,12),mat('#f9d888'));stone.position.set(-.9,1.06,z);parkour.add(stone)}
  const tunnel=new T.Group();tunnel.position.set(0,1.35,-16.8);parkour.add(tunnel);for(const x of [-1.7,1.7]){const pillar=new T.Mesh(new T.BoxGeometry(.22,2.3,.25),mat('#a68de8'));pillar.position.set(x,1.15,0);tunnel.add(pillar)}const beam=new T.Mesh(new T.BoxGeometry(3.65,.24,.3),mat('#a68de8'));beam.position.y=2.3;tunnel.add(beam);
  const finish=new T.Group();finish.position.set(0,2.5,-34);parkour.add(finish);for(const x of [-2.5,2.5]){const post=new T.Mesh(new T.BoxGeometry(.35,3.2,.35),mat('#ffe1a0'));post.position.set(x,1.6,0);finish.add(post)}const top=new T.Mesh(new T.BoxGeometry(5.4,.55,.4),mat('#a17bd6'));top.position.y=3.2;finish.add(top);
+
+ // V62: vivid adventure-park scenery with real 3D silhouettes, not an empty horizon.
+ // Shared low-poly meshes and low polygon counts keep the mobile draw budget reasonable.
+ const adventurePalette=['#ff6f9e','#ffd15c','#7b8bff','#45d7c5','#fd9a4b','#9c6cff'];
+ const adventureRock=new T.MeshStandardMaterial({color:'#7362ba',roughness:1,flatShading:true});
+ const adventureGrass=new T.MeshStandardMaterial({color:'#72e66d',roughness:.9});
+ const adventureCloud=new T.MeshStandardMaterial({color:'#ffffff',roughness:1,emissive:'#8dc5ff',emissiveIntensity:.07});
+ const sharedCloud=new T.IcosahedronGeometry(1,1);
+ function adventureBackdrop(parent,ox,oz,scale=1){
+   const bg=new T.Group();bg.position.set(ox,0,oz);bg.scale.setScalar(scale);parent.add(bg);
+   const shape=(geo,material,x,y,z,sx=1,sy=1,sz=1)=>{
+     const mesh=new T.Mesh(geo,material);mesh.position.set(x,y,z);mesh.scale.set(sx,sy,sz);bg.add(mesh);return mesh
+   };
+   const cylinder=new T.CylinderGeometry(1,1.14,.8,12);
+   const rock=new T.CylinderGeometry(1.7,.75,3,9);
+   const torus=new T.TorusGeometry(3.2,.23,8,40);
+   const cone=new T.ConeGeometry(1,2,9);
+   const trunk=new T.CylinderGeometry(.17,.23,2,7);
+   const leaf=new T.IcosahedronGeometry(1.15,1);
+   const mats=adventurePalette.map(color=>new T.MeshStandardMaterial({color,roughness:.63,metalness:.03,flatShading:true}));
+   for(let i=0;i<12;i++){
+     const a=i*Math.PI*2/12,r=27+(i%3)*7,x=Math.cos(a)*r,z=Math.sin(a)*r;
+     shape(rock,adventureRock,x,-3.3,z,2.4+(i%3)*.45,1.1+(i%4)*.35,2.4);
+     shape(cylinder,adventureGrass,x,-.6+(i%4)*.3,z,3.3,1,3.3);
+     shape(trunk,mats[4],x,1.2,z,.9,1,1);
+     shape(leaf,mats[(i+3)%6],x,3.5,z,1.7,1.9,1.7);
+     if(i%2===0){
+       const gate=shape(torus,mats[i%6],x,5.5,z,1.35,1.35,1);
+       gate.rotation.y=a+Math.PI/2;
+       shape(cone,mats[(i+2)%6],x,9.4,z,1.4,1.3,1.4);
+     }
+   }
+   for(let i=0;i<9;i++){
+     const a=(i+.4)*Math.PI*2/9,r=42+(i%2)*9,x=Math.cos(a)*r,z=Math.sin(a)*r;
+     const base=shape(new T.CylinderGeometry(2.4,3.2,11+(i%3)*3,8),mats[i%6],x,3,z);
+     const roof=shape(cone,mats[(i+1)%6],x,10+(i%3)*1.5,z,3,1.3,3);
+     base.rotation.y=a;roof.rotation.y=a;
+   }
+   for(let i=0;i<10;i++){
+     const a=i*Math.PI*2/10,r=31+(i%3)*5,x=Math.cos(a)*r,z=Math.sin(a)*r;
+     for(let j=0;j<3;j++)shape(sharedCloud,adventureCloud,x+(j-1)*2.2,15+(i%3)*3+(j===1?1.1:0),z,2.6,1.15,1.5);
+   }
+   const coaster=new T.Group();bg.add(coaster);
+   const coasterMat=mats[0],railMat=mats[3];
+   for(let i=0;i<22;i++){
+     const a=i*Math.PI*2/22,r=21.5,x=Math.cos(a)*r,z=Math.sin(a)*r,y=6+Math.sin(a*3)*2.4;
+     const post=shape(trunk,railMat,x,y/2,z,.85,y/2, .85);
+     const next=(i+1)*Math.PI*2/22;
+     const p1=new T.Vector3(x,y,z),p2=new T.Vector3(Math.cos(next)*r,6+Math.sin(next*3)*2.4,Math.sin(next)*r);
+     const d=p2.clone().sub(p1);
+     const bar=shape(new T.CylinderGeometry(.14,.14,1,6),coasterMat,(p1.x+p2.x)/2,(p1.y+p2.y)/2,(p1.z+p2.z)/2,1,d.length(),1);
+     bar.quaternion.setFromUnitVectors(new T.Vector3(0,1,0),d.normalize());
+   }
+   return bg;
+ }
+ const parkAdventure=adventureBackdrop(parkour,0,-17,1);
  let parkCheckpoint=0,parkDone=false,parkFails=0;
  function parkRespawn(){const p=parkPlatforms[parkCheckpoint];player.position.set(p.x,p.y+.08,375+p.z);vel=0;onGround=true;keys.clear();joystick.x=0;joystick.y=0}
  function enterParkour(){mode='parkour';parkour.visible=true;scene.background=parkSky;scene.fog=parkFog;parkCheckpoint=0;parkDone=false;parkFails=0;angle=0;targetAngle=0;targetPitch=.28;parkRespawn();$('status').textContent='🧗 PARKOUR · Salta de plataforma en plataforma. ¡Checkpoint a mitad!'}
  function leaveParkour(message){parkour.visible=false;scene.background=scene.userData.citySky||new T.Color('#b4dcf0');scene.fog=cityFog;goIsland('map');if(message)$('status').textContent=message}
-const tiles=[];let arenaBuilt=false;const arenaGroup=new T.Group();scene.add(arenaGroup);arenaGroup.visible=false;function resetArena(){arenaGroup.visible=true;if(!arenaBuilt){const before=new Set(scene.children);block(19,.6,10,mat('#a1dcb2'),0,-.4,86);block(19,.6,10,mat('#a1dcb2'),0,-.4,56);for(let r=0;r<8;r++)for(let c=0;c<7;c++){let t=block(2.45,.35,2.45,mat((r+c)%2?'#f8a5d8':'#a9b2fc'),(c-3)*2.55,-.12,65+r*2.55);tiles.push({mesh:t,r,c,safe:c===(r*3+2)%7,broken:false})}for(const object of [...scene.children])if(!before.has(object)&&object!==arenaGroup)arenaGroup.add(object);arenaBuilt=true}for(let t of tiles){t.broken=false;t.mesh.visible=true;t.mesh.material.color.set((t.r+t.c)%2?'#f8a5d8':'#a9b2fc')}player.position.set(0,0,87);vel=0;onGround=true}function backCity(msg){goIsland('map');if(msg)$('status').textContent=msg}
+const arenaScenery=new T.Group();scene.add(arenaScenery);arenaScenery.visible=false;adventureBackdrop(arenaScenery,0,72,1.15);
+const tiles=[];let arenaBuilt=false;const arenaGroup=new T.Group();scene.add(arenaGroup);arenaGroup.visible=false;function resetArena(){arenaGroup.visible=true;arenaScenery.visible=true;if(!arenaBuilt){const before=new Set(scene.children);block(19,.6,10,mat('#a1dcb2'),0,-.4,86);block(19,.6,10,mat('#a1dcb2'),0,-.4,56);for(let r=0;r<8;r++)for(let c=0;c<7;c++){let t=block(2.45,.35,2.45,mat((r+c)%2?'#f8a5d8':'#a9b2fc'),(c-3)*2.55,-.12,65+r*2.55);tiles.push({mesh:t,r,c,safe:c===(r*3+2)%7,broken:false})}for(const object of [...scene.children])if(!before.has(object)&&object!==arenaGroup)arenaGroup.add(object);arenaBuilt=true}for(let t of tiles){t.broken=false;t.mesh.visible=true;t.mesh.material.color.set((t.r+t.c)%2?'#f8a5d8':'#a9b2fc')}player.position.set(0,0,87);vel=0;onGround=true}function backCity(msg){goIsland('map');if(msg)$('status').textContent=msg}
 player.position.set(0,0,11);$('hud').style.display='none';let dragging=false,lastX=0,lastY=0,dragPointer=null;renderer.domElement.style.touchAction='none';renderer.domElement.addEventListener('pointerdown',e=>{if(!active||extras.shopOpen)return;dragging=true;dragPointer=e.pointerId;lastX=e.clientX;lastY=e.clientY;renderer.domElement.setPointerCapture(e.pointerId)});renderer.domElement.addEventListener('pointerup',()=>{dragging=false;dragPointer=null});renderer.domElement.addEventListener('pointercancel',()=>{dragging=false;dragPointer=null});renderer.domElement.addEventListener('pointermove',e=>{if(!active||!dragging||e.pointerId!==dragPointer)return;targetAngle-=(e.clientX-lastX)*.005;targetPitch=T.MathUtils.clamp(targetPitch+(e.clientY-lastY)*.004,-.25,.85);lastX=e.clientX;lastY=e.clientY});
 
  // City minimap. Positions come from the same shop coordinates used in world.js.
@@ -175,8 +232,8 @@ player.position.set(0,0,11);$('hud').style.display='none';let dragging=false,las
  islandSelect.querySelector('.islandClose').onclick=()=>islandSelect.style.display='none';
  islandSelect.querySelectorAll('[data-island]').forEach(b=>b.onclick=()=>goIsland(b.dataset.island));
  function goIsland(destination){
-  islandSelect.style.display='none';shop.visible=false;parkour.visible=false;arenaGroup.visible=false;onlineIsland.visible=false;islandHub.visible=false;worldRoot.visible=false;
-  scene.background=scene.userData.citySky||new T.Color('#b2cfe2');scene.fog=cityFog;
+  islandSelect.style.display='none';shop.visible=false;parkour.visible=false;arenaGroup.visible=false;arenaScenery.visible=false;onlineIsland.visible=false;islandHub.visible=false;worldRoot.visible=false;
+  scene.background=new T.Color('#86d4ff');scene.fog=new T.FogExp2('#c1eeff',.0017);
   vel=0;onGround=true;keys.clear();joystick.x=joystick.y=0;movementVelocity.set(0,0,0);angle=0;targetAngle=0;sun.shadow.needsUpdate=true;
   if(destination==='wardrobe'){islandHub.visible=true;mode='islands';player.position.set(0,0,5);window.barbasOpenWardrobe?.();return}
   if(destination==='shop'){enterShop();return}
