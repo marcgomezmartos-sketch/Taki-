@@ -377,7 +377,7 @@ export function createTournament(T,scene,player,extras,ui){
    const grounded=pos=>{
     if(rollers)return Math.abs(pos.z)<11.5&&survivalParts.some(q=>q.type==='roller'&&Math.abs(pos.x-q.x)<2.12);
     if(Math.hypot(pos.x,pos.z)>11)return false;
-    const a=(Math.atan2(pos.z,pos.x)+Math.PI*2)%(Math.PI*2),sector=Math.floor(a/(Math.PI/6));
+    const a=(Math.atan2(pos.x,pos.z)+Math.PI*2)%(Math.PI*2),sector=Math.floor(a/(Math.PI/6));
     return survivalParts.some(q=>q.type==='tile'&&q.index===sector&&q.alive);
    };
    const hitBar=(pos,jumping)=>{
