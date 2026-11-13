@@ -30,7 +30,7 @@ $('jump').addEventListener('pointerdown',e=>{e.preventDefault();jump()});$('inte
 
 const shop=new T.Group();scene.add(shop);shop.position.set(0,0,235);shop.visible=false;
 const ivory=mat('#f6eee2'),dark=mat('#26253b'),gold=mat('#caa46b'),oak=mat('#97725d'),pink=mat('#e5b7bd'),cream=mat('#ffebd3');
-function item(geo,material,x,y,z,parent=shop){const o=new T.Mesh(geo,material);o.position.set(x,y,z);o.castShadow=true;o.receiveShadow=true;parent.add(o);return o}
+function item(geo,material,x,y,z,parent=shop){const o=new T.Mesh(geo,material);o.position.set(x,y,z);o.castShadow=false;o.receiveShadow=true;parent.add(o);return o}
 function bx(x,y,z,a,b,c,m){return item(new T.BoxGeometry(a,b,c),m,x,y,z)}
 // Giant four-aisle boutique: 34 x 108 metres, 57 individual products, no floating catalogue.
 bx(0,-.16,0,34,.3,108,ivory);bx(0,7.1,0,34,.3,108,dark);
@@ -145,7 +145,7 @@ player.position.set(0,0,11);$('hud').style.display='none';let dragging=false,las
  #islandSelect .islandChoices button span{font-size:35px}
  #islandSelect .islandChoices button small{font-size:10px;font-weight:600;opacity:.85}
  #islandSelect .islandClose{width:100%;margin-top:17px;border:1px solid #ffffff88;border-radius:13px;background:#ffffff1c;color:#fff;padding:12px;font-weight:800}
- #miniMap{right:14px!important;top:355px!important;width:auto!important;height:auto!important;padding:11px 16px!important;border-radius:18px!important;background:#2e566b!important;color:white!important;font:bold 14px system-ui!important}
+ #miniMap{right:14px!important;top:385px!important;left:16px!important;right:auto!important;width:auto!important;height:auto!important;padding:11px 16px!important;border-radius:18px!important;background:#2e566b!important;color:white!important;font:bold 14px system-ui!important}
  #miniMap canvas{display:none!important}
  `;document.head.append(islandCSS);
  const islandSelect=document.createElement('div');islandSelect.id='islandSelect';islandSelect.innerHTML='<div class="islandPanel"><h2>🏝️ ELIGE TU ISLA</h2><p>Viaja directamente. Sin caminar por una ciudad enorme.</p><div class="islandChoices"><button data-island="arena"><span>🏆</span>MINIJUEGOS<small>ARENA PARTY</small></button><button data-island="parkour"><span>🧗</span>PARKOUR<small>Saltos y desafíos</small></button><button data-island="shop"><span>🛍️</span>TIENDA<small>TK SHOP · ropa</small></button><button data-island="online"><span>👥</span>ONLINE<small>Próximamente</small></button></div><button class="islandClose">✕ CERRAR MAPA</button></div>';document.body.append(islandSelect);
