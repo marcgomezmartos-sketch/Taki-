@@ -97,14 +97,14 @@ export function createTournament(T,scene,player,extras,ui){
  const hud=document.createElement('div');hud.id='roundHUD';document.body.append(hud);
  const useButton=document.querySelector('[data-key="KeyE"]')||document.querySelector('[data-key="KeyF"]');
  const actions=document.createElement('div');actions.id='roundActions';actions.innerHTML='<button id="roundPass">PASE</button><button id="roundShoot">CHUTAR</button>';document.body.append(actions);
- let hiding=false,hideSpot=null,roundRewarded=false,showResult=false,robotParts=null,shots=[],obstacles=[],gaps=[],raceRespawn=8,raceLastZ=8,robotClock=0;
+ let survivalParts=[],survivalHit=0;let hiding=false,hideSpot=null,roundRewarded=false,showResult=false,robotParts=null,shots=[],obstacles=[],gaps=[],raceRespawn=8,raceLastZ=8,robotClock=0;
  let current=null,stage=0,alive=10,time=0,score=0,enemy=0,seekers=[],isSeeker=false,hitCooldown=0,finishers=0,roundToken=0,started=false,ballVelocity=new T.Vector3(),throwTimer=0;
- const prelim=['futsal','hide','race'],finals=['water','robot','future'];
- const labels={futsal:'FÚTBOL SALA 5 VS 5',hide:'ESCONDITE EN EL PARQUE',race:'CARRERA DE OBSTÁCULOS',water:'FINAL · PARQUE ACUÁTICO',robot:'FINAL · ROBOT LANZADOR',future:'FINAL · CARRERA FUTURISTA'};
- const intro={futsal:'Primer equipo en marcar 2 goles o el que gane al terminar 5 minutos.',hide:'5 buscan y 5 se esconden. Sobrevive o encuentra a tus rivales.',race:'¡Los primeros 5 en cruzar la meta se clasifican!',water:'Solo uno puede ganar: llega primero a la meta.',robot:'Evita los proyectiles del robot. ¡El último en pie gana!',future:'Una carrera entre portales y obstáculos. Solo gana el primero.'};
+ const prelim=['futsal','rollers','jump','race'],finals=['water','robot','future'];
+ const labels={futsal:'FÚTBOL SALA 5 VS 5',rollers:'RODILLOS INFERNALES',jump:'SALTO MORTAL',race:'CARRERA DE OBSTÁCULOS',water:'FINAL · PARQUE ACUÁTICO',robot:'FINAL · ROBOT LANZADOR',future:'FINAL · CARRERA FUTURISTA'};
+ const intro={futsal:'Primer equipo en marcar 2 goles o el que gane al terminar 5 minutos.',rollers:'Aguanta en los rodillos que giran sin caerte. ¡Solo clasifican cinco!',jump:'Salta las barras giratorias y esquiva las plataformas que desaparecen.',race:'¡Los primeros 5 en cruzar la meta se clasifican!',water:'Solo uno puede ganar: llega primero a la meta.',robot:'Evita los proyectiles del robot. ¡El último en pie gana!',future:'Una carrera entre portales y obstáculos. Solo gana el primero.'};
  const show=(label,title,sub,button)=>{banner.classList.add('show');banner.classList.toggle('result',showResult);banner.querySelector('#roundLabel').textContent=label;banner.querySelector('#roundTitle').textContent=title;banner.querySelector('#roundSub').textContent=sub;const b=banner.querySelector('button');b.style.display=button?'block':'none';b.onclick=button||null};
  const hideBanner=()=>banner.classList.remove('show');
- function reset(){goalToken++;goalSplash.style.display='none';goalPause=0;lastTouch='TÚ';hiding=false;hideSpot=null;roundRewarded=false;showResult=false;robotParts=null;shots=[];obstacles=[];gaps=[];raceRespawn=8;raceLastZ=8;robotClock=0;while(root.children.length>10){let x=root.children[root.children.length-1];root.remove(x);if(x.geometry)x.geometry.dispose()}for(let b of bots){b.visible=true;b.position.set(0,0,0);b.userData.lastPosition.copy(b.position)}for(const brain of botBrain){brain.raceCheckpoint=8;brain.raceStun=0;brain.raceJump=0;brain.raceFinish=false;brain.raceFails=0}ball.visible=false;ballVelocity.set(0,0,0);hitCooldown=0;throwTimer=0;finishers=0;score=enemy=0;time=0;actions.style.display='none';}
+ function reset(){goalToken++;goalSplash.style.display='none';goalPause=0;lastTouch='TÚ';hiding=false;hideSpot=null;roundRewarded=false;showResult=false;robotParts=null;shots=[];obstacles=[];gaps=[];raceRespawn=8;raceLastZ=8;robotClock=0;survivalParts=[];survivalHit=0;while(root.children.length>10){let x=root.children[root.children.length-1];root.remove(x);if(x.geometry)x.geometry.dispose()}for(let b of bots){b.visible=true;b.position.set(0,0,0);b.userData.lastPosition.copy(b.position)}for(const brain of botBrain){brain.raceCheckpoint=8;brain.raceStun=0;brain.raceJump=0;brain.raceFinish=false;brain.raceFails=0}ball.visible=false;ballVelocity.set(0,0,0);hitCooldown=0;throwTimer=0;finishers=0;score=enemy=0;time=0;actions.style.display='none';}
 
  const lightMat=material('#ffdf74'),darkMat=material('#252f56'),whiteMat=material('#f8f7f1');
  function buildArena(){
@@ -155,6 +155,31 @@ export function createTournament(T,scene,player,extras,ui){
    }
    for(let i=0;i<12;i++){const z=-31+i*5.4;cube(1,.12,1,lightMat,-32,.3,z);cube(1,.12,1,lightMat,32,.3,z)}
  }
+ function buildSurvival(kind){
+  const rollers=kind==='rollers',colors=['#ff73b8','#5ad8f2','#ffe16e','#8edb9e'];
+  if(rollers){
+   for(let i=0;i<4;i++){
+    const x=(i-1.5)*5.1;
+    const cylinder=new T.Mesh(new T.CylinderGeometry(2.45,2.45,24,20),material(colors[i]));
+    cylinder.rotation.x=Math.PI/2;cylinder.position.set(x,-2.25,0);root.add(cylinder);
+    survivalParts.push({type:'roller',mesh:cylinder,x});
+    for(let j=0;j<7;j++){const ring=new T.Mesh(new T.TorusGeometry(2.46,.12,6,18),material('#fff4c6'));ring.position.set(x,-2.25,-9+j*3);root.add(ring)}
+   }
+   cube(25,1,.9,material('#344a76'),0,-1,-12.5);cube(25,1,.9,material('#344a76'),0,-1,12.5);
+  }else{
+   for(let i=0;i<12;i++){
+    const tile=new T.Mesh(new T.CylinderGeometry(11.3,11.3,.6,3,1,false,i*Math.PI/6,Math.PI/6),material(colors[i%4]));
+    tile.position.y=-.38;root.add(tile);survivalParts.push({type:'tile',mesh:tile,index:i,alive:true});
+   }
+   const armGroup=new T.Group();armGroup.position.y=.62;root.add(armGroup);
+   const lower=new T.Mesh(new T.BoxGeometry(21,.3,.55),material('#ff488e'));armGroup.add(lower);
+   const upper=new T.Mesh(new T.BoxGeometry(.55,.35,21),material('#fff1a1'));upper.position.y=1.35;armGroup.add(upper);
+   const hub=new T.Mesh(new T.CylinderGeometry(.9,.9,2,12),material('#334579'));hub.position.y=.6;root.add(hub);
+   survivalParts.push({type:'arms',mesh:armGroup});
+  }
+  bots.forEach((b,i)=>{b.visible=true;const a=i*Math.PI*2/9;b.position.set(rollers?(i%4-1.5)*5.1:Math.cos(a)*7,0,rollers?-7+Math.floor(i/4)*6:Math.sin(a)*7)});
+  player.position.set(rollers?-2.55:0,0,rollers?8:7);
+ }
  function use(){if(current!=='hide'||!started||isSeeker)return false;if(hiding){hiding=false;hideSpot=null;ui.status('Has salido del escondite');return true}
    for(let i=0;i<root.children.length;i++){const a=root.children[i];if(!a.isMesh||a.userData.crowd)continue;if(a.geometry?.type!=='BoxGeometry')continue;
     const x=a.position.x,z=a.position.z;if(Math.hypot(player.position.x-x,player.position.z-z)<3.4&&a.position.y>0.3){hiding=true;hideSpot=new T.Vector3(x,0,z);ui.status('¡Escondido! Pulsa USAR para salir');return true}}
@@ -168,6 +193,8 @@ export function createTournament(T,scene,player,extras,ui){
    ball.visible=true;ball.position.set(0,.5,0);
    bots.forEach((b,i)=>b.position.set((i%5-2)*3,0,i<4?3: -5));
    player.position.set(0,0,9);actions.style.display='flex';
+  }else if(kind==='rollers'||kind==='jump'){
+   buildSurvival(kind);
   }else if(kind==='hide'){
    buildAmusement();
    bots.forEach((b,i)=>b.position.set(Math.sin(i*2)*18,0,Math.cos(i*2)*18));
@@ -249,6 +276,7 @@ export function createTournament(T,scene,player,extras,ui){
   const race=current==='race'||current==='water'||current==='future';
   if(race){p.x=T.MathUtils.clamp(p.x,-7,7);p.z=T.MathUtils.clamp(p.z,-110,10)}
   else if(current==='futsal'){p.x=T.MathUtils.clamp(p.x,-12,12);p.z=T.MathUtils.clamp(p.z,-19,19)}
+  else if(current==='rollers'||current==='jump'){p.x=T.MathUtils.clamp(p.x,-12,12);p.z=T.MathUtils.clamp(p.z,-12,12)}
   else if(current==='hide'){p.x=T.MathUtils.clamp(p.x,-35,35);p.z=T.MathUtils.clamp(p.z,-35,35)}
   else {p.x=T.MathUtils.clamp(p.x,-12,12);p.z=T.MathUtils.clamp(p.z,-12,12)}
   if(race){
@@ -339,6 +367,47 @@ export function createTournament(T,scene,player,extras,ui){
    });
    hud.textContent='⚽ AZUL '+score+' - '+enemy+' ROJO · '+Math.max(0,300-Math.floor(time))+'s';
    if(goalPause<=0&&(score>=2||enemy>=2||time>=300)){score>enemy?qualify():end(false)}
+  }else if(current==='rollers'||current==='jump'){
+   const rollers=current==='rollers',spin=1.1+Math.min(1.8,time*.017);
+   for(const part of survivalParts){
+    if(part.type==='roller')part.mesh.rotation.z+=dt*spin*(part.x<0?1:-1);
+    if(part.type==='arms')part.mesh.rotation.y+=dt*spin;
+    if(part.type==='tile'&&time>12){const wave=Math.floor((time-12)/5),gone=(part.index+wave*5)%12<Math.min(5,1+Math.floor(time/20));part.alive=!gone;part.mesh.visible=!gone}
+   }
+   const grounded=pos=>{
+    if(rollers)return Math.abs(pos.z)<11.5&&survivalParts.some(q=>q.type==='roller'&&Math.abs(pos.x-q.x)<2.12);
+    if(Math.hypot(pos.x,pos.z)>11)return false;
+    const a=(Math.atan2(pos.z,pos.x)+Math.PI*2)%(Math.PI*2),sector=Math.floor(a/(Math.PI/6));
+    return survivalParts.some(q=>q.type==='tile'&&q.index===sector&&q.alive);
+   };
+   const hitBar=(pos,jumping)=>{
+    if(rollers)return !jumping&&Math.sin(time*2.3+pos.z*.65+pos.x)>.997;
+    const arm=survivalParts.find(q=>q.type==='arms');
+    const a=Math.atan2(pos.z,pos.x)-arm.mesh.rotation.y;
+    return !jumping&&Math.abs(Math.sin(a))<.08&&Math.hypot(pos.x,pos.z)>1.2;
+   };
+   if((!grounded(p)||hitBar(p,p.y>.65))&&survivalHit<=0){survivalHit=1;end(false);return true}
+   survivalHit=Math.max(0,survivalHit-dt);
+   let remaining=1;
+   bots.forEach((b,i)=>{
+    if(!b.visible)return;
+    const brain=botBrain[i];
+    if(rollers){
+     const target=(i%4-1.5)*5.1+Math.sin(time*.7+brain.phase)*.65;
+     b.position.x+=T.MathUtils.clamp(target-b.position.x,-dt*2.7,dt*2.7);
+     b.position.z=T.MathUtils.clamp(b.position.z+Math.sin(time*.6+brain.phase)*dt*2,-10,10);
+    }else{
+     const a=Math.atan2(b.position.z,b.position.x)+dt*(i%2?-.25:.3),rad=6.5+Math.sin(time*.3+brain.phase)*1.8;
+     b.position.set(Math.cos(a)*rad,0,Math.sin(a)*rad);
+    }
+    if(brain.raceJump<=0&&Math.sin(time*2.3+brain.phase)>.88)brain.raceJump=.7;
+    brain.raceJump=Math.max(0,brain.raceJump-dt);
+    b.position.y=brain.raceJump>0?Math.sin((1-brain.raceJump/.7)*Math.PI)*1.15:0;
+    if(!grounded(b.position)||hitBar(b.position,b.position.y>.65)){b.visible=false;return}
+    remaining++;
+   });
+   hud.textContent=(rollers?'🎢 RODILLOS INFERNALES':'🌀 SALTO MORTAL')+' · '+remaining+' restantes · '+Math.max(0,90-Math.floor(time))+'s';
+   if(remaining<=5||time>=90)qualify();
   }else if(current==='hide'){
    bots.forEach((b,i)=>{const hunter=seekers.includes(i);const target=hunter?(hiding?b.position:p):new T.Vector3(Math.sin(time*.3+i)*26,0,Math.cos(time*.2+i)*26);let v=target.clone().sub(b.position);v.y=0;if(v.length()>.5)b.position.addScaledVector(v.normalize(),dt*(hunter?2.3:2.3));if(hunter&&!isSeeker&&!hiding&&b.position.distanceTo(p)<1.2)end(false);if(isSeeker&&!hunter&&b.position.distanceTo(p)<1.4){b.visible=false;seekers.push(i)}});
    hud.textContent='🫣 '+(isSeeker?'TE TOCA BUSCAR':'TE TOCA ESCONDERTE')+(hiding?' · OCULTO':' · USAR PARA ESCONDERTE')+' · '+Math.max(0,60-Math.floor(time))+'s';
