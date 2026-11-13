@@ -238,6 +238,23 @@ player.position.set(0,0,11);$('hud').style.display='none';let dragging=false,las
  #islandSelect .islandChoices button small{color:#fff;opacity:.94}
  #islandSelect .islandClose{background:linear-gradient(#f8fcff,#b9d8f5);border:2px solid #fff;color:#1b3766;box-shadow:0 4px #6489b1;font-weight:900}
  @media(max-height:710px){#islandSelect .islandPanel{padding:10px 14px}#islandSelect .islandChoices button{min-height:82px}#islandSelect .islandChoices button:nth-child(5){min-height:65px}#islandSelect .islandPanel::after{top:41px}}
+
+ /* Main mode is the hero; utility destinations are secondary. */
+ #islandSelect .islandChoices{gap:9px!important}
+ #islandSelect .islandChoices button{min-height:78px!important;padding:9px!important;font-size:14px!important;gap:3px!important}
+ #islandSelect .islandChoices button span{font-size:23px!important}
+ #islandSelect .islandChoices button small{font-size:10px!important}
+ #islandSelect .islandChoices button[data-island="arena"]{grid-column:1/-1!important;min-height:153px!important;background:linear-gradient(135deg,#ffbf32 0%,#ff8139 48%,#e94d77 100%)!important;color:#152c60!important;border:3px solid #fff7b0!important;box-shadow:0 8px 0 #8b315a,0 12px 25px #0006!important;font-size:29px!important;letter-spacing:1px}
+ #islandSelect .islandChoices button[data-island="arena"] span{font-size:45px!important;filter:drop-shadow(0 3px 2px #9b481d66)}
+ #islandSelect .islandChoices button[data-island="arena"] small{font-size:13px!important;color:#272c5b!important;opacity:1!important}
+ #islandSelect .islandChoices button[data-island="wardrobe"]{grid-column:auto!important;min-height:78px!important;background:linear-gradient(155deg,#e97dbe,#9e408f)!important}
+ #islandSelect .islandChoices button[data-island="profile"]{background:linear-gradient(155deg,#56bce7,#236caa)!important}
+ #islandSelect .islandChoices button[data-island="group"]{background:linear-gradient(155deg,#75caa0,#238e81)!important}
+ #islandSelect .islandPanel{max-height:94vh!important;padding:15px 18px!important}
+ #islandSelect .islandPanel h2{font-size:25px!important;margin:0 0 4px!important}
+ #islandSelect .islandPanel p{margin:0 0 10px!important}
+ #islandSelect .islandClose{margin-top:12px!important}
+ @media(max-height:720px){#islandSelect .islandChoices button{min-height:65px!important}#islandSelect .islandChoices button[data-island="arena"]{min-height:116px!important}#islandSelect .islandPanel{padding:10px 14px!important}}
  `;document.head.append(islandCSS);
  const islandSelect=document.createElement('div');islandSelect.id='islandSelect';islandSelect.innerHTML='<div class="islandPanel"><h2>ELIGE TU DESTINO</h2><p>Selecciona una zona y entra directamente.</p><div class="islandChoices"><button data-island="arena"><span>🏆</span>MINIJUEGOS<small>Torneo · 10 jugadores</small></button><button data-island="parkour"><span>🧗</span>PARKOUR<small>Saltos y desafíos</small></button><button data-island="shop"><span>🛍️</span>TIENDA<small>TK SHOP · ropa</small></button><button data-island="online"><span>👥</span>ONLINE<small>Próximamente</small></button><button data-island="wardrobe"><span>👕</span>VESTUARIO<small>Cambiar ropa y personaje</small></button><button data-island="profile"><span>👤</span>PERFIL<small>Skin, victorias y nombre</small></button><button data-island="group"><span>👥</span>GRUPO<small>Amigos e invitaciones</small></button></div><button class="islandClose">✕ CERRAR MAPA</button></div>';document.body.append(islandSelect);
  const showIslands=()=>{if(!active)return;islandSelect.style.display='flex';joystick.x=joystick.y=0;keys.clear()};
