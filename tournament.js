@@ -1,3 +1,4 @@
+import {crearBarbasV4} from './barbas_v5.js?v=rig58';
 // Barbas Minigames V63: round director. Local bots until multiplayer backend is ready.
 export function createTournament(T,scene,player,extras,ui){
  const root=new T.Group();scene.add(root);root.visible=false;
@@ -5,8 +6,54 @@ export function createTournament(T,scene,player,extras,ui){
  const floorMat=material('#58cfa5'),pink=material('#fa6caa'),blue=material('#57baf4'),gold=material('#ffd75b');
  const cube=(w,h,d,m,x,y,z)=>{let a=new T.Mesh(new T.BoxGeometry(w,h,d),m);a.position.set(x,y,z);a.receiveShadow=true;root.add(a);return a};
  const sphere=(r,m,x,y,z)=>{let a=new T.Mesh(new T.SphereGeometry(r,12,8),m);a.position.set(x,y,z);root.add(a);return a};
- const botMat=[material('#fc765e'),material('#9d75f8'),material('#f7d74e'),material('#69cba9'),material('#f48ac6')];
- const bots=[];for(let i=0;i<9;i++){let g=new T.Group();let body=new T.Mesh(new T.CapsuleGeometry(.38,.8,4,8),botMat[i%5]);body.position.y=1;g.add(body);let head=new T.Mesh(new T.SphereGeometry(.35,10,8),material('#e5b48b'));head.position.y=1.85;g.add(head);root.add(g);bots.push(g)}
+ // Bots use the SAME articulated character rig as the player, not placeholder capsules.
+ const botStyles=[
+  {name:'Alex_07',gender:'man',top:'#f34c54',pants:'#27334c',shoes:'#f4f4ec',cap:'#151a24'},
+  {name:'LunaPlay',gender:'woman',top:'#bc67ed',pants:'#353050',shoes:'#ffffff',cap:null},
+  {name:'MaxPro',gender:'man',top:'#f5c34b',pants:'#263d65',shoes:'#f8f8fa',cap:'#20232e'},
+  {name:'NereaGG',gender:'woman',top:'#4ec4ad',pants:'#353e58',shoes:'#f8d7e6',cap:null},
+  {name:'Dani_FC',gender:'man',top:'#f78cae',pants:'#232e42',shoes:'#fafafa',cap:'#f7f0df'},
+  {name:'MiaStar',gender:'woman',top:'#76a4ff',pants:'#544270',shoes:'#fff2dc',cap:null},
+  {name:'LeoRush',gender:'man',top:'#f08b44',pants:'#27344d',shoes:'#e6f7ff',cap:'#101827'},
+  {name:'SaraWin',gender:'woman',top:'#ff6a8c',pants:'#344866',shoes:'#ffffff',cap:null},
+  {name:'Izan99',gender:'man',top:'#5fd1db',pants:'#393951',shoes:'#fff6e0',cap:'#26324a'}
+ ];
+ const bots=[],botRigs=[],botPrev=[];
+ const outfitMaterial=(hex)=>new T.MeshStandardMaterial({color:hex,roughness:.88,metalness:0,side:T.DoubleSide});
+ for(let i=0;i<9;i++){
+  const preset=botStyles[i],rig=crearBarbasV4();
+  rig.setAvatarStyle(preset.gender);
+  const g=new T.Group();g.add(rig.root);
+  // Clothes follow the torso, thighs and animated arms/knees, like the player's wardrobe.
+  const top=outfitMaterial(preset.top),trousers=outfitMaterial(preset.pants),sneakers=outfitMaterial(preset.shoes);
+  rig.garment(top,[[1.34,.307,.24],[1.48,.352,.266],[1.7,.378,.274],[1.94,.345,.252],[2.035,.235,.185]],rig.body,18);
+  for(const arm of rig.arms){
+   rig.garment(top,[[-.34,.143,.15],[-.18,.16,.16],[.05,.168,.164]],arm,14);
+  }
+  for(const leg of rig.legs){
+   rig.garment(trousers,[[-.56,.19,.196],[-.33,.21,.212],[.05,.222,.22]],leg,14);
+  }
+  for(const knee of rig.knees){
+   rig.garment(trousers,[[-.38,.15,.16],[-.18,.177,.18],[.07,.18,.184]],knee,14);
+  }
+  for(const foot of rig.feet){
+   const shoe=new T.Mesh(new T.BoxGeometry(.36,.14,.52),sneakers);shoe.position.set(0,-.14,.13);foot.add(shoe);
+  }
+  if(preset.cap){
+   const capMat=outfitMaterial(preset.cap);
+   const cap=new T.Mesh(new T.SphereGeometry(.31,14,8,0,Math.PI*2,0,Math.PI*.48),capMat);
+   cap.position.set(0,.32,0);rig.head.add(cap);
+   const brim=new T.Mesh(new T.BoxGeometry(.41,.055,.25),capMat);brim.position.set(0,.33,.27);rig.head.add(brim);
+  }
+  // Lightweight floating gamer tag, attached to each moving character.
+  const labelCanvas=document.createElement('canvas');labelCanvas.width=256;labelCanvas.height=64;
+  const ctx=labelCanvas.getContext('2d');ctx.fillStyle='rgba(16,25,54,.85)';ctx.beginPath();ctx.roundRect(3,4,250,54,17);ctx.fill();
+  ctx.font='bold 29px system-ui';ctx.fillStyle='#ffffff';ctx.textAlign='center';ctx.fillText(preset.name,128,43);
+  const tex=new T.CanvasTexture(labelCanvas);tex.colorSpace=T.SRGBColorSpace;
+  const tag=new T.Sprite(new T.SpriteMaterial({map:tex,transparent:true,depthWrite:false}));tag.scale.set(1.35,.34,1);tag.position.y=2.5;g.add(tag);
+  g.userData.lastPosition=new T.Vector3();g.userData.rig=rig;g.userData.name=preset.name;
+  root.add(g);bots.push(g);botRigs.push(rig);botPrev.push(new T.Vector3());
+ }
  const ball=sphere(.4,material('#fff8df'),0,.5,0);ball.visible=false;
  const banner=document.createElement('div');banner.id='roundDirector';banner.innerHTML='<div class="roundPark"><div class="roundFerris"></div><div class="roundTent"></div><div class="roundLights"></div></div><div class="roundContent"><div id="roundLabel"></div><div id="roundWheel"><div class="roundWheelFace"><div class="wheelIcon">🎡</div></div><div class="wheelPointer">▼</div></div><div id="roundTitle"></div><div id="roundSub"></div><button id="roundContinue">CONTINUAR</button></div><div id="roundAvatar"></div>';document.body.append(banner);
  const style=document.createElement('style');style.textContent=`
@@ -49,7 +96,7 @@ export function createTournament(T,scene,player,extras,ui){
  const intro={futsal:'Primer equipo en marcar 2 goles o el que gane al terminar 5 minutos.',hide:'5 buscan y 5 se esconden. Sobrevive o encuentra a tus rivales.',race:'¡Los primeros 5 en cruzar la meta se clasifican!',water:'Solo uno puede ganar: llega primero a la meta.',robot:'Evita los proyectiles del robot. ¡El último en pie gana!',future:'Una carrera entre portales y obstáculos. Solo gana el primero.'};
  const show=(label,title,sub,button)=>{banner.classList.add('show');banner.classList.toggle('result',showResult);banner.querySelector('#roundLabel').textContent=label;banner.querySelector('#roundTitle').textContent=title;banner.querySelector('#roundSub').textContent=sub;const b=banner.querySelector('button');b.style.display=button?'block':'none';b.onclick=button||null};
  const hideBanner=()=>banner.classList.remove('show');
- function reset(){hiding=false;hideSpot=null;roundRewarded=false;showResult=false;robotParts=null;shots=[];obstacles=[];gaps=[];raceRespawn=8;raceLastZ=8;robotClock=0;while(root.children.length>10){let x=root.children[root.children.length-1];root.remove(x);if(x.geometry)x.geometry.dispose()}for(let b of bots){b.visible=true;b.position.set(0,0,0)}ball.visible=false;ballVelocity.set(0,0,0);hitCooldown=0;throwTimer=0;finishers=0;score=enemy=0;time=0;actions.style.display='none';}
+ function reset(){hiding=false;hideSpot=null;roundRewarded=false;showResult=false;robotParts=null;shots=[];obstacles=[];gaps=[];raceRespawn=8;raceLastZ=8;robotClock=0;while(root.children.length>10){let x=root.children[root.children.length-1];root.remove(x);if(x.geometry)x.geometry.dispose()}for(let b of bots){b.visible=true;b.position.set(0,0,0);b.userData.lastPosition.copy(b.position)}ball.visible=false;ballVelocity.set(0,0,0);hitCooldown=0;throwTimer=0;finishers=0;score=enemy=0;time=0;actions.style.display='none';}
 
  const lightMat=material('#ffdf74'),darkMat=material('#252f56'),whiteMat=material('#f8f7f1');
  function buildArena(){
@@ -268,6 +315,7 @@ export function createTournament(T,scene,player,extras,ui){
    if(left===0)end(true);
 
   }
+  bots.forEach((b,i)=>{if(!b.visible)return;const previous=b.userData.lastPosition;const dx=b.position.x-previous.x,dz=b.position.z-previous.z;const dist=Math.hypot(dx,dz);const speed=Math.min(9,dist/Math.max(dt,.01));if(dist>.001){const target=Math.atan2(-dx,-dz);b.rotation.y+=Math.atan2(Math.sin(target-b.rotation.y),Math.cos(target-b.rotation.y))*Math.min(1,dt*9)}botRigs[i].actualizar(dt,speed>.4?(speed>5?'correr':'caminar'):'quieto',{velocidad:speed});previous.copy(b.position)});
   return true;
  }
  return {start,stop,update,kick,use,hasGround:()=>!(current==='race'||current==='water'||current==='future')||!gaps.some(g=>player.position.z<g.a&&player.position.z>g.b),get running(){return !!current},get started(){return started}};
