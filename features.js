@@ -103,6 +103,8 @@ export function iniciarExtras({player,model,head,rig,showStatus}){
   if(['bucket','fisher'].includes(cap.design)){brim.scale.set(.37,.03,.36);brim.position.z=0;brim.position.y=.055}
  }
  const dress=get('dress'),jacket=get('jacket'),pants=get('pants'),bag=get('bag');
+ // Hide the original skin torso when a garment covers it: prevents skin-coloured holes.
+ if(rig.body.children[0])rig.body.children[0].visible=!(jacket||dress);
  // Every garment is attached to the animated body rig. Overlapping cuffs and
  // generous joints avoid exposed skin at shoulder, elbow, waist and knee.
  const meshBall=(parent,color,x,y,z,sx,sy,sz)=>{const m=new T.Mesh(new T.SphereGeometry(1,20,14),new T.MeshStandardMaterial({color,roughness:.91}));m.position.set(x,y,z);m.scale.set(sx,sy,sz);m.castShadow=true;parent.add(m);wearableParts.push(m);return m};
@@ -112,8 +114,8 @@ export function iniciarExtras({player,model,head,rig,showStatus}){
    const arm=rig.arms[i],elbow=rig.elbows[i];
    // Shoulder dome must overlap the torso and upper arm to hide the skin seam
    // even during arm swing and when viewed from above.
-   meshBall(arm,color,0,.005,0,.205,.22,.197);
-   meshBall(arm,color,0,-.12,0,.186,.24,.182);
+   meshBall(arm,color,0,.005,0,.172,.21,.168);
+   meshBall(arm,color,0,-.12,0,.167,.21,.164);
    fitted([[-.39,.151,.153],[-.27,.173,.17],[-.10,.185,.18],[.05,.195,.191],[.14,.152,.158]],color,arm);
    if(long){
     meshBall(elbow,color,0,-.035,0,.155,.175,.154);
@@ -141,11 +143,11 @@ export function iniciarExtras({player,model,head,rig,showStatus}){
  // Hip cover joins both legs to the torso; avoids skin-colored crotch gaps.
  fitted([[1.18,.343,.26],[1.29,.356,.268],[1.39,.347,.257]],pants.color,rig.body);
  if(isSkirt){const hem=pants.design==='midi'?.65:.91;fitted([[hem,.47,.39],[hem+.13,.49,.41],[1.12,.405,.32],[1.35,.352,.26]],pants.color,rig.body)}
- else{for(let i=0;i<2;i++){const leg=rig.legs[i];fitted([[-.56,.193,.187],[-.39,.211,.208],[-.16,.233,.225],[.10,.229,.222]],pants.color,leg);meshBall(leg,pants.color,0,-.06,0,.226,.15,.219);
+ else{for(let i=0;i<2;i++){const leg=rig.legs[i];fitted([[-.56,.193,.187],[-.39,.211,.208],[-.16,.233,.225],[.10,.229,.222]],pants.color,leg);meshBall(leg,pants.color,0,-.06,0,.212,.12,.21);
  if(!isShort){const knee=rig.knees[i];meshBall(knee,pants.color,0,-.10,0,.177,.24,.18);fitted([[-.55,.173,.177],[-.39,.181,.184],[-.19,.192,.197],[.10,.196,.197]],pants.color,knee);meshBall(knee,pants.color,0,-.43,0,.173,.09,.18)}
  }}
  }
- if(dress){coverTorso(dress.color);const hem=['party','evening'].includes(dress.design)?.65:.55;fitted([[hem,hem,.52],[hem+.12,hem*.96,.49],[1.06,.45,.36],[1.35,.35,.26]],dress.color,rig.body);meshBall(rig.body,dress.color,0,1.33,0,.355,.13,.26);
+ if(dress){coverTorso(dress.color);const hem=['party','evening'].includes(dress.design)?.65:.55;fitted([[hem,hem,.52],[hem+.12,hem*.96,.49],[1.06,.45,.36],[1.35,.35,.26]],dress.color,rig.body);meshBall(rig.body,dress.color,0,1.33,0,.35,.10,.25);
  if(['denim','garden'].includes(dress.design))sleeve(dress.color,false);
  if(['ribbon','summer','garden'].includes(dress.design))for(const side of [-1,1])meshBall(rig.body,'#fff2d9',side*.18,1.65,.277,.085,.085,.04)
  }
