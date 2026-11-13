@@ -1,4 +1,5 @@
 import * as T from 'three';
+import {RoundedBoxGeometry} from 'three/addons/geometries/RoundedBoxGeometry.js';
 // BARBAS MINIGAMES — Brooklyn-inspired neighborhood hub, original fictional layout.
 export function crearCiudad(scene){
  // Seeded procedural PBR surface maps: all assets are generated locally.
@@ -104,6 +105,56 @@ export function crearCiudad(scene){
  for(const [x,z] of [[-14,-43],[14,-43],[-43,13],[43,13]]){ball(.23,glowMat,x,6.5,z)}
  const accents=[];
  for(const [x,y,z] of [[0,5,-19],[-29,4,9],[29,4,9]]){const light=new T.PointLight('#ffc88c',1.8,12,2);light.position.set(x,y,z);scene.add(light);accents.push(light)}
+ // V56: layered stylized geometry inspired by polished party-platformer environments.
+ const roundedGeo=new RoundedBoxGeometry(1,1,1,3,.15);
+ const roundBox=(w,h,d,m,x,y,z)=>{const o=new T.Mesh(roundedGeo,m);o.scale.set(w,h,d);o.position.set(x,y,z);o.castShadow=true;o.receiveShadow=true;scene.add(o);return o};
+ const saturated=[mat('#e6a45f',.62),mat('#4a93a1',.54),mat('#d46e60',.68),mat('#e7c68d',.67),mat('#7a9b83',.7)];
+ // Distinctive storefront canopies, architectural columns and inset window panels.
+ shops.forEach((sh,i)=>{
+  const w=i===0?17:14,d=i===0?16:13,h=i===0?19:15,fz=sh.z+d/2+.32;
+  roundBox(w+.6,.44,.6,saturated[i],sh.x,h-.65,sh.z+d/2+.05);
+  for(const side of [-1,1]){
+   roundBox(.48,h-.9,.48,concrete,sh.x+side*(w/2-.28),(h-.9)/2,sh.z+d/2+.3);
+   roundBox(.36,2.5,.32,metal,sh.x+side*2.4,1.25,fz+.35);
+  }
+  for(let y=4.8;y<h-1;y+=4.6)for(const dx of [-w*.32,0,w*.32]){
+   roundBox(2.8,3.35,.18,trim,sh.x+dx,y,sh.z+d/2+.25);
+   roundBox(2.36,2.9,.19,glass,sh.x+dx,y,sh.z+d/2+.38);
+   box(.10,2.9,.23,metal,sh.x+dx,y,sh.z+d/2+.51);
+   box(2.36,.10,.23,metal,sh.x+dx,y,sh.z+d/2+.51);
+  }
+ });
+ // Rounded stylized parked cars: silhouette, bumpers, wheels, windows.
+ const rubber=mat('#222a32',.96),wheelRim=mat('#c8d2d2',.38,.65),lights=mat('#ffe7b2',.3,.2);
+ const carColors=[mat('#df715c',.42,.15),mat('#f0c46e',.48,.12),mat('#65a1b0',.43,.12),mat('#778e73',.53,.08)];
+ const cars=[[-46,-10,0],[45,-9,0],[-44,26,0],[44,26,0],[-11,45,Math.PI/2],[13,45,Math.PI/2]];
+ cars.forEach(([x,z,a],i)=>{
+  const group=new T.Group();group.position.set(x,.3,z);group.rotation.y=a;scene.add(group);
+  const car=(w,h,d,m,xx,yy,zz)=>{const o=new T.Mesh(roundedGeo,m);o.scale.set(w,h,d);o.position.set(xx,yy,zz);o.castShadow=true;group.add(o)};
+  car(2.35,.66,4.0,carColors[i%4],0,.42,0);car(1.94,.79,2.18,carColors[i%4],0,1.08,-.28);
+  car(1.78,.45,.07,glass,0,1.12,.84);car(1.78,.45,.07,glass,0,1.12,-1.4);
+  for(const side of [-1,1])for(const dz of [-1.25,1.25]){
+   const wheel=new T.Mesh(new T.CylinderGeometry(.43,.43,.21,16),rubber);
+   wheel.rotation.z=Math.PI/2;wheel.position.set(side*1.12,.24,dz);group.add(wheel);
+   const hub=new T.Mesh(new T.CylinderGeometry(.23,.23,.225,16),wheelRim);
+   hub.rotation.z=Math.PI/2;hub.position.copy(wheel.position);group.add(hub);
+  }
+  for(const side of [-1,1])car(.34,.19,.08,lights,side*.72,.52,2.04);
+ });
+ // Characterful urban park props: playground ramps, colourful planter rings.
+ const parkTiles=[[-20,20],[-15,20],[-20,25],[-15,25]];
+ for(const [x,z] of parkTiles){roundBox(3,.12,3,mat('#a2b4a5',.85),x,.24,z)}
+ for(const [x,z] of [[-25,15],[-11,30],[17,20],[24,25]]){
+  const trunk=roundBox(.48,3,.46,wood,x,1.65,z);
+  const canopy=new T.Mesh(new T.IcosahedronGeometry(1.85,1),mat('#5c9a71',.78));
+  canopy.position.set(x,4.15,z);canopy.castShadow=true;scene.add(canopy);
+  const crown=new T.Mesh(new T.IcosahedronGeometry(1.15,1),mat('#83b782',.72));
+  crown.position.set(x+.7,4.75,z+.25);crown.castShadow=true;scene.add(crown);
+ }
+ // Painted road crossings and kerb edge highlights.
+ for(const z of [-38,0,38])for(const x of [-38,0,38]){
+  for(let i=-3;i<=3;i++)roundBox(.75,.025,3.5,paint,x+i*1.55,-.005,z+7.6);
+ }
  // Street furniture: lamp posts, subway entrance, hydrants, benches, trees.
  const lamps=[];
  for(const x of [-43,-14,14,43])for(const z of [-43,13,43]){if(Math.abs(x)<20&&Math.abs(z)<20)continue;
