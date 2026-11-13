@@ -1,6 +1,6 @@
-import {installSocial} from './social.js?v=70';
+import {installSocial} from './social.js?v=73';
 import {createTournament} from './tournament.js?v=69';
-import * as T from 'three';import {createGraphics} from './graphics.js?v=57';import {crearBarbasV4} from './barbas_v5.js?v=rig58';import {iniciarExtras} from './features.js?v=prices68';
+import * as T from 'three';import {createGraphics} from './graphics.js?v=57';import {crearBarbasV4} from './barbas_v5.js?v=rig73';import {iniciarExtras} from './features.js?v=prices68';
 function iniciarBarbasParty(){
 const $=id=>document.getElementById(id), scene=new T.Scene();scene.background=new T.Color('#e99588');scene.fog=new T.FogExp2('#d99c94',.0035);// Skybox image path: replace with your own panoramic sky asset.
  const SKY_IMAGE='assets/cielo_ciudad.jpg';
@@ -278,20 +278,21 @@ player.position.set(0,0,11);$('hud').style.display='none';let dragging=false,las
   }catch(e){return null}
  };
  const social=installSocial({extras,avatar:captureProfileAvatar});
+ window.addEventListener('barbas-social-closed',()=>{if(mode==='islands'&&active)showIslands()});
  const tournament=createTournament(T,scene,player,extras,{returnMap:()=>goIsland('map'),status:t=>$('status').textContent=t,getYaw:()=>visual.rotation.y,captureAvatar:()=>captureProfileAvatar()});
  function goIsland(destination){
   islandSelect.style.display='none';tournament.stop();shop.visible=false;parkour.visible=false;arenaGroup.visible=false;arenaScenery.visible=false;onlineIsland.visible=false;islandHub.visible=false;worldRoot.visible=false;
   scene.background=new T.Color('#86d4ff');scene.fog=new T.FogExp2('#c1eeff',.0017);
   vel=0;onGround=true;keys.clear();joystick.x=joystick.y=0;movementVelocity.set(0,0,0);angle=0;targetAngle=0;sun.shadow.needsUpdate=true;
-  if(destination==='profile'||destination==='group'){islandHub.visible=true;mode='islands';player.position.set(0,0,5);social.open(destination);return}
-  if(destination==='wardrobe'){islandHub.visible=true;mode='islands';player.position.set(0,0,5);window.barbasOpenWardrobe?.();return}
+  if(destination==='profile'||destination==='group'){mode='islands';player.position.set(0,0,5);social.open(destination);return}
+  if(destination==='wardrobe'){mode='islands';player.position.set(0,0,5);window.barbasOpenWardrobe?.();return}
   if(destination==='shop'){enterShop();return}
   if(destination==='parkour'){enterParkour();return}
   if(destination==='arena'){mode='tournament';player.position.set(0,0,0);$('status').textContent='🏆 TORNEO · 10 jugadores, 3 modos y finales';tournament.start();return}
   if(destination==='online'){mode='online';onlineIsland.visible=true;player.position.set(0,0,-234);$('status').textContent='👥 ISLA ONLINE · Las partidas multijugador estarán disponibles próximamente';return}
-  mode='islands';islandHub.visible=true;player.position.set(0,0,5);$('status').textContent='Pulsa MAPA para elegir una zona';showIslands();
+  mode='islands';islandHub.visible=false;player.position.set(0,0,5);$('status').textContent='Pulsa MAPA para elegir una zona';showIslands();
  }
- islandHub.visible=true;
+ islandHub.visible=false;
  mapButton.innerHTML='🗺️ MAPA';
  mapButton.onclick=showIslands;
  let fullMapOpen=false;mapFull.querySelector('#mapClose').onclick=()=>{fullMapOpen=false;mapFull.style.display='none'};
@@ -327,7 +328,7 @@ player.position.set(0,0,11);$('hud').style.display='none';let dragging=false,las
   else{c.fillStyle='#1d2741';c.font='bold '+(large?5:7)*scale+'px system-ui';c.textAlign='center';c.fillText('ESTÁS DENTRO DE '+(mode==='shop'?'TK SHOP':'ARENA'),w/2,h-7*scale)}
  }
  let mapFrame=0;
-const clock=new T.Clock();function loop(){refreshPlayerTag();requestAnimationFrame(loop);let dt=Math.min(clock.getDelta(),.04);if(active&&!extras.shopOpen){let v=new T.Vector3(joystick.x+(keys.has('KeyD')?1:0)-(keys.has('KeyA')?1:0),0,joystick.y+(keys.has('KeyS')?1:0)-(keys.has('KeyW')?1:0));let strength=Math.min(1,v.length());let moving=strength>.12;v.normalize().multiplyScalar(moving?strength:0).applyAxisAngle(new T.Vector3(0,1,0),angle);let speed=keys.has('ShiftLeft')?8.4:5;const desiredVelocity=v.clone().multiplyScalar(speed);const responsiveness=1-Math.exp(-(moving?11:15)*dt);movementVelocity.lerp(desiredVelocity,responsiveness);if(movementVelocity.lengthSq()<.001)movementVelocity.set(0,0,0);player.position.addScaledVector(movementVelocity,dt);const actualSpeed=movementVelocity.length();const isMoving=actualSpeed>.17;extras.update(dt,isMoving,actualSpeed);if(isMoving){const desiredYaw=Math.atan2(-movementVelocity.x,-movementVelocity.z);visual.rotation.y+=Math.atan2(Math.sin(desiredYaw-visual.rotation.y),Math.cos(desiredYaw-visual.rotation.y))*(1-Math.exp(-12*dt));}visual.position.y=0;visual.rotation.z=T.MathUtils.damp(visual.rotation.z,0,12,dt);vel-=23*dt;player.position.y+=vel*dt;let prevY=player.position.y-(vel+23*dt)*dt;let support=(mode==='islands'||mode==='online'||mode==='shop'||mode==='tournament')||(player.position.z>80&&player.position.z<92)||(player.position.z>51&&player.position.z<61);if(mode==='tournament'){tournament.update(dt);support=tournament.hasGround()}if(mode==='parkour'){
+const clock=new T.Clock();function loop(){player.visible=mode!=='islands';refreshPlayerTag();requestAnimationFrame(loop);let dt=Math.min(clock.getDelta(),.04);if(active&&mode!=='islands'&&!extras.shopOpen){let v=new T.Vector3(joystick.x+(keys.has('KeyD')?1:0)-(keys.has('KeyA')?1:0),0,joystick.y+(keys.has('KeyS')?1:0)-(keys.has('KeyW')?1:0));let strength=Math.min(1,v.length());let moving=strength>.12;v.normalize().multiplyScalar(moving?strength:0).applyAxisAngle(new T.Vector3(0,1,0),angle);let speed=keys.has('ShiftLeft')?8.4:5;const desiredVelocity=v.clone().multiplyScalar(speed);const responsiveness=1-Math.exp(-(moving?11:15)*dt);movementVelocity.lerp(desiredVelocity,responsiveness);if(movementVelocity.lengthSq()<.001)movementVelocity.set(0,0,0);player.position.addScaledVector(movementVelocity,dt);const actualSpeed=movementVelocity.length();const isMoving=actualSpeed>.17;extras.update(dt,isMoving,actualSpeed);if(isMoving){const desiredYaw=Math.atan2(-movementVelocity.x,-movementVelocity.z);visual.rotation.y+=Math.atan2(Math.sin(desiredYaw-visual.rotation.y),Math.cos(desiredYaw-visual.rotation.y))*(1-Math.exp(-12*dt));}visual.position.y=0;visual.rotation.z=T.MathUtils.damp(visual.rotation.z,0,12,dt);vel-=23*dt;player.position.y+=vel*dt;let prevY=player.position.y-(vel+23*dt)*dt;let support=(mode==='islands'||mode==='online'||mode==='shop'||mode==='tournament')||(player.position.z>80&&player.position.z<92)||(player.position.z>51&&player.position.z<61);if(mode==='tournament'){tournament.update(dt);support=tournament.hasGround()}if(mode==='parkour'){
   support=false;let floor=null;
   for(let k=0;k<parkPlatforms.length;k++){const p=parkPlatforms[k];if(Math.abs(player.position.x-p.x)<p.w/2+.08&&Math.abs(player.position.z-(375+p.z))<p.d/2+.08&&vel<=0&&prevY>=p.y-.25&&player.position.y<=p.y+.20){if(floor===null||p.y>floor.y)floor={...p,k}}}
   if(floor){player.position.y=floor.y;vel=0;onGround=true;support=true;if(floor.k>=4&&parkCheckpoint===0){parkCheckpoint=4;extras.sound('buy');$('status').textContent='🚩 ¡Checkpoint conseguido!'}if(floor.k===8&&!parkDone){parkDone=true;extras.reward(10,'🏆 ¡Parkour completado! +10 monedas');leaveParkour('🏆 ¡Parkour superado! Has ganado 10 monedas')}}
