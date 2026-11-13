@@ -29,15 +29,15 @@ export function createTournament(T,scene,player,extras,ui){
  .wheelPointer{position:absolute;top:-26px;left:calc(50% - 18px);font-size:37px;color:#fff4b0;text-shadow:0 3px #aa5d2a}
  @keyframes wheelRotate{to{transform:rotate(360deg)}}
  #roundDirector.result{background:linear-gradient(145deg,#74d8f9,#8d7af2 58%,#56d7a1)}
- #roundDirector.result .roundContent{width:58%;margin-left:auto;margin-right:0;padding:26px 12px}
+ #roundDirector.result .roundContent{width:55%;margin-left:auto;margin-right:0;padding:22px 10px;background:linear-gradient(160deg,#263fb8,#472a9a);box-shadow:0 10px 0 #171b68,0 25px 65px #11255e99}
  #roundDirector.result #roundWheel{display:none}
  #roundDirector.result #roundAvatar{display:block}
- #roundAvatar{display:none;position:absolute;z-index:3;left:7%;bottom:20%;width:110px;height:205px;background:linear-gradient(#e6b18b 0 23%,#1577d2 23% 61%,#424c70 61% 100%);border-radius:52px 52px 20px 20px;border:5px solid #fff;box-shadow:0 8px 0 #1e4281;animation:avatarBounce .9s ease-in-out infinite alternate}
- #roundAvatar:before{content:'●  ●';position:absolute;top:25px;left:19px;color:#162a44;font-size:18px;letter-spacing:8px}
- #roundAvatar:after{content:'';position:absolute;left:23px;top:53px;width:54px;height:15px;background:#272338;border-radius:0 0 20px 20px}
+ #roundAvatar{display:none;position:absolute;z-index:3;left:3%;bottom:20%;width:42%;height:48%;background:linear-gradient(#4fb2f0,#7a68cf);background-size:cover;background-position:center;border-radius:26px;border:4px solid #fff3bb;box-shadow:0 8px 0 #1e4281,0 15px 35px #14205c77;animation:avatarBounce .9s ease-in-out infinite alternate}
+ #roundAvatar:before{content:none}
+ #roundAvatar:after{content:none}
  @keyframes avatarBounce{to{transform:translateY(-12px) rotate(-3deg)}}
- #roundDirector.result #roundTitle{font-size:clamp(24px,6vw,40px)}
- #roundDirector.result #roundSub{font-size:14px}
+ #roundDirector.result #roundTitle{font-size:clamp(21px,6vw,40px);color:#ffe478;text-shadow:0 3px #c4548b}
+ #roundDirector.result #roundSub{font-size:14px}#roundDirector.result .roundLights{background:repeating-linear-gradient(95deg,transparent 0 32px,#ffe75d 33px 42px,#ff619d 43px 52px,#7de9ff 53px 63px,transparent 64px 100px);height:35px;animation:confettiFloat 2s linear infinite}@keyframes confettiFloat{to{background-position:140px 0}}
  `;document.head.append(style);
  const hud=document.createElement('div');hud.id='roundHUD';document.body.append(hud);
  const useButton=document.querySelector('[data-key="KeyE"]')||document.querySelector('[data-key="KeyF"]');
@@ -174,7 +174,7 @@ export function createTournament(T,scene,player,extras,ui){
   let spins=0;const options=stage===0?prelim:finals;const spin=()=>{if(token!==roundToken)return;if(spins<9){show('RULETA DEL PARQUE',labels[options[spins%options.length]],'Girando la ruleta de minijuegos…',null);spins++;setTimeout(spin,130)}else{show('¡MODO SELECCIONADO!',labels[kind],intro[kind],null);setTimeout(countdown,1100)}};spin();
  }
  function next(){stage++;if(stage===1){alive=5;startRound(finals[Math.floor(Math.random()*finals.length)])}else end(true)}
- function end(won){if(roundRewarded)return;roundRewarded=true;started=false;roundToken++;const prize=won?150:25;if(extras.reward)extras.reward(prize,won?'🏆 CAMPEÓN':'Ronda terminada');showResult=true;root.visible=false;banner.classList.add('result');show(won?'🏆 ¡VICTORIA!':'ELIMINADO',won?'¡ERES EL CAMPEÓN!':'¡BUEN INTENTO!',(won?'Has ganado la final. ':'Has quedado fuera del torneo. ')+'+'+prize+' monedas',()=>{hideBanner();stop();ui.returnMap()});}
+ function end(won){if(roundRewarded)return;roundRewarded=true;started=false;roundToken++;const prize=won?150:25;if(extras.reward)extras.reward(prize,won?'🏆 CAMPEÓN':'Ronda terminada');showResult=true;root.visible=false;banner.classList.add('result');const portrait=ui.captureAvatar?.();const avatar=banner.querySelector('#roundAvatar');if(portrait){avatar.style.backgroundImage='url('+portrait+')';avatar.style.borderRadius='24px'}else{avatar.style.backgroundImage='none'}show(won?'🏆 ¡VICTORIA!':'ELIMINADO',won?'¡ERES EL CAMPEÓN!':'¡BUEN INTENTO!',(won?'Has ganado la final. ':'Has quedado fuera del torneo. ')+'+'+prize+' monedas',()=>{hideBanner();stop();ui.returnMap()});}
  function qualify(){if(!started)return;showResult=false;started=false;roundToken++;root.visible=false;show('¡CLASIFICADO!','¡PASAS DE RONDA!','Quedan 5 participantes. Prepárate para la gran final.',()=>{hideBanner();next()})}
  function start(){showResult=false;stage=0;alive=10;show('TORNEO DE 10 JUGADORES','¡PREPÁRATE!','9 bots competirán contigo. Clasifícate entre los 5 mejores para disputar una final.',()=>{hideBanner();startRound(prelim[Math.floor(Math.random()*prelim.length)])});}
  function stop(){roundToken++;current=null;started=false;root.visible=false;banner.classList.remove('result');actions.style.display='none';hud.style.display='none';hideBanner()}
