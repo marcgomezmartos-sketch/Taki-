@@ -240,15 +240,42 @@ export function iniciarExtras({player,model,head,rig,showStatus}){
  let ctx,musicBus,sfxBus,musicTimer,musicOn=true,step=0,ambience;
  const audioPrefsKey='barbas-audio-settings-v1';
  let audioPrefs={music:42,effects:55};try{audioPrefs={...audioPrefs,...JSON.parse(localStorage.getItem(audioPrefsKey)||'{}')}}catch{}
- // Original synthwave-inspired soundtrack for the futuristic hub (no external music files).
- const melody=[659.25,0,783.99,987.77,0,783.99,659.25,0,587.33,0,659.25,783.99,880,0,783.99,0,523.25,0,659.25,783.99,0,659.25,587.33,0,493.88,0,587.33,659.25,783.99,0,659.25,0];
- const chords=[[220,261.63,329.63],[174.61,220,261.63],[196,246.94,293.66],[164.81,196,246.94]];
- const bass=[110,87.31,98,82.41];
+ // Original upbeat arcade soundtrack: playful, bouncy and royalty-free.
+ // 136 BPM, C major, alternating A/B phrases with a light chiptune lead.
+ const melody=[
+  523.25,659.25,783.99,0,880,783.99,659.25,587.33,
+  659.25,783.99,1046.50,987.77,880,0,783.99,0,
+  783.99,880,987.77,0,1046.50,987.77,880,783.99,
+  659.25,783.99,880,659.25,587.33,523.25,0,0,
+  659.25,783.99,880,1046.50,0,880,783.99,659.25,
+  587.33,659.25,783.99,0,880,783.99,659.25,0,
+  523.25,587.33,659.25,783.99,880,1046.50,987.77,880,
+  783.99,659.25,587.33,659.25,523.25,0,523.25,0
+ ];
+ const chords=[[261.63,329.63,392],[220,261.63,349.23],[174.61,220,261.63],[196,246.94,392]];
+ const bass=[130.81,110,87.31,98];
  function drum(freq,volume=.2,decay=.14){if(!ctx||!musicBus)return;const now=ctx.currentTime,o=ctx.createOscillator(),g=ctx.createGain();o.type='sine';o.frequency.setValueAtTime(freq*2.4,now);o.frequency.exponentialRampToValueAtTime(freq,now+.07);g.gain.setValueAtTime(volume,now);g.gain.exponentialRampToValueAtTime(.0001,now+decay);o.connect(g);g.connect(musicBus);o.start(now);o.stop(now+decay+.01)}
- function hat(){if(!ctx||!musicBus)return;const len=Math.floor(ctx.sampleRate*.045),buffer=ctx.createBuffer(1,len,ctx.sampleRate),data=buffer.getChannelData(0);for(let i=0;i<len;i++)data[i]=(Math.random()*2-1)*Math.pow(1-i/len,2);const src=ctx.createBufferSource(),filter=ctx.createBiquadFilter(),gain=ctx.createGain();src.buffer=buffer;filter.type='highpass';filter.frequency.value=6800;gain.gain.value=.065;src.connect(filter);filter.connect(gain);gain.connect(musicBus);src.start()}
+ function hat(){if(!ctx||!musicBus)return;const len=Math.floor(ctx.sampleRate*.045),buffer=ctx.createBuffer(1,len,ctx.sampleRate),data=buffer.getChannelData(0);for(let i=0;i<len;i++)data[i]=(Math.random()*2-1)*Math.pow(1-i/len,2);const src=ctx.createBufferSource(),filter=ctx.createBiquadFilter(),gain=ctx.createGain();src.buffer=buffer;filter.type='highpass';filter.frequency.value=6800;gain.gain.value=.038;src.connect(filter);filter.connect(gain);gain.connect(musicBus);src.start()}
  function syncVolumes(){if(musicBus)musicBus.gain.setTargetAtTime(musicOn?Math.max(0,Math.min(100,audioPrefs.music))/100*.24:0,ctx.currentTime,.06);if(sfxBus)sfxBus.gain.setTargetAtTime(Math.max(0,Math.min(100,audioPrefs.effects))/100*.28,ctx.currentTime,.04)}
  window.addEventListener('barbas-audio-change',e=>{audioPrefs={...audioPrefs,...e.detail};syncVolumes()});
- function ensureAudio(){if(!ctx){ctx=new (window.AudioContext||window.webkitAudioContext)();musicBus=ctx.createGain();sfxBus=ctx.createGain();musicBus.connect(ctx.destination);sfxBus.connect(ctx.destination);syncVolumes();const buffer=ctx.createBuffer(1,ctx.sampleRate*2,ctx.sampleRate),data=buffer.getChannelData(0);for(let i=0;i<data.length;i++)data[i]=(Math.random()*2-1)*.05;const noise=ctx.createBufferSource();noise.buffer=buffer;noise.loop=true;const low=ctx.createBiquadFilter();low.type='lowpass';low.frequency.value=160;ambience=ctx.createGain();ambience.gain.value=.004;noise.connect(low);low.connect(ambience);ambience.connect(musicBus);noise.start()}if(ctx.state==='suspended')ctx.resume();if(!musicTimer)musicTimer=setInterval(()=>{if(!musicOn||!ctx)return;const n=melody[step%melody.length],ch=chords[Math.floor(step/8)%4];if(n)tone(n,.22,'triangle',.115,musicBus);if(step%8===0){for(const f of ch)tone(f,1.75,'sine',.065,musicBus)}if(step%2===0){tone(bass[Math.floor(step/8)%4]*(step%8===6?2:1),.23,'sawtooth',.075,musicBus);drum(55,.23,.16)}if(step%4===2)drum(160,.075,.075);if(step%2===1)hat();step++},245)}
+ function ensureAudio(){if(!ctx){ctx=new (window.AudioContext||window.webkitAudioContext)();musicBus=ctx.createGain();sfxBus=ctx.createGain();musicBus.connect(ctx.destination);sfxBus.connect(ctx.destination);syncVolumes();const buffer=ctx.createBuffer(1,ctx.sampleRate*2,ctx.sampleRate),data=buffer.getChannelData(0);for(let i=0;i<data.length;i++)data[i]=(Math.random()*2-1)*.05;const noise=ctx.createBufferSource();noise.buffer=buffer;noise.loop=true;const low=ctx.createBiquadFilter();low.type='lowpass';low.frequency.value=160;ambience=ctx.createGain();ambience.gain.value=.001;noise.connect(low);low.connect(ambience);ambience.connect(musicBus);noise.start()}if(ctx.state==='suspended')ctx.resume();if(!musicTimer)musicTimer=setInterval(()=>{
+  if(!musicOn||!ctx||ctx.state!=='running')return;
+  const beat=step%8,bar=Math.floor(step/8)%4;
+  const n=melody[step%melody.length];
+  if(n)tone(n,beat===7?.17:.14,'square',.055,musicBus);
+  if(beat===0||beat===4){
+   for(const f of chords[bar])tone(f,.48,'triangle',.028,musicBus);
+  }
+  if(beat%2===0){
+   tone(bass[bar]*(beat===6?1.5:1),.16,'triangle',.085,musicBus);
+   if(beat===0||beat===4)drum(72,.20,.15);
+   else drum(155,.075,.09);
+  }
+  if(beat===2||beat===6)drum(180,.13,.095);
+  if(beat%2===1)hat();
+  if(beat===7&&bar===3)tone(1046.5,.11,'sine',.035,musicBus);
+  step++;
+ },220)}
  function tone(freq,duration,type='sine',volume=.25,bus=sfxBus){if(!ctx||!bus)return;const o=ctx.createOscillator(),g=ctx.createGain();o.type=type;o.frequency.value=freq;const now=ctx.currentTime;g.gain.setValueAtTime(0,now);g.gain.linearRampToValueAtTime(volume,now+.055);g.gain.setValueAtTime(volume*.75,now+Math.max(.06,duration*.36));g.gain.exponentialRampToValueAtTime(.0001,now+duration+.16);o.connect(g);g.connect(bus);o.start(now);o.stop(now+duration+.18)}
  function sound(type){if(!ctx)return;const presets={jump:[[330,.13],[440,.19]],step:[[110,.05]],buy:[[440,.11],[660,.2],[880,.3]],equip:[[550,.12]],open:[[390,.12],[520,.2]],close:[[320,.1]],error:[[170,.2],[130,.2]],coin:[[620,.09],[930,.15]]};let delay=0;for(const [f,d] of presets[type]||[]){setTimeout(()=>tone(f,d,type==='step'?'triangle':'sine',type==='step'?.07:.26),delay);delay+=90}}
  audioButton.onclick=()=>{ensureAudio();musicOn=!musicOn;syncVolumes();audioButton.textContent='♫ Música: '+(musicOn?'ON':'OFF')};
