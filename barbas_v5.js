@@ -121,13 +121,15 @@ export function crearBarbasV4(){
   root.scale.setScalar(woman?.57:.72);
   avatarHair.clear();
   if(woman){
-   // Rounded, layered bob: no dangling sphere-chain ponytail or hair penetrating the body.
+   // Long, flowing hairstyle with a unified silhouette, not separate dangling beads.
    hairPiece(0,.285,-.06,.31,.155,.29);
    hairPiece(0,.24,.11,.295,.115,.205);
-   hairPiece(0,.02,-.245,.305,.27,.13);
+   hairPiece(0,-.11,-.25,.31,.49,.15);
+   hairPiece(0,-.50,-.25,.28,.32,.13);
    for(const side of [-1,1]){
     hairPiece(side*.235,.07,-.085,.125,.30,.18,side*.07);
-    hairPiece(side*.247,-.16,-.08,.11,.22,.15,side*.04);
+    hairPiece(side*.247,-.28,-.09,.12,.43,.16,side*.035);
+    hairPiece(side*.235,-.58,-.12,.115,.26,.14,side*.03);
     hairPiece(side*.14,.255,.19,.16,.09,.13,side*.12);
    }
    // Distinct side-swept fringe; facial features remain unobstructed.
