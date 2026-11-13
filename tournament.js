@@ -99,9 +99,9 @@ export function createTournament(T,scene,player,extras,ui){
  const actions=document.createElement('div');actions.id='roundActions';actions.innerHTML='<button id="roundPass">PASE</button><button id="roundShoot">CHUTAR</button>';document.body.append(actions);
  let survivalParts=[],survivalHit=0;let hiding=false,hideSpot=null,roundRewarded=false,showResult=false,robotParts=null,shots=[],obstacles=[],gaps=[],raceRespawn=8,raceLastZ=8,robotClock=0;
  let current=null,stage=0,alive=10,time=0,score=0,enemy=0,seekers=[],isSeeker=false,hitCooldown=0,finishers=0,roundToken=0,started=false,ballVelocity=new T.Vector3(),throwTimer=0;
- const prelim=['futsal','rollers','jump','race'],finals=['water','robot','future'];
- const labels={futsal:'FÚTBOL SALA 5 VS 5',rollers:'RODILLOS INFERNALES',jump:'SALTO MORTAL',race:'CARRERA DE OBSTÁCULOS',water:'FINAL · PARQUE ACUÁTICO',robot:'FINAL · ROBOT LANZADOR',future:'FINAL · CARRERA FUTURISTA'};
- const intro={futsal:'Primer equipo en marcar 2 goles o el que gane al terminar 5 minutos.',rollers:'Aguanta en los rodillos que giran sin caerte. ¡Solo clasifican cinco!',jump:'Salta las barras giratorias y esquiva las plataformas que desaparecen.',race:'¡Los primeros 5 en cruzar la meta se clasifican!',water:'Solo uno puede ganar: llega primero a la meta.',robot:'Evita los proyectiles del robot. ¡El último en pie gana!',future:'Una carrera entre portales y obstáculos. Solo gana el primero.'};
+ const prelim=['futsal','rollers','jump','race'],finals=['water','robot','future','karts'];
+ const labels={futsal:'FÚTBOL SALA 5 VS 5',rollers:'RODILLOS INFERNALES',jump:'SALTO MORTAL',race:'CARRERA DE OBSTÁCULOS',water:'FINAL · PARQUE ACUÁTICO',robot:'FINAL · ROBOT LANZADOR',future:'FINAL · CARRERA FUTURISTA',karts:'FINAL · KARTS'};
+ const intro={futsal:'Primer equipo en marcar 2 goles o el que gane al terminar 5 minutos.',rollers:'Aguanta en los rodillos que giran sin caerte. ¡Solo clasifican cinco!',jump:'Salta las barras giratorias y esquiva las plataformas que desaparecen.',race:'¡Los primeros 5 en cruzar la meta se clasifican!',water:'Solo uno puede ganar: llega primero a la meta.',robot:'Evita los proyectiles del robot. ¡El último en pie gana!',future:'Una carrera entre portales y obstáculos. Solo gana el primero.',karts:'¡Cinco pilotos y un campeón! El primero en cruzar la meta gana.'};
  const show=(label,title,sub,button)=>{banner.classList.add('show');banner.classList.toggle('result',showResult);banner.querySelector('#roundLabel').textContent=label;banner.querySelector('#roundTitle').textContent=title;banner.querySelector('#roundSub').textContent=sub;const b=banner.querySelector('button');b.style.display=button?'block':'none';b.onclick=button||null};
  const hideBanner=()=>banner.classList.remove('show');
  function reset(){goalToken++;goalSplash.style.display='none';goalPause=0;lastTouch=window.barbasPlayerName?.()||'TÚ';hiding=false;hideSpot=null;roundRewarded=false;showResult=false;robotParts=null;shots=[];obstacles=[];gaps=[];raceRespawn=8;raceLastZ=8;robotClock=0;survivalParts=[];survivalHit=0;while(root.children.length>10){let x=root.children[root.children.length-1];root.remove(x);if(x.geometry)x.geometry.dispose()}for(let b of bots){b.visible=true;b.position.set(0,0,0);b.userData.lastPosition.copy(b.position)}for(const brain of botBrain){brain.raceCheckpoint=8;brain.raceStun=0;brain.raceJump=0;brain.raceFinish=false;brain.raceFails=0}ball.visible=false;ballVelocity.set(0,0,0);hitCooldown=0;throwTimer=0;finishers=0;score=enemy=0;time=0;actions.style.display='none';}
@@ -185,8 +185,55 @@ export function createTournament(T,scene,player,extras,ui){
     const x=a.position.x,z=a.position.z;if(Math.hypot(player.position.x-x,player.position.z-z)<3.4&&a.position.y>0.3){hiding=true;hideSpot=new T.Vector3(x,0,z);ui.status('¡Escondido! Pulsa USAR para salir');return true}}
    ui.status('Acércate a una caseta o atracción y pulsa USAR');return true;
  }
+
+ const kartCenter=z=>Math.sin(-z/18)*3.2+Math.sin(-z/37)*2.4;
+ const kartVisuals=[];
+ function makeKart(parent,hex){
+  const group=new T.Group();parent.add(group);kartVisuals.push(group);
+  const part=(geo,c,x,y,z)=>{const m=new T.Mesh(geo,material(c));m.position.set(x,y,z);group.add(m);return m};
+  part(new T.BoxGeometry(1.3,.32,2.1),hex,0,.3,0);
+  part(new T.BoxGeometry(1.1,.38,.9),hex,0,.55,-.65);
+  part(new T.BoxGeometry(.8,.75,.25),'#29314b',0,.77,.4);
+  part(new T.BoxGeometry(1.5,.2,.2),'#ffdf68',0,.24,-1.1);
+  for(const x of [-.76,.76])for(const z of [-.72,.72]){
+   const wheel=part(new T.CylinderGeometry(.34,.34,.26,12),'#17212d',x,.3,z);wheel.rotation.z=Math.PI/2;
+  }
+  const steer=part(new T.TorusGeometry(.28,.06,8,14),'#25324d',0,.95,-.22);steer.rotation.x=.7;
+  group.visible=false;return group;
+ }
+ const kartPlayer=makeKart(player,'#ffb932');
+ const kartBots=bots.map((b,i)=>makeKart(b,['#ff477e','#48c7fc','#7fdb62','#ae77ff'][i%4]));
+ function showKarts(on){kartPlayer.visible=on;kartBots.forEach((k,i)=>k.visible=on&&bots[i].visible)}
+ function buildKartFinal(){
+  const asphalt=material('#434a5c'),red=material('#ff5370'),white=material('#f6f1e9'),grass=material('#59c49a');
+  cube(50,.3,135,grass,0,-.6,-51);
+  for(let i=0;i<61;i++){
+   const z=9-i*1.95,x=kartCenter(z);
+   cube(12,.18,2.04,asphalt,x,-.3,z);
+   for(const side of [-1,1])cube(.7,.28,2.04,i%2?red:white,x+side*6,-.15,z);
+   if(i%4===0)cube(.12,.03,.9,white,x,-.18,z);
+  }
+  for(let i=0;i<15;i++){
+   const z=4-i*7.5,x=kartCenter(z);
+   for(const side of [-1,1]){
+    const bx=x+side*10;
+    cube(2,1.7,2,material(i%2?'#ffb64d':'#57bde9'),bx,.65,z);
+    sphere(.8,material(i%2?'#fc68ad':'#ffe17b'),bx,2.2,z);
+   }
+  }
+  for(const z of [-24,-57,-88,-104]){
+   const x=kartCenter(z),purple=material('#7656cc');
+   cube(.55,6,.55,purple,x-6.6,3,z);cube(.55,6,.55,purple,x+6.6,3,z);
+   cube(14,.8,.6,material('#ffda69'),x,6,z);
+  }
+  for(let i=0;i<12;i++)cube(1,.04,1,i%2?white:material('#25263b'),kartCenter(-104)-5.5+i,-.17,-104);
+  bots.forEach((b,i)=>{b.visible=i<4;b.position.set(kartCenter(5)+(i%2?2:-2),0,5+Math.floor(i/2)*2);});
+  player.position.set(kartCenter(8),0,8);showKarts(true);
+  ui.status('🏎️ FINAL KARTS · ¡El primero en cruzar la meta gana!');
+ }
+
  function makeWorld(kind){
-  reset();root.visible=true;
+  reset();root.visible=true;showKarts(kind==='karts');if(kind==='karts'){buildKartFinal();return}
   const race=kind==='race'||kind==='water'||kind==='future';
   if(kind==='futsal'){
    buildArena();setFutsalKits();
@@ -259,7 +306,7 @@ export function createTournament(T,scene,player,extras,ui){
  function end(won){if(roundRewarded)return;roundRewarded=true;started=false;roundToken++;const prize=won?150:25;if(extras.reward)extras.reward(prize,won?'🏆 CAMPEÓN':'Ronda terminada');window.barbasRecordMatch?.(won);showResult=true;root.visible=false;banner.classList.add('result');const portrait=ui.captureAvatar?.();const avatar=banner.querySelector('#roundAvatar');if(portrait){avatar.style.backgroundImage='url('+portrait+')';avatar.style.borderRadius='24px'}else{avatar.style.backgroundImage='none'}show(won?'🏆 ¡VICTORIA!':'ELIMINADO',won?'¡ERES EL CAMPEÓN!':'¡BUEN INTENTO!',(won?'Has ganado la final. ':'Has quedado fuera del torneo. ')+'+'+prize+' monedas',()=>{hideBanner();stop();ui.returnMap()});}
  function qualify(){if(!started)return;showResult=false;started=false;roundToken++;root.visible=false;show('¡CLASIFICADO!','¡PASAS DE RONDA!','Quedan 5 participantes. Prepárate para la gran final.',()=>{hideBanner();next()})}
  function start(){showResult=false;stage=0;alive=10;show('TORNEO DE 10 JUGADORES','¡PREPÁRATE!','9 bots competirán contigo. Clasifícate entre los 5 mejores para disputar una final.',()=>{hideBanner();startRound(prelim[Math.floor(Math.random()*prelim.length)])});}
- function stop(){goalToken++;goalSplash.style.display='none';roundToken++;current=null;started=false;root.visible=false;banner.classList.remove('result');actions.style.display='none';hud.style.display='none';hideBanner()}
+ function stop(){showKarts(false);goalToken++;goalSplash.style.display='none';roundToken++;current=null;started=false;root.visible=false;banner.classList.remove('result');actions.style.display='none';hud.style.display='none';hideBanner()}
  function kick(shoot){
   if(current!=='futsal'||!started)return;
   if(Math.hypot(player.position.x-ball.position.x,player.position.z-ball.position.z)>3.2){ui.status('Acércate al balón');return}
@@ -274,8 +321,15 @@ export function createTournament(T,scene,player,extras,ui){
   time+=dt;hitCooldown=Math.max(0,hitCooldown-dt);
   const p=player.position;
   const race=current==='race'||current==='water'||current==='future';
+  if(current==='karts'){
+   const center=kartCenter(p.z);p.x=T.MathUtils.clamp(p.x,center-5.1,center+5.1);p.z=T.MathUtils.clamp(p.z,-107,10);
+   let rank=1;bots.forEach((b,i)=>{if(!b.visible)return;const brain=botBrain[i];if(!brain.raceFinish){b.position.z=Math.max(-105,b.position.z-dt*(3.1+(i%3)*.55)*brain.pace);b.position.x=T.MathUtils.damp(b.position.x,kartCenter(b.position.z)+(i%2?1.5:-1.5),4,dt);if(b.position.z<=-104)brain.raceFinish=true}if(b.position.z<p.z)rank++});
+   hud.textContent='🏎️ KARTS · PUESTO '+rank+'/5 · '+Math.max(0,Math.round(p.z+104))+' m PARA META';
+   if(p.z<=-104){end(rank===1);return true}
+   if(bots.slice(0,4).every((b,i)=>botBrain[i].raceFinish)){end(false);return true}
+  }
   if(race){p.x=T.MathUtils.clamp(p.x,-7,7);p.z=T.MathUtils.clamp(p.z,-110,10)}
-  else if(current==='futsal'){p.x=T.MathUtils.clamp(p.x,-12,12);p.z=T.MathUtils.clamp(p.z,-19,19)}
+  else if(current==='karts'){}else if(current==='futsal'){p.x=T.MathUtils.clamp(p.x,-12,12);p.z=T.MathUtils.clamp(p.z,-19,19)}
   else if(current==='rollers'||current==='jump'){p.x=T.MathUtils.clamp(p.x,-12,12);p.z=T.MathUtils.clamp(p.z,-12,12)}
   else if(current==='hide'){p.x=T.MathUtils.clamp(p.x,-35,35);p.z=T.MathUtils.clamp(p.z,-35,35)}
   else {p.x=T.MathUtils.clamp(p.x,-12,12);p.z=T.MathUtils.clamp(p.z,-12,12)}
