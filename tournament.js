@@ -50,13 +50,13 @@ export function createTournament(T,scene,player,extras,ui){
     else{cube(2.8,2.6,2.8,[pink,gold,blue][i%3],Math.sin(i*3)*4,1.3,z)}
    }
    cube(15,5,.3,gold,0,3,-109);
-   bots.forEach((b,i)=>b.position.set((i%5-2)*2.1,0,4+Math.floor(i/5)*2));
+   bots.forEach((b,i)=>{b.visible=stage===0||i<4;b.position.set((i%5-2)*2.1,0,4+Math.floor(i/5)*2)});
    player.position.set(0,0,8);
   }else if(kind==='robot'){
    cube(25,.8,25,material('#7e80d5'),0,-.5,0);
    cube(5,6,3,material('#485c8b'),0,3,-16);
    sphere(1.5,pink,0,6,-14);
-   bots.forEach((b,i)=>b.position.set(Math.sin(i*.7)*7,0,Math.cos(i*.7)*7));
+   bots.forEach((b,i)=>{b.visible=i<4;b.position.set(Math.sin(i*.7)*7,0,Math.cos(i*.7)*7)});
    player.position.set(0,0,8);
   }
  }
@@ -64,8 +64,7 @@ export function createTournament(T,scene,player,extras,ui){
   current=kind;started=false;makeWorld(kind);
   const token=++roundToken;let count=3;
   const countdown=()=>{if(token!==roundToken)return;if(count>0){show('RONDA '+(stage+1),String(count),labels[kind],null);count--;setTimeout(countdown,850)}else{hideBanner();started=true;time=0}};
-  show('¡MODO SELECCIONADO!',labels[kind],intro[kind],null);
-  setTimeout(countdown,2200);
+  let spins=0;const options=stage===0?prelim:finals;const spin=()=>{if(token!==roundToken)return;if(spins<9){show('SORTEO DE MINIJUEGO',labels[options[spins%options.length]],'¿Qué desafío tocará?',null);spins++;setTimeout(spin,130)}else{show('¡MODO SELECCIONADO!',labels[kind],intro[kind],null);setTimeout(countdown,1100)}};spin();
  }
  function next(){stage++;if(stage===1){alive=5;startRound(finals[Math.floor(Math.random()*finals.length)])}else end(true)}
  function end(won){started=false;roundToken++;const prize=won?150:25;if(extras.reward)extras.reward(prize,won?'🏆 CAMPEÓN':'Ronda terminada');show(won?'🏆 ¡VICTORIA!':'ELIMINADO',won?'¡ERES EL CAMPEÓN!':'¡BUEN INTENTO!',(won?'Has ganado la final. ':'Has quedado fuera del torneo. ')+'+'+prize+' monedas',()=>{hideBanner();stop();ui.returnMap()});}
@@ -104,14 +103,14 @@ export function createTournament(T,scene,player,extras,ui){
    hud.textContent='⚽ '+score+' - '+enemy+' · '+Math.max(0,300-Math.floor(time))+'s · PASE / CHUTAR';
    if(score>=2||enemy>=2||time>=300){score>enemy?qualify():end(false)}
   }else if(current==='hide'){
-   bots.forEach((b,i)=>{const hunter=seekers.includes(i);const target=hunter?p:new T.Vector3(Math.sin(time*.3+i)*26,0,Math.cos(time*.2+i)*26);let v=target.clone().sub(b.position);v.y=0;if(v.length()>.5)b.position.addScaledVector(v.normalize(),dt*(hunter?3.4:2.3));if(hunter&&!isSeeker&&b.position.distanceTo(p)<1.2)end(false);if(isSeeker&&!hunter&&b.position.distanceTo(p)<1.4){b.visible=false;seekers.push(i)}});
+   bots.forEach((b,i)=>{const hunter=seekers.includes(i);const target=hunter?p:new T.Vector3(Math.sin(time*.3+i)*26,0,Math.cos(time*.2+i)*26);let v=target.clone().sub(b.position);v.y=0;if(v.length()>.5)b.position.addScaledVector(v.normalize(),dt*(hunter?2.3:2.3));if(hunter&&!isSeeker&&b.position.distanceTo(p)<1.2)end(false);if(isSeeker&&!hunter&&b.position.distanceTo(p)<1.4){b.visible=false;seekers.push(i)}});
    hud.textContent='🫣 '+(isSeeker?'BUSCA A LOS ESCONDIDOS':'ESCÓNDETE')+' · '+Math.max(0,60-Math.floor(time))+'s';
    if(time>=60)qualify();
   }else if(current==='robot'){
    throwTimer+=dt;
    if(throwTimer>1.2){throwTimer=0;const b=bots[Math.floor(Math.random()*bots.length)];if(b.visible){b.position.set((Math.random()-.5)*20,0,(Math.random()-.5)*20)}}
    bots.forEach((b,i)=>{if(!b.visible)return;b.position.x+=Math.sin(time*2+i)*dt*1.6;if(Math.random()<dt*.15)b.visible=false});
-   if(Math.random()<dt*.3&&hitCooldown===0){let x=(Math.random()-.5)*23,z=(Math.random()-.5)*23;let projectile=sphere(.8,pink,x,2,z);setTimeout(()=>{root.remove(projectile);projectile.geometry.dispose()},550);if(Math.hypot(p.x-x,p.z-z)<1.6){end(false)}}
+   if(Math.random()<dt*.6&&hitCooldown===0){let x=(Math.random()-.5)*23,z=(Math.random()-.5)*23;let projectile=sphere(.8,pink,x,2,z);setTimeout(()=>{root.remove(projectile);projectile.geometry.dispose()},550);if(Math.hypot(p.x-x,p.z-z)<1.6){end(false)}}
    const left=bots.filter(b=>b.visible).length;hud.textContent='🤖 SUPERVIVENCIA · '+(left+1)+' restantes';
    if(left===0)end(true);
   }
