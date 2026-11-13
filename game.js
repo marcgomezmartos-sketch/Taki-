@@ -148,6 +148,27 @@ player.position.set(0,0,11);$('hud').style.display='none';let dragging=false,las
  #islandSelect .islandClose{width:100%;margin-top:17px;border:1px solid #ffffff88;border-radius:13px;background:#ffffff1c;color:#fff;padding:12px;font-weight:800}
  #miniMap{right:14px!important;top:385px!important;left:16px!important;right:auto!important;width:auto!important;height:auto!important;padding:11px 16px!important;border-radius:18px!important;background:#2e566b!important;color:white!important;font:bold 14px system-ui!important}
  #miniMap canvas{display:none!important}
+
+ /* V61 arcade obstacle-world destination screen */
+ #islandSelect{background:linear-gradient(180deg,#4cbcff 0%,#78d8ff 39%,#d0f9ff 68%,#4bcd9c 100%)!important;backdrop-filter:none!important;overflow:hidden}
+ #islandSelect::before{content:'';position:absolute;inset:0;pointer-events:none;background:radial-gradient(ellipse 34% 8% at 19% 23%,#fff 0 58%,transparent 62%),radial-gradient(ellipse 30% 7% at 77% 13%,#fff 0 57%,transparent 61%),radial-gradient(ellipse 40% 9% at 56% 39%,#ffffff9e 0 60%,transparent 64%);opacity:.8}
+ #islandSelect::after{content:'';position:absolute;bottom:-9%;left:-15%;width:130%;height:40%;pointer-events:none;background:radial-gradient(ellipse at 35% 22%,#b5ed55 0 18%,transparent 18.5%),radial-gradient(ellipse at 68% 36%,#5fc95c 0 22%,transparent 22.5%),linear-gradient(175deg,transparent 12%,#5ac2e5 12% 37%,#237cbf 37% 54%,#91d74c 54% 64%,#4da75c 64%);clip-path:polygon(0 31%,24% 10%,46% 24%,68% 0,100% 28%,100% 100%,0 100%);opacity:.9}
+ #islandSelect .islandPanel{z-index:1;position:relative;width:min(470px,96vw);max-height:94dvh;border:3px solid #fff;border-radius:26px;background:linear-gradient(180deg,#103976ec,#173579f2);box-shadow:0 12px 0 #0a2660,0 24px 42px #15397688;padding:16px 17px 19px;text-align:center;overflow:auto}
+ #islandSelect .islandPanel::before{content:'BARBAS';display:block;font-weight:1000;font-style:italic;letter-spacing:-2px;font-size:clamp(36px,10vw,55px);line-height:1.02;color:#fff;text-shadow:0 4px #193b9c,3px 7px #071a54,-2px -2px #ffd455}
+ #islandSelect .islandPanel::after{content:'MINIGAMES';display:block;position:absolute;top:49px;left:50%;transform:translateX(-50%) rotate(-3deg);font-weight:1000;font-size:clamp(15px,4.5vw,22px);letter-spacing:1px;color:#ffe35d;text-shadow:0 3px #aa591a,0 5px #08244f;pointer-events:none}
+ #islandSelect h2{margin:33px 0 3px;font-size:clamp(18px,5vw,23px);color:#fff;text-shadow:0 2px #15265b}
+ #islandSelect p{font-size:12px;margin:0 0 13px;color:#c6f7ff}
+ #islandSelect .islandChoices{gap:10px}
+ #islandSelect .islandChoices button{min-height:107px;border:3px solid #ffffffd9;border-radius:19px;background:linear-gradient(170deg,#41b5ff,#1663c9)!important;box-shadow:0 6px 0 #0a2e76,0 10px 13px #081f5b70;font-size:15px;letter-spacing:.4px;text-shadow:0 2px #173771;transition:transform .12s;touch-action:manipulation}
+ #islandSelect .islandChoices button:active{transform:translateY(4px);box-shadow:0 2px 0 #0a2e76}
+ #islandSelect .islandChoices button:nth-child(2){background:linear-gradient(160deg,#bc6bff,#7434d4)!important}
+ #islandSelect .islandChoices button:nth-child(3){background:linear-gradient(160deg,#ffc851,#ed8523)!important}
+ #islandSelect .islandChoices button:nth-child(4){background:linear-gradient(160deg,#6edc62,#1f9b73)!important}
+ #islandSelect .islandChoices button:nth-child(5){background:linear-gradient(160deg,#ff86bd,#d83b8a)!important;min-height:79px}
+ #islandSelect .islandChoices button span{font-size:29px;filter:drop-shadow(0 3px 1px #16366b88)}
+ #islandSelect .islandChoices button small{color:#fff;opacity:.94}
+ #islandSelect .islandClose{background:linear-gradient(#f8fcff,#b9d8f5);border:2px solid #fff;color:#1b3766;box-shadow:0 4px #6489b1;font-weight:900}
+ @media(max-height:710px){#islandSelect .islandPanel{padding:10px 14px}#islandSelect .islandChoices button{min-height:82px}#islandSelect .islandChoices button:nth-child(5){min-height:65px}#islandSelect .islandPanel::after{top:41px}}
  `;document.head.append(islandCSS);
  const islandSelect=document.createElement('div');islandSelect.id='islandSelect';islandSelect.innerHTML='<div class="islandPanel"><h2>ELIGE TU DESTINO</h2><p>Selecciona una zona y entra directamente.</p><div class="islandChoices"><button data-island="arena"><span>🏆</span>MINIJUEGOS<small>ARENA PARTY</small></button><button data-island="parkour"><span>🧗</span>PARKOUR<small>Saltos y desafíos</small></button><button data-island="shop"><span>🛍️</span>TIENDA<small>TK SHOP · ropa</small></button><button data-island="online"><span>👥</span>ONLINE<small>Próximamente</small></button><button data-island="wardrobe"><span>👕</span>VESTUARIO<small>Cambiar ropa y personaje</small></button></div><button class="islandClose">✕ CERRAR MAPA</button></div>';document.body.append(islandSelect);
  const showIslands=()=>{if(!active)return;islandSelect.style.display='flex';joystick.x=joystick.y=0;keys.clear()};
