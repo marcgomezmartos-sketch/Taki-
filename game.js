@@ -1,4 +1,4 @@
-import * as T from 'three';import {createGraphics} from './graphics.js?v=57';import {crearBarbasV4} from './barbas_v5.js?v=rig58';import {iniciarExtras} from './features.js?v=outfit58';
+import * as T from 'three';import {createGraphics} from './graphics.js?v=57';import {crearBarbasV4} from './barbas_v5.js?v=rig58';import {iniciarExtras} from './features.js?v=outfit59';
 function iniciarBarbasParty(){
 const $=id=>document.getElementById(id), scene=new T.Scene();scene.background=new T.Color('#e99588');scene.fog=new T.FogExp2('#d99c94',.0035);// Skybox image path: replace with your own panoramic sky asset.
  const SKY_IMAGE='assets/cielo_ciudad.jpg';
@@ -142,13 +142,14 @@ player.position.set(0,0,11);$('hud').style.display='none';let dragging=false,las
  #islandSelect .islandChoices button:nth-child(2){background:linear-gradient(155deg,#8d79bd,#4a528f)}
  #islandSelect .islandChoices button:nth-child(3){background:linear-gradient(155deg,#ca9564,#7c5949)}
  #islandSelect .islandChoices button:nth-child(4){background:linear-gradient(155deg,#77ac9a,#356d73)}
+ #islandSelect .islandChoices button:nth-child(5){grid-column:1/-1;min-height:82px;background:linear-gradient(155deg,#d6a7b7,#8b668f)}
  #islandSelect .islandChoices button span{font-size:35px}
  #islandSelect .islandChoices button small{font-size:10px;font-weight:600;opacity:.85}
  #islandSelect .islandClose{width:100%;margin-top:17px;border:1px solid #ffffff88;border-radius:13px;background:#ffffff1c;color:#fff;padding:12px;font-weight:800}
  #miniMap{right:14px!important;top:385px!important;left:16px!important;right:auto!important;width:auto!important;height:auto!important;padding:11px 16px!important;border-radius:18px!important;background:#2e566b!important;color:white!important;font:bold 14px system-ui!important}
  #miniMap canvas{display:none!important}
  `;document.head.append(islandCSS);
- const islandSelect=document.createElement('div');islandSelect.id='islandSelect';islandSelect.innerHTML='<div class="islandPanel"><h2>ELIGE TU DESTINO</h2><p>Selecciona una zona y entra directamente.</p><div class="islandChoices"><button data-island="arena"><span>🏆</span>MINIJUEGOS<small>ARENA PARTY</small></button><button data-island="parkour"><span>🧗</span>PARKOUR<small>Saltos y desafíos</small></button><button data-island="shop"><span>🛍️</span>TIENDA<small>TK SHOP · ropa</small></button><button data-island="online"><span>👥</span>ONLINE<small>Próximamente</small></button></div><button class="islandClose">✕ CERRAR MAPA</button></div>';document.body.append(islandSelect);
+ const islandSelect=document.createElement('div');islandSelect.id='islandSelect';islandSelect.innerHTML='<div class="islandPanel"><h2>ELIGE TU DESTINO</h2><p>Selecciona una zona y entra directamente.</p><div class="islandChoices"><button data-island="arena"><span>🏆</span>MINIJUEGOS<small>ARENA PARTY</small></button><button data-island="parkour"><span>🧗</span>PARKOUR<small>Saltos y desafíos</small></button><button data-island="shop"><span>🛍️</span>TIENDA<small>TK SHOP · ropa</small></button><button data-island="online"><span>👥</span>ONLINE<small>Próximamente</small></button><button data-island="wardrobe"><span>👕</span>VESTUARIO<small>Cambiar ropa y personaje</small></button></div><button class="islandClose">✕ CERRAR MAPA</button></div>';document.body.append(islandSelect);
  const showIslands=()=>{if(!active)return;islandSelect.style.display='flex';joystick.x=joystick.y=0;keys.clear()};
  islandSelect.querySelector('.islandClose').onclick=()=>islandSelect.style.display='none';
  islandSelect.querySelectorAll('[data-island]').forEach(b=>b.onclick=()=>goIsland(b.dataset.island));
@@ -156,6 +157,7 @@ player.position.set(0,0,11);$('hud').style.display='none';let dragging=false,las
   islandSelect.style.display='none';shop.visible=false;parkour.visible=false;arenaGroup.visible=false;onlineIsland.visible=false;islandHub.visible=false;worldRoot.visible=false;
   scene.background=scene.userData.citySky||new T.Color('#b2cfe2');scene.fog=cityFog;
   vel=0;onGround=true;keys.clear();joystick.x=joystick.y=0;movementVelocity.set(0,0,0);angle=0;targetAngle=0;sun.shadow.needsUpdate=true;
+  if(destination==='wardrobe'){islandHub.visible=true;mode='islands';player.position.set(0,0,5);window.barbasOpenWardrobe?.();return}
   if(destination==='shop'){enterShop();return}
   if(destination==='parkour'){enterParkour();return}
   if(destination==='arena'){mode='arena';resetArena();$('status').textContent='🏆 ARENA PARTY · Cruza las baldosas hasta la meta';return}
