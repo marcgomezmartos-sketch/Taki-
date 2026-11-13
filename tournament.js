@@ -123,13 +123,13 @@ export function createTournament(T,scene,player,extras,ui){
    const trim=kind==='water'?material('#fff4ba'):material('#fff8e3');
    const addBlock=(x,z,w,d,h=2,type='block',speed=0)=>{cube(w,h,d,[pink,blue,gold][obstacles.length%3],x,h/2,z);obstacles.push({x,z,w,d,h,type,speed,phase:obstacles.length*1.7})};
    // Modular racecourse: real gaps, jumping pads, maze, moving gates and finish.
-   const segments=[[10,-10],[-16,-32],[-39,-52],[-58,-75],[-81,-110]];
+   const segments=[[10,-10],[-13.2,-32],[-35.2,-52],[-55.2,-75],[-78.2,-110]];
    for(const [a,b] of segments){
      cube(15,.8,Math.abs(a-b),track,0,-.48,(a+b)/2);
      cube(.35,.65,Math.abs(a-b),trim,-7.7,.05,(a+b)/2);
      cube(.35,.65,Math.abs(a-b),trim,7.7,.05,(a+b)/2);
    }
-   gaps=[{a:-10,b:-16},{a:-32,b:-39},{a:-52,b:-58},{a:-75,b:-81}];
+   gaps=[{a:-10,b:-13.2},{a:-32,b:-35.2},{a:-52,b:-55.2},{a:-75,b:-78.2}];
    for(const z of [-10,-32,-52,-75]){cube(15,.15,.45,gold,0,.05,z+.6);cube(15,.15,.45,pink,0,.05,z-.6)}
    // Alternating zig-zag maze: walls must be navigated around.
    for(let i=0;i<4;i++){const z=-20-i*2.8,side=i%2===0?-1:1;addBlock(side*3.1,z,8,1.15,3.4,'maze')}
