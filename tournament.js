@@ -197,11 +197,27 @@ export function createTournament(T,scene,player,extras,ui){
   else if(current==='hide'){p.x=T.MathUtils.clamp(p.x,-35,35);p.z=T.MathUtils.clamp(p.z,-35,35)}
   else {p.x=T.MathUtils.clamp(p.x,-12,12);p.z=T.MathUtils.clamp(p.z,-12,12)}
   if(race){
-   let rank=1;bots.forEach((b,i)=>{b.position.z-=dt*(3.3+i%4*.38);b.position.z=Math.max(-110,b.position.z);if(b.position.z<p.z)rank++});
-   for(let i=0;i<15;i++){let z=5-i*7.5;if(Math.abs(p.z-z)<1.2&&Math.abs(p.x-Math.sin(i*(current==='future'?5:3))*4)<1.7&&hitCooldown===0){p.z+=3;hitCooldown=1.2}}
-   hud.textContent='🏁 '+labels[current]+' · Puesto '+rank+'/'+(stage?5:10);
+   let rank=1;
+   bots.forEach((b,i)=>{if(!b.visible)return;
+     const speed=2.9+(i%4)*.37;
+     b.position.z=Math.max(-107,b.position.z-dt*speed);
+     // Bots occasionally wait at jumping gaps and slow at the maze.
+     if(gaps.some(g=>b.position.z<g.a&&b.position.z>g.b))b.position.y=1.5;else b.position.y=0;
+     if(b.position.z<p.z)rank++;
+   });
+   // Save progress at solid sections; falling in a gap returns to last checkpoint.
+   const crossing=gaps.find(g=>p.z<g.a&&p.z>g.b);
+   if(!crossing&&p.z<raceLastZ-2){raceLastZ=p.z;if(p.z< -18&&raceRespawn> -18)raceRespawn=-18;if(p.z< -42&&raceRespawn> -42)raceRespawn=-42;if(p.z< -83&&raceRespawn> -83)raceRespawn=-83}
+   if(crossing&&p.y<.45){p.set(0,0,raceRespawn);hitCooldown=1;ui.status('💦 ¡Caída! Vuelves al último checkpoint')}
+   for(const o of obstacles){
+     const ox=o.type==='moving'?Math.sin(time*o.speed+o.phase)*5:o.x;
+     if(Math.abs(p.z-o.z)<o.d*.5+.48&&Math.abs(p.x-ox)<o.w*.5+.4&&p.y<o.h+.15){
+       if(hitCooldown<=0){p.z=Math.min(9,p.z+2.8);hitCooldown=.7;ui.status('💥 ¡Obstáculo! Esquiva o salta')}
+     }
+   }
+   hud.textContent='🏁 '+labels[current]+' · '+rank+'/'+(stage?5:10)+' · '+Math.max(0,105-Math.floor(time))+'s';
    if(p.z<=-105){if(stage===0){rank<=5?qualify():end(false)}else end(rank===1)}
-   else if(time>100){if(stage===0){rank<=5?qualify():end(false)}else end(false)}
+   else if(time>105){if(stage===0){rank<=5?qualify():end(false)}else end(false)}
   }else if(current==='futsal'){
    ball.position.addScaledVector(ballVelocity,dt);ballVelocity.multiplyScalar(Math.exp(-1.8*dt));
    if(Math.abs(ball.position.x)>11){ball.position.x=T.MathUtils.clamp(ball.position.x,-11,11);ballVelocity.x*=-.8}
@@ -214,12 +230,43 @@ export function createTournament(T,scene,player,extras,ui){
    hud.textContent='🫣 '+(isSeeker?'TE TOCA BUSCAR':'TE TOCA ESCONDERTE')+(hiding?' · OCULTO':' · USAR PARA ESCONDERTE')+' · '+Math.max(0,60-Math.floor(time))+'s';
    if(time>=60){if(isSeeker){bots.filter((b,i)=>!seekers.includes(i)&&b.visible).length===0?qualify():end(false)}else qualify()}
   }else if(current==='robot'){
-   throwTimer+=dt;
-   if(throwTimer>1.2){throwTimer=0;const b=bots[Math.floor(Math.random()*bots.length)];if(b.visible){b.position.set((Math.random()-.5)*20,0,(Math.random()-.5)*20)}}
-   bots.forEach((b,i)=>{if(!b.visible)return;b.position.x+=Math.sin(time*2+i)*dt*1.6;if(Math.random()<dt*.15)b.visible=false});
-   if(Math.random()<dt*.6&&hitCooldown===0){let x=(Math.random()-.5)*23,z=(Math.random()-.5)*23;let projectile=sphere(.8,pink,x,2,z);setTimeout(()=>{root.remove(projectile);projectile.geometry.dispose()},550);if(Math.hypot(p.x-x,p.z-z)<1.6){end(false)}}
-   const left=bots.filter(b=>b.visible).length;hud.textContent='🤖 SUPERVIVENCIA · '+(left+1)+' restantes';
+   robotClock+=dt;throwTimer+=dt;
+   if(robotParts){
+     robotParts.machine.rotation.y=Math.sin(time*1.3)*.28;
+     robotParts.machine.position.y=Math.sin(time*2)*.2;
+   }
+   // Visible telegraphed projectiles: first a warning circle, then a flying sphere, then impact.
+   if(throwTimer>2.1){
+     throwTimer=0;
+     const living=[{position:p,player:true},...bots.filter(b=>b.visible).map(b=>({position:b.position,player:false}))];
+     const target=living[Math.floor(Math.random()*living.length)];
+     const x=T.MathUtils.clamp(target.position.x+(Math.random()-.5)*1.4,-10,10);
+     const z=T.MathUtils.clamp(target.position.z+(Math.random()-.5)*1.4,-10,10);
+     const warningMat=new T.MeshBasicMaterial({color:'#ff3e61',transparent:true,opacity:.55,depthWrite:false,side:T.DoubleSide});
+     const warning=new T.Mesh(new T.RingGeometry(.9,1.5,24),warningMat);warning.rotation.x=-Math.PI/2;warning.position.set(x,.12,z);root.add(warning);
+     const shell=new T.Mesh(new T.SphereGeometry(.72,12,8),new T.MeshStandardMaterial({color:'#ff627f',emissive:'#ff2355',emissiveIntensity:1.1,roughness:.25}));
+     shell.position.set(0,6,-15);root.add(shell);
+     shots.push({x,z,warning,shell,age:0,targetPlayer:target.player,hit:false});
+     ui.status(target.player?'🔴 ¡EL ROBOT TE APUNTA! ¡MUÉVETE!':'🎯 El robot apunta a un rival');
+   }
+   for(let i=shots.length-1;i>=0;i--){
+     const sh=shots[i];sh.age+=dt;
+     sh.warning.material.opacity=.3+Math.sin(sh.age*17)*.2;
+     const flight=T.MathUtils.clamp((sh.age-.8)/.75,0,1);
+     sh.shell.position.set(sh.x*flight,6+(1-flight)*.3-5.25*flight, -15+(sh.z+15)*flight);
+     sh.shell.visible=sh.age>.8&&sh.age<1.6;
+     if(sh.age>=1.6&&!sh.hit){
+       sh.hit=true;sh.warning.material.color.set('#fff1a4');sh.warning.scale.setScalar(1.7);
+       if(Math.hypot(p.x-sh.x,p.z-sh.z)<1.55){end(false);return true}
+       for(const b of bots){if(b.visible&&Math.hypot(b.position.x-sh.x,b.position.z-sh.z)<1.6)b.visible=false}
+     }
+     if(sh.age>1.95){root.remove(sh.warning,sh.shell);sh.warning.geometry.dispose();sh.warning.material.dispose();sh.shell.geometry.dispose();sh.shell.material.dispose();shots.splice(i,1)}
+   }
+   bots.forEach((b,i)=>{if(!b.visible)return;b.position.x=T.MathUtils.clamp(b.position.x+Math.sin(time*1.8+i*2)*dt*2.5,-10,10);b.position.z=T.MathUtils.clamp(b.position.z+Math.cos(time*1.3+i)*dt*1.7,-10,10)});
+   const left=bots.filter(b=>b.visible).length;
+   hud.textContent='🤖 ROBOT · '+(left+1)+' restantes · ESQUIVA LAS MARCAS ROJAS';
    if(left===0)end(true);
+
   }
   return true;
  }
