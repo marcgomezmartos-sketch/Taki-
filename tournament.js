@@ -55,7 +55,7 @@ export function createTournament(T,scene,player,extras,ui){
   root.add(g);bots.push(g);botRigs.push(rig);botPrev.push(new T.Vector3());
  }
  // Individual personalities and tactical positions prevent the nine bots from forming one swarm.
- const botBrain=bots.map((b,i)=>({phase:i*1.73,pace:.86+(i%4)*.09,decision:0,target:new T.Vector3(),lane:(i%5-2)*2.6,role:i%4}));
+ const botBrain=bots.map((b,i)=>({phase:i*1.73,pace:.86+(i%4)*.09,decision:0,target:new T.Vector3(),lane:(i%5-2)*2.6,role:i%4,raceCheckpoint:8,raceStun:0,raceJump:0,raceFinish:false,raceFails:0}));
  const kitBlue=outfitMaterial('#176eea'),kitRed=outfitMaterial('#ef414f');
  const botShirts=bots.map(b=>b.userData.rig.body.children.filter(o=>o.isMesh&&o.material?.color&&o.material.color.getHexString()===botStyles[bots.indexOf(b)].top.slice(1).toLowerCase()));
  const goalSplash=document.createElement('div');goalSplash.style.cssText='position:fixed;left:50%;top:22%;transform:translate(-50%,-50%) scale(.7);z-index:9998;pointer-events:none;display:none;text-align:center;color:white;font:900 clamp(30px,9vw,70px) system-ui;text-shadow:0 5px 0 #152b64,0 9px 28px #001a43;transition:transform .24s';document.body.appendChild(goalSplash);
@@ -104,7 +104,7 @@ export function createTournament(T,scene,player,extras,ui){
  const intro={futsal:'Primer equipo en marcar 2 goles o el que gane al terminar 5 minutos.',hide:'5 buscan y 5 se esconden. Sobrevive o encuentra a tus rivales.',race:'¡Los primeros 5 en cruzar la meta se clasifican!',water:'Solo uno puede ganar: llega primero a la meta.',robot:'Evita los proyectiles del robot. ¡El último en pie gana!',future:'Una carrera entre portales y obstáculos. Solo gana el primero.'};
  const show=(label,title,sub,button)=>{banner.classList.add('show');banner.classList.toggle('result',showResult);banner.querySelector('#roundLabel').textContent=label;banner.querySelector('#roundTitle').textContent=title;banner.querySelector('#roundSub').textContent=sub;const b=banner.querySelector('button');b.style.display=button?'block':'none';b.onclick=button||null};
  const hideBanner=()=>banner.classList.remove('show');
- function reset(){goalToken++;goalSplash.style.display='none';goalPause=0;lastTouch='TÚ';hiding=false;hideSpot=null;roundRewarded=false;showResult=false;robotParts=null;shots=[];obstacles=[];gaps=[];raceRespawn=8;raceLastZ=8;robotClock=0;while(root.children.length>10){let x=root.children[root.children.length-1];root.remove(x);if(x.geometry)x.geometry.dispose()}for(let b of bots){b.visible=true;b.position.set(0,0,0);b.userData.lastPosition.copy(b.position)}ball.visible=false;ballVelocity.set(0,0,0);hitCooldown=0;throwTimer=0;finishers=0;score=enemy=0;time=0;actions.style.display='none';}
+ function reset(){goalToken++;goalSplash.style.display='none';goalPause=0;lastTouch='TÚ';hiding=false;hideSpot=null;roundRewarded=false;showResult=false;robotParts=null;shots=[];obstacles=[];gaps=[];raceRespawn=8;raceLastZ=8;robotClock=0;while(root.children.length>10){let x=root.children[root.children.length-1];root.remove(x);if(x.geometry)x.geometry.dispose()}for(let b of bots){b.visible=true;b.position.set(0,0,0);b.userData.lastPosition.copy(b.position)}for(const brain of botBrain){brain.raceCheckpoint=8;brain.raceStun=0;brain.raceJump=0;brain.raceFinish=false;brain.raceFails=0}ball.visible=false;ballVelocity.set(0,0,0);hitCooldown=0;throwTimer=0;finishers=0;score=enemy=0;time=0;actions.style.display='none';}
 
  const lightMat=material('#ffdf74'),darkMat=material('#252f56'),whiteMat=material('#f8f7f1');
  function buildArena(){
@@ -253,12 +253,42 @@ export function createTournament(T,scene,player,extras,ui){
   else {p.x=T.MathUtils.clamp(p.x,-12,12);p.z=T.MathUtils.clamp(p.z,-12,12)}
   if(race){
    let rank=1;
-   bots.forEach((b,i)=>{if(!b.visible)return;
-     const speed=2.9+(i%4)*.37;
+   bots.forEach((b,i)=>{
+    if(!b.visible)return;
+    const brain=botBrain[i];if(brain.raceFinish){if(b.position.z<p.z)rank++;return}
+    brain.raceStun=Math.max(0,brain.raceStun-dt);
+    brain.raceJump=Math.max(0,brain.raceJump-dt);
+    if(brain.raceStun<=0){
+     // Each competitor chooses a separate line and steers around actual obstacle hitboxes.
+     const lookZ=b.position.z-3.4;
+     let lane=brain.lane+Math.sin(time*.75+brain.phase)*.6;
+     for(const o of obstacles){
+      const ox=o.type==='moving'?Math.sin(time*o.speed+o.phase)*5:o.x;
+      if(Math.abs(lookZ-o.z)<o.d*.5+2.3&&Math.abs(lane-ox)<o.w*.5+.9){
+       const left=ox-o.w*.5-1.15,right=ox+o.w*.5+1.15;
+       lane=Math.abs(left-brain.lane)<Math.abs(right-brain.lane)?left:right;
+      }
+     }
+     lane=T.MathUtils.clamp(lane,-6.6,6.6);
+     const delta=lane-b.position.x;
+     b.position.x+=T.MathUtils.clamp(delta,-dt*3.8,dt*3.8);
+     const speed=(3.4+(i%3)*.45)*brain.pace;
      b.position.z=Math.max(-107,b.position.z-dt*speed);
-     // Bots occasionally wait at jumping gaps and slow at the maze.
-     if(gaps.some(g=>b.position.z<g.a&&b.position.z>g.b))b.position.y=1.5;else b.position.y=0;
-     if(b.position.z<p.z)rank++;
+     if(gaps.some(g=>b.position.z<g.a+.65&&b.position.z>g.b-1.1))brain.raceJump=Math.max(brain.raceJump,.55);
+    }
+    b.position.y=brain.raceJump>0?Math.sin((1-brain.raceJump/.55)*Math.PI)*1.4:0;
+    const gap=gaps.find(g=>b.position.z<g.a&&b.position.z>g.b);
+    let collided=false;
+    for(const o of obstacles){
+     const ox=o.type==='moving'?Math.sin(time*o.speed+o.phase)*5:o.x;
+     if(Math.abs(b.position.z-o.z)<o.d*.5+.38&&Math.abs(b.position.x-ox)<o.w*.5+.35&&b.position.y<o.h+.12){collided=true;break}
+    }
+    // Same setbacks as a human: a wall knocks you back, a missed jump respawns at checkpoint.
+    if(collided&&brain.raceStun<=0){b.position.z=Math.min(9,b.position.z+2.8);brain.raceStun=.8;brain.raceFails++}
+    if(gap&&brain.raceJump<=0){b.position.set(brain.lane,0,brain.raceCheckpoint);brain.raceStun=1.1;brain.raceFails++}
+    if(!gap){for(const cp of [-18,-42,-83])if(b.position.z<cp&&brain.raceCheckpoint>cp)brain.raceCheckpoint=cp}
+    if(b.position.z<=-105){brain.raceFinish=true;finishers++;b.position.z=-107}
+    if(b.position.z<p.z)rank++;
    });
    // Save progress at solid sections; falling in a gap returns to last checkpoint.
    const crossing=gaps.find(g=>p.z<g.a&&p.z>g.b);
@@ -352,7 +382,7 @@ export function createTournament(T,scene,player,extras,ui){
    if(left===0)end(true);
 
   }
-  bots.forEach((b,i)=>{if(!b.visible)return;const previous=b.userData.lastPosition;const dx=b.position.x-previous.x,dz=b.position.z-previous.z;const dist=Math.hypot(dx,dz);const speed=Math.min(9,dist/Math.max(dt,.01));if(dist>.001){const target=Math.atan2(-dx,-dz);b.rotation.y+=Math.atan2(Math.sin(target-b.rotation.y),Math.cos(target-b.rotation.y))*Math.min(1,dt*9)}botRigs[i].actualizar(dt,speed>.4?(speed>5?'correr':'caminar'):'quieto',{velocidad:speed});previous.copy(b.position)});
+  bots.forEach((b,i)=>{if(!b.visible)return;const previous=b.userData.lastPosition;const dx=b.position.x-previous.x,dz=b.position.z-previous.z;const dist=Math.hypot(dx,dz);const speed=Math.min(9,dist/Math.max(dt,.01));if(dist>.001){const target=Math.atan2(dx,dz);b.rotation.y+=Math.atan2(Math.sin(target-b.rotation.y),Math.cos(target-b.rotation.y))*Math.min(1,dt*9)}botRigs[i].actualizar(dt,speed>.4?(speed>5?'correr':'caminar'):'quieto',{velocidad:speed});previous.copy(b.position)});
   return true;
  }
  return {start,stop,update,kick,use,hasGround:()=>!(current==='race'||current==='water'||current==='future')||!gaps.some(g=>player.position.z<g.a&&player.position.z>g.b),get running(){return !!current},get started(){return started}};
