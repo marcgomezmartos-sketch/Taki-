@@ -1,6 +1,6 @@
 import {installSocial} from './social.js?v=73';
 import {createTournament} from './tournament.js?v=75';
-import * as T from 'three';import {createGraphics} from './graphics.js?v=57';import {crearBarbasV4} from './barbas_v5.js?v=rig74';import {iniciarExtras} from './features.js?v=coins74';
+import * as T from 'three';import {createGraphics} from './graphics.js?v=57';import {crearBarbasV4} from './barbas_v5.js?v=rig74';import {iniciarExtras} from './features.js?v=outfit76';
 function iniciarBarbasParty(){
 const $=id=>document.getElementById(id), scene=new T.Scene();scene.background=new T.Color('#e99588');scene.fog=new T.FogExp2('#d99c94',.0035);// Skybox image path: replace with your own panoramic sky asset.
  const SKY_IMAGE='assets/cielo_ciudad.jpg';
