@@ -171,20 +171,48 @@ export function iniciarExtras({player,model,head,rig,showStatus}){
  if(jacket?.design==='stonePink'&&!dress){
   // Sleeve badge is attached to the arm rather than floating on the torso.
   logo(rig.arms[1],'STONE','#242b2d','#d4dfad',.164,-.24,.08,.18,.15);
-  meshBall(rig.body,'#c889a1',0,1.5,.285,.20,.14,.018);
+  // Tailored zip hoodie: hood behind neck, drawstrings, zipper, pockets and ribbed hem.
+  const hoodieMat=new T.MeshStandardMaterial({color:jacket.color,roughness:.93,side:T.DoubleSide});
+  const hoodieDetail=(geo,mat,parent,x,y,z)=>{const m=new T.Mesh(geo,mat);m.position.set(x,y,z);parent.add(m);wearableParts.push(m);return m};
+  // A compact hood wraps the neck rather than forming a swollen belly.
+  const hood=hoodieDetail(new T.TorusGeometry(.285,.095,10,24,Math.PI),hoodieMat,rig.body,0,2.045,-.13);
+  hood.rotation.z=Math.PI;
+  const hoodBack=hoodieDetail(new T.SphereGeometry(1,18,12),hoodieMat,rig.body,0,1.995,-.225);
+  hoodBack.scale.set(.32,.19,.14);
+  const zipperMat=new T.MeshStandardMaterial({color:'#34363d',metalness:.48,roughness:.38});
+  hoodieDetail(new T.BoxGeometry(.017,.58,.016),zipperMat,rig.body,0,1.62,.303);
+  const pull=hoodieDetail(new T.BoxGeometry(.055,.08,.025),zipperMat,rig.body,0,1.83,.319);
+  const stringMat=new T.MeshStandardMaterial({color:'#25262d',roughness:.95});
+  for(const x of [-.12,.12]){
+   hoodieDetail(new T.CylinderGeometry(.009,.009,.26,6),stringMat,rig.body,x,1.87,.318);
+   hoodieDetail(new T.BoxGeometry(.19,.014,.013),new T.MeshStandardMaterial({color:'#c68ea7',roughness:1}),rig.body,x*1.8,1.46,.304);
+  }
+  // Ribbing follows the fitted torso, not an oversized floating oval.
+  fitted([[1.22,.365,.275],[1.26,.373,.28],[1.30,.369,.278]],'#c78aa4',rig.body);
+  for(const arm of rig.elbows)meshBall(arm,'#c78aa4',0,-.30,0,.145,.075,.147);
  }
  if(pants?.design==='crtzWide'&&!dress){
   logo(rig.legs[0],'CRTZ','#323a3a','#f2f2e6',-.03,-.22,.235,.24,.12);
-  for(const leg of rig.legs)meshBall(leg,pants.color,0,-.44,0,.245,.12,.23);
-  for(const knee of rig.knees)meshBall(knee,pants.color,0,-.22,0,.225,.30,.22);
+  // Loose cargo silhouette: wider fabric at thigh, knee and ankle, without spherical bulges.
+  for(const leg of rig.legs)fitted([[-.54,.263,.245],[-.35,.262,.246],[-.12,.25,.234],[.12,.24,.226]],pants.color,leg);
+  for(const knee of rig.knees)fitted([[-.56,.255,.245],[-.42,.26,.249],[-.22,.264,.254],[.09,.253,.246]],pants.color,knee);
+  const cargoMat=new T.MeshStandardMaterial({color:pants.color,roughness:.96});
+  for(const leg of rig.legs){
+   const pocket=new T.Mesh(new T.BoxGeometry(.15,.19,.065),cargoMat);pocket.position.set(leg===rig.legs[0]?-.23:.23,-.30,.075);leg.add(pocket);wearableParts.push(pocket);
+  }
  }
  if(bag){
-  const strapMat=new T.MeshStandardMaterial({color:'#3d4245',roughness:.78,side:T.DoubleSide});
-  const strap=new T.Mesh(new T.TorusGeometry(.36,.042,8,24,Math.PI),strapMat);
-  strap.rotation.z=Math.PI;strap.position.set(.46,1.67,.16);rig.body.add(strap);wearableParts.push(strap);
-  const bagMat=new T.MeshStandardMaterial({color:bag.color,roughness:.77});
-  const bagMesh=new T.Mesh(new T.BoxGeometry(.55,.41,.22),bagMat);bagMesh.position.set(.53,1.23,.17);rig.body.add(bagMesh);wearableParts.push(bagMesh);
-  logo(rig.body,'GOYARD','#555c60','#d4d1c8',.53,1.25,.285,.39,.15);
+  // Crossbody strap is a diagonal fitted band on the front/back of the torso.
+  // Bag rests against the hip; no huge floating rectangular slab.
+  const strapMat=new T.MeshStandardMaterial({color:'#303438',roughness:.92,side:T.DoubleSide});
+  const strap=new T.Mesh(new T.BoxGeometry(.075,.94,.028),strapMat);
+  strap.rotation.z=-.48;strap.position.set(.05,1.7,.316);rig.body.add(strap);wearableParts.push(strap);
+  const backStrap=new T.Mesh(new T.BoxGeometry(.075,.94,.028),strapMat);
+  backStrap.rotation.z=.48;backStrap.position.set(.05,1.7,-.315);rig.body.add(backStrap);wearableParts.push(backStrap);
+  const bagMat=new T.MeshStandardMaterial({color:bag.color,roughness:.86});
+  const bagMesh=new T.Mesh(new T.BoxGeometry(.38,.33,.16),bagMat);bagMesh.position.set(.27,1.36,.327);rig.body.add(bagMesh);wearableParts.push(bagMesh);
+  const flap=new T.Mesh(new T.BoxGeometry(.4,.105,.025),strapMat);flap.position.set(.27,1.46,.422);rig.body.add(flap);wearableParts.push(flap);
+  logo(rig.body,'GOYARD','#555c60','#d4d1c8',.27,1.34,.418,.29,.12);
  }
  const shoes=get('shoes');if(shoes){for(const knee of rig.knees){const shoe=new T.Mesh(new T.SphereGeometry(1,20,12),new T.MeshStandardMaterial({color:shoes.color,roughness:1}));shoe.position.set(0,-.545,.095);shoe.scale.set(.213,.092,.29);knee.add(shoe);wearableParts.push(shoe)}}
  }
