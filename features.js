@@ -14,8 +14,8 @@ export function iniciarExtras({player,model,head,rig,showStatus}){
  );
  const key='barbas-party-economy-v1';
  let saved={};
- let coins=Number.isFinite(saved.coins)?saved.coins:0,owned=new Set(Array.isArray(saved.owned)?saved.owned:[]),equipped=saved.equipped||{};
- let avatarStyle='';let startingCoinsGranted=false;let cloudReady=false;let cloudSaveChain=Promise.resolve();const save=()=>{const data={coins,owned:[...owned],equipped,avatarStyle,startingCoinsGranted};if(cloudReady&&window.barbasAccount?.save){cloudSaveChain=cloudSaveChain.catch(()=>{}).then(()=>window.barbasAccount.save(data)).catch(e=>{showStatus('Error guardando partida: '+(e.code||e.message))})}};
+ let coins=0,owned=new Set(Array.isArray(saved.owned)?saved.owned:[]),equipped=saved.equipped||{};
+ let avatarStyle='';let coinResetVersion=1;let startingCoinsGranted=true;let cloudReady=false;let cloudSaveChain=Promise.resolve();const save=()=>{const data={coins,owned:[...owned],equipped,avatarStyle,startingCoinsGranted,coinResetVersion};if(cloudReady&&window.barbasAccount?.save){cloudSaveChain=cloudSaveChain.catch(()=>{}).then(()=>window.barbasAccount.save(data)).catch(e=>{showStatus('Error guardando partida: '+(e.code||e.message))})}};
  const style=document.createElement('style');style.textContent=`
  #coinsHud{position:fixed;top:75px;left:14px;z-index:6;background:#201b39d9;border:1px solid #ffe19a66;border-radius:12px;padding:8px 12px;font-weight:900;color:#ffe38a}
  #shopButton,#audioButton{position:fixed;z-index:7;right:12px;display:none;font-size:13px;padding:10px 12px;border-radius:12px}
@@ -316,8 +316,11 @@ export function iniciarExtras({player,model,head,rig,showStatus}){
   if(!data||cloudReady)return;
   coins=Number.isFinite(data.coins)?data.coins:0;
   startingCoinsGranted=data.startingCoinsGranted===true;
-  const needsStartingCoins=!startingCoinsGranted;
-  if(needsStartingCoins){coins=Math.max(coins,100000);startingCoinsGranted=true;}
+  // One-time economy reset for each existing account, without resetting future winnings.
+  const needsCoinReset=data.coinResetVersion!==1;
+  if(needsCoinReset)coins=0;
+  coinResetVersion=1;
+  startingCoinsGranted=true;
   avatarStyle=data.avatarStyle==='woman'?'woman':data.avatarStyle==='man'?'man':'';
   if(avatarStyle)setAvatarStyle(avatarStyle,false);
   owned=new Set(Array.isArray(data.owned)?data.owned:[]);
@@ -327,7 +330,7 @@ export function iniciarExtras({player,model,head,rig,showStatus}){
   const needsGrant=!owned.has(STARTER_TOP)||!owned.has(STARTER_SHORTS);
   owned.add(STARTER_TOP);owned.add(STARTER_SHORTS);
   cloudReady=true;
-  if(needsGrant||needsStartingCoins)save();
+  if(needsGrant||needsCoinReset)save();
   applyOutfit();updateHud();
  }
  window.addEventListener('barbas-profile-ready',e=>useCloudProfile(e.detail));if(window.barbasAccount?.ready&&window.barbasAccount.profile)useCloudProfile(window.barbasAccount.profile);applyOutfit();updateHud();hud.style.display='none';
