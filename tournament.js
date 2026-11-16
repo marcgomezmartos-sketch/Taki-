@@ -259,6 +259,21 @@ export function createTournament(T,scene,player,extras,ui){
      cube(.35,.65,Math.abs(a-b),trim,7.7,.05,(a+b)/2);
    }
    gaps=[{a:-10,b:-13.2},{a:-32,b:-35.2},{a:-52,b:-55.2},{a:-75,b:-78.2}];
+   // V80: shaped, themed inflatable course geometry instead of naked boxes.
+   const themed=new T.Group();root.add(themed);
+   const tm=c=>new T.MeshStandardMaterial({color:c,roughness:.43,metalness:.05});
+   const tc=tm('#31d1f0'),tp=tm('#fb5fa9'),ty=tm('#ffda45'),tv=tm('#8c58ea'),tw=tm('#ffffff');
+   const prop=(geo,m,x,y,z,rx=0,ry=0,rz=0)=>{const o=new T.Mesh(geo,m);o.position.set(x,y,z);o.rotation.set(rx,ry,rz);o.receiveShadow=true;themed.add(o);return o};
+   function soft(w,h,d,m,x,y,z){const shape=new T.Shape(),a=w/2,b=h/2,r=Math.min(.42,a*.7,b*.7);shape.moveTo(-a+r,-b);shape.lineTo(a-r,-b);shape.quadraticCurveTo(a,-b,a,-b+r);shape.lineTo(a,b-r);shape.quadraticCurveTo(a,b,a-r,b);shape.lineTo(-a+r,b);shape.quadraticCurveTo(-a,b,-a,b-r);shape.lineTo(-a,-b+r);shape.quadraticCurveTo(-a,-b,-a+r,-b);const g=new T.ExtrudeGeometry(shape,{depth:d,bevelEnabled:true,bevelThickness:.1,bevelSize:.1,bevelSegments:2,curveSegments:3});g.translate(0,0,-d/2);return prop(g,m,x,y,z)}
+   for(const [a,b] of segments){
+     for(const side of [-1,1]){prop(new T.CylinderGeometry(.33,.33,Math.abs(a-b),10),side<0?tp:tc,side*7.55,.52,(a+b)/2,Math.PI/2);for(const z of [a+.8,b-.8])prop(new T.CylinderGeometry(.4,.55,1.2,10),ty,side*7.55,.25,z)}
+     for(let z=a-2;z>b+2;z-=5)soft(1.2,.06,1.6,tw,0,-.035,z);
+   }
+   for(const [i,z] of [-3,-39,-70,-99].entries()){const color=i%2?tv:tp;for(const side of [-1,1]){prop(new T.CylinderGeometry(.68,.78,5.3,12),color,side*6.5,2.6,z);prop(new T.SphereGeometry(.8,12,8),ty,side*6.5,5.25,z)}soft(13,.95,1.1,color,0,5.5,z);soft(4.7,.5,.24,tw,0,5.45,z+.72)}
+   for(const [i,z] of [-25,-48,-66,-88].entries()){const side=i%2?1:-1,x=side*10.6;prop(new T.CylinderGeometry(1.35,1.55,2.5,14),tv,x,1.6,z,0,0,Math.PI/2);prop(new T.TorusGeometry(1.13,.24,8,18),ty,x-side*1.4,1.6,z,0,Math.PI/2);prop(new T.SphereGeometry(.85,12,8),tp,x-side*2.2,1.6,z);soft(2.5,.7,2.6,tc,x,.38,z)}
+   for(const x of [-6.6,6.6])prop(new T.CylinderGeometry(.55,.7,6.6,12),ty,x,2.8,-104);soft(14,.95,1.2,tp,0,6.1,-104);
+   for(let x=-5;x<=5;x+=2)soft(.9,.55,.16,tw,x,6.1,-103.25);
+
    for(const z of [-10,-32,-52,-75]){cube(15,.15,.45,gold,0,.05,z+.6);cube(15,.15,.45,pink,0,.05,z-.6)}
    // Alternating zig-zag maze: walls must be navigated around.
    for(let i=0;i<4;i++){const z=-20-i*2.8,side=i%2===0?-1:1;addBlock(side*3.1,z,8,1.15,3.4,'maze')}
