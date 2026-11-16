@@ -1,3 +1,4 @@
+import {premiumWorld} from './premium-v83.js';
 import {crearBarbasV4} from './barbas_v5.js?v=rig58';
 // Barbas Minigames V63: round director. Local bots until multiplayer backend is ready.
 export function createTournament(T,scene,player,extras,ui){
@@ -163,7 +164,7 @@ export function createTournament(T,scene,player,extras,ui){
     const cylinder=new T.Mesh(new T.CylinderGeometry(2.45,2.45,24,20),material(colors[i]));
     cylinder.rotation.x=Math.PI/2;cylinder.position.set(x,-2.25,0);root.add(cylinder);
     survivalParts.push({type:'roller',mesh:cylinder,x});
-    for(let j=0;j<7;j++){const ring=new T.Mesh(new T.TorusGeometry(2.46,.12,6,18),material('#fff4c6'));ring.position.set(x,-2.25,-9+j*3);root.add(ring)}
+    
    }
    cube(25,1,.9,material('#344a76'),0,-1,-12.5);cube(25,1,.9,material('#344a76'),0,-1,12.5);
   }else{
@@ -221,7 +222,7 @@ export function createTournament(T,scene,player,extras,ui){
     sphere(.8,material(i%2?'#fc68ad':'#ffe17b'),bx,2.2,z);
    }
   }
-  for(const z of [-24,-57,-88,-104]){
+  for(const z of [-104]){
    const x=kartCenter(z),purple=material('#7656cc');
    cube(.55,6,.55,purple,x-6.6,3,z);cube(.55,6,.55,purple,x+6.6,3,z);
    cube(14,.8,.6,material('#ffda69'),x,6,z);
@@ -233,7 +234,7 @@ export function createTournament(T,scene,player,extras,ui){
  }
 
  function makeWorld(kind){
-  reset();root.visible=true;showKarts(kind==='karts');if(kind==='karts'){buildKartFinal();return}
+  reset();root.visible=true;showKarts(kind==='karts');premiumWorld(T,root,kind);if(kind==='karts'){buildKartFinal();return}
   const race=kind==='race'||kind==='water'||kind==='future';
   if(kind==='futsal'){
    buildArena();setFutsalKits();
@@ -282,7 +283,7 @@ export function createTournament(T,scene,player,extras,ui){
    for(let i=0;i<3;i++){addBlock(0,-61-i*4.5,3.2,1.2,3.5,'moving',2.4+i*.35)}
    for(let i=0;i<3;i++){addBlock(Math.sin(i*2.5)*3,-84-i*6,2.3,2.3,2.6,'bumper')}
    for(let i=0;i<10;i++){const z=6-i*12;for(const x of [-9,9]){cube(.6,3,.6,whiteMat,x,1.5,z);sphere(.48,[pink,gold,blue][i%3],x,3.2,z)}}
-   for(const z of [-25,-48,-69,-95]){const ring=new T.Mesh(new T.TorusGeometry(5,.35,8,24),gold);ring.position.set(0,5,z);root.add(ring)}
+   
    cube(15,.18,.7,gold,0,.2,-106);cube(.8,7,.8,whiteMat,-7,3.5,-106);cube(.8,7,.8,whiteMat,7,3.5,-106);
    cube(15,1,.8,pink,0,7,-106);
    bots.forEach((b,i)=>{b.visible=stage===0||i<4;b.position.set((i%5-2)*2.1,0,4+Math.floor(i/5)*2)});
