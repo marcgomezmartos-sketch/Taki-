@@ -1,4 +1,3 @@
-import {decorateArena} from './theme-v81.js';
 import {installSocial} from './social.js?v=73';
 import {createTournament} from './tournament.js?v=80';
 import * as T from 'three';import {createGraphics} from './graphics.js?v=57';import {crearBarbasV4} from './barbas_v5.js?v=rig74';import {iniciarExtras} from './features.js?v=reset77';
@@ -86,7 +85,6 @@ for(let i=0;i<shopCatalog.length;i++){
  shopItems.push({id:product.id,x,z});
 }
 // Shop exterior and city are spatially separated to avoid overlap.
-decorateArena(T,shop,'shop');
 function enterShop(){mode='shop';shop.visible=true;sun.shadow.needsUpdate=true;player.position.set(0,0,283);vel=0;onGround=true;angle=0;targetAngle=0;keys.clear();$('status').textContent='🛍️ TK SHOP · Recorre los pasillos y pulsa USAR cerca de cada producto'}
 function leaveShop(){shop.visible=false;goIsland('map')}
 
@@ -112,7 +110,7 @@ function leaveShop(){shop.visible=false;goIsland('map')}
  for(let i=0;i<8;i++){const z=8-i*10,side=i%2?1:-1,x=side*(13+i%3*4);const rock=new T.Mesh(new T.CylinderGeometry(3,1.2,4,7),rockMat);rock.position.set(x,-4,z);parkour.add(rock);const turf=new T.Mesh(new T.CylinderGeometry(3.5,3.3,.4,8),islandMat);turf.position.set(x,-1.8,z);parkour.add(turf);const trunk=new T.Mesh(new T.CylinderGeometry(.18,.24,2,7),mat('#795946'));trunk.position.set(x,.0,z);parkour.add(trunk);const leaves=new T.Mesh(new T.IcosahedronGeometry(1.3,1),mat(i%2?'#57b48b':'#71c79d'));leaves.position.set(x,1.4,z);parkour.add(leaves)}
  // Visual variety: speed arrows, ring, stepping stones, a low tunnel, and finish arch.
  for(const z of [-3.8,-4.2]){const arrow=new T.Mesh(new T.BoxGeometry(.48,.04,.7),new T.MeshBasicMaterial({color:'#53e7ff'}));arrow.rotation.y=Math.PI/4;arrow.position.set(0,.08,z);parkour.add(arrow)}
- const ring=new T.Mesh(new T.TorusGeometry(1.45,.12,8,32),new T.MeshStandardMaterial({color:'#69f0ef',emissive:'#237d88',emissiveIntensity:.5}));ring.position.set(1.2,2.25,-8.5);parkour.add(ring);
+ const ring=new T.Mesh(new T.TorusGeometry(1.45,.12,8,32),new T.MeshStandardMaterial({color:'#69f0ef',emissive:'#237d88',emissiveIntensity:.5}));ring.position.set(1.2,2.25,-8.5);ring.visible=false;parkour.add(ring);
  for(const z of [-11.9,-12.6,-13.3]){const stone=new T.Mesh(new T.CylinderGeometry(.36,.36,.08,12),mat('#f9d888'));stone.position.set(-.9,1.06,z);parkour.add(stone)}
  const tunnel=new T.Group();tunnel.position.set(0,1.35,-16.8);parkour.add(tunnel);for(const x of [-1.7,1.7]){const pillar=new T.Mesh(new T.BoxGeometry(.22,2.3,.25),mat('#a68de8'));pillar.position.set(x,1.15,0);tunnel.add(pillar)}const beam=new T.Mesh(new T.BoxGeometry(3.65,.24,.3),mat('#a68de8'));beam.position.y=2.3;tunnel.add(beam);
  const finish=new T.Group();finish.position.set(0,2.5,-34);parkour.add(finish);for(const x of [-2.5,2.5]){const post=new T.Mesh(new T.BoxGeometry(.35,3.2,.35),mat('#ffe1a0'));post.position.set(x,1.6,0);finish.add(post)}const top=new T.Mesh(new T.BoxGeometry(5.4,.55,.4),mat('#a17bd6'));top.position.y=3.2;finish.add(top);
@@ -142,7 +140,7 @@ function leaveShop(){shop.visible=false;goIsland('map')}
      shape(cylinder,adventureGrass,x,-.6+(i%4)*.3,z,3.3,1,3.3);
      shape(trunk,mats[4],x,1.2,z,.9,1,1);
      shape(leaf,mats[(i+3)%6],x,3.5,z,1.7,1.9,1.7);
-     if(i%2===0){
+     if(false){
        const gate=shape(torus,mats[i%6],x,5.5,z,1.35,1.35,1);
        gate.rotation.y=a+Math.PI/2;
        shape(cone,mats[(i+2)%6],x,9.4,z,1.4,1.3,1.4);
@@ -158,7 +156,7 @@ function leaveShop(){shop.visible=false;goIsland('map')}
      const a=i*Math.PI*2/10,r=31+(i%3)*5,x=Math.cos(a)*r,z=Math.sin(a)*r;
      for(let j=0;j<3;j++)shape(sharedCloud,adventureCloud,x+(j-1)*2.2,15+(i%3)*3+(j===1?1.1:0),z,2.6,1.15,1.5);
    }
-   const coaster=new T.Group();bg.add(coaster);
+   const coaster=new T.Group();bg.add(coaster);coaster.visible=false;
    const coasterMat=mats[0],railMat=mats[3];
    for(let i=0;i<22;i++){
      const a=i*Math.PI*2/22,r=21.5,x=Math.cos(a)*r,z=Math.sin(a)*r,y=6+Math.sin(a*3)*2.4;
@@ -221,8 +219,7 @@ function leaveShop(){shop.visible=false;goIsland('map')}
    p.mesh.position.set(x,p.y-.19,z);p.mesh.scale.set(w/original[3],1,d/original[4]);
   });
  }
- decorateArena(T,parkour,'parkour');
-function enterParkour(){mode='parkour';parkour.visible=true;scene.background=parkSky;scene.fog=parkFog;parkCheckpoint=0;parkDone=false;parkFails=0;angle=0;targetAngle=0;targetPitch=.28;parkRespawn();$('status').textContent='🧗 PARKOUR · Salta de plataforma en plataforma. ¡Checkpoint a mitad!'}
+ function enterParkour(){mode='parkour';parkour.visible=true;scene.background=parkSky;scene.fog=parkFog;parkCheckpoint=0;parkDone=false;parkFails=0;angle=0;targetAngle=0;targetPitch=.28;parkRespawn();$('status').textContent='🧗 PARKOUR · Salta de plataforma en plataforma. ¡Checkpoint a mitad!'}
  function leaveParkour(message){parkour.visible=false;scene.background=scene.userData.citySky||new T.Color('#b4dcf0');scene.fog=cityFog;goIsland('map');if(message)$('status').textContent=message}
 const arenaScenery=new T.Group();scene.add(arenaScenery);arenaScenery.visible=false;adventureBackdrop(arenaScenery,0,72,1.15);
 const tiles=[];let arenaBuilt=false;const arenaGroup=new T.Group();scene.add(arenaGroup);arenaGroup.visible=false;function resetArena(){arenaGroup.visible=true;arenaScenery.visible=true;if(!arenaBuilt){const before=new Set(scene.children);block(19,.6,10,mat('#a1dcb2'),0,-.4,86);block(19,.6,10,mat('#a1dcb2'),0,-.4,56);for(let r=0;r<8;r++)for(let c=0;c<7;c++){let t=block(2.45,.35,2.45,mat((r+c)%2?'#f8a5d8':'#a9b2fc'),(c-3)*2.55,-.12,65+r*2.55);tiles.push({mesh:t,r,c,safe:c===(r*3+2)%7,broken:false})}for(const object of [...scene.children])if(!before.has(object)&&object!==arenaGroup)arenaGroup.add(object);arenaBuilt=true}for(let t of tiles){t.broken=false;t.mesh.visible=true;t.mesh.material.color.set((t.r+t.c)%2?'#f8a5d8':'#a9b2fc')}player.position.set(0,0,87);vel=0;onGround=true}function backCity(msg){goIsland('map');if(msg)$('status').textContent=msg}
