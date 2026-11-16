@@ -170,6 +170,31 @@ function leaveShop(){shop.visible=false;goIsland('map')}
    return bg;
  }
  const parkAdventure=adventureBackdrop(parkour,0,-17,1);
+ const parkArt=new T.Group();parkour.add(parkArt);
+ const artMat=c=>new T.MeshStandardMaterial({color:c,roughness:.6});
+ const artGreen=artMat('#47c89c'),artDark=artMat('#247b88'),artCream=artMat('#fff0bb'),artPink=artMat('#ff64a9'),artGold=artMat('#ffd55e'),artBlue=artMat('#4d95ed');
+ const artBox=(w,h,d,m,x,y,z)=>{const o=new T.Mesh(new T.BoxGeometry(w,h,d),m);o.position.set(x,y,z);o.receiveShadow=true;parkArt.add(o);return o};
+ const artCylinder=(rt,rb,h,m,x,y,z)=>{const o=new T.Mesh(new T.CylinderGeometry(rt,rb,h,10),m);o.position.set(x,y,z);parkArt.add(o);return o};
+ // Colorful continuous landscape beneath the playable course instead of empty sky.
+ artBox(94,1.3,105,artGreen,0,-16,-19);artBox(98,3,109,artDark,0,-18,-19);
+ for(let i=0;i<18;i++){const x=(i%2?1:-1)*(11+(i%4)*7),z=12-i*3.2;
+   artCylinder(1.5,2.1,1.1,artCream,x,-14.7,z);artCylinder(.32,.42,3,artDark,x,-12.6,z);
+   const crown=new T.Mesh(new T.IcosahedronGeometry(1.8,1),i%3?artGreen:artPink);crown.position.set(x,-10.6,z);parkArt.add(crown);
+ }
+ const wheel=new T.Group();wheel.position.set(-21,4,-17);parkArt.add(wheel);
+ const wheelRing=new T.Mesh(new T.TorusGeometry(9,.48,8,48),artPink);wheel.add(wheelRing);
+ const wheelInner=new T.Mesh(new T.TorusGeometry(7.4,.14,6,48),artCream);wheel.add(wheelInner);
+ for(let i=0;i<12;i++){const a=i*Math.PI/6;const gondola=new T.Mesh(new T.SphereGeometry(.9,9,7),i%2?artGold:artBlue);gondola.position.set(Math.cos(a)*9,Math.sin(a)*9,0);wheel.add(gondola)}
+ artCylinder(.6,.8,14,artCream,-21,-5,-17);
+ for(let i=0;i<5;i++){const z=5-i*9,side=i%2?1:-1;
+   artCylinder(2.5,3.2,7,artPink,side*16,-7,z);
+   const roof=new T.Mesh(new T.ConeGeometry(3.8,4,10),artGold);roof.position.set(side*16,-1.5,z);parkArt.add(roof);
+ }
+ for(let i=0;i<parkPlatforms.length;i++){const p=parkPlatforms[i];
+   artBox(p.w+.16,.13,p.d+.16,i===8?artGold:i%2?artPink:artBlue,p.x,p.y-.38,p.z);
+   for(const side of [-1,1]){const orb=new T.Mesh(new T.SphereGeometry(.18,8,6),artGold);orb.position.set(p.x+side*(p.w/2-.35),p.y+.23,p.z-p.d/2+.4);parkArt.add(orb)}
+ }
+
  let parkCheckpoint=0,parkDone=false,parkFails=0;
  function parkRespawn(){const p=parkPlatforms[parkCheckpoint];player.position.set(p.x,p.y+.08,375+p.z);vel=0;onGround=true;keys.clear();joystick.x=0;joystick.y=0}
  let parkLevel='easy',parkReward=10,parkFinish=8,parkCheckpointIndex=4;
