@@ -1,9 +1,8 @@
-import {buildArtAssets} from './art-assets-v84.js';
 import {premiumWorld} from './premium-v83.js';
 import {crearBarbasV4} from './barbas_v5.js?v=rig58';
 // Barbas Minigames V63: round director. Local bots until multiplayer backend is ready.
 export function createTournament(T,scene,player,extras,ui){
- const root=new T.Group();scene.add(root);root.visible=false;let artAssets=null;
+ const root=new T.Group();scene.add(root);root.visible=false;
  const material=(c)=>new T.MeshStandardMaterial({color:c,roughness:.73,metalness:.03});
  const floorMat=material('#58cfa5'),pink=material('#fa6caa'),blue=material('#57baf4'),gold=material('#ffd75b');
  const cube=(w,h,d,m,x,y,z)=>{let a=new T.Mesh(new T.BoxGeometry(w,h,d),m);a.position.set(x,y,z);a.receiveShadow=true;root.add(a);return a};
@@ -235,7 +234,7 @@ export function createTournament(T,scene,player,extras,ui){
  }
 
  function makeWorld(kind){
-  reset();root.visible=true;showKarts(kind==='karts');premiumWorld(T,root,kind);artAssets=buildArtAssets(T,root,kind);if(kind==='karts'){buildKartFinal();return}
+  reset();root.visible=true;showKarts(kind==='karts');premiumWorld(T,root,kind);if(kind==='karts'){buildKartFinal();return}
   const race=kind==='race'||kind==='water'||kind==='future';
   if(kind==='futsal'){
    buildArena();setFutsalKits();
@@ -335,7 +334,7 @@ export function createTournament(T,scene,player,extras,ui){
  actions.querySelector('#roundShoot').onclick=()=>kick(true);
  function update(dt){
   if(!current||!started)return false;
-  time+=dt;artAssets?.update(dt,time);hitCooldown=Math.max(0,hitCooldown-dt);
+  time+=dt;hitCooldown=Math.max(0,hitCooldown-dt);
   const p=player.position;
   const race=current==='race'||current==='water'||current==='future';
   if(current==='karts'){
