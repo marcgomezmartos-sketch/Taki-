@@ -1,3 +1,4 @@
+import {decorateArena} from './theme-v81.js';
 import {installSocial} from './social.js?v=73';
 import {createTournament} from './tournament.js?v=80';
 import * as T from 'three';import {createGraphics} from './graphics.js?v=57';import {crearBarbasV4} from './barbas_v5.js?v=rig74';import {iniciarExtras} from './features.js?v=reset77';
@@ -85,6 +86,7 @@ for(let i=0;i<shopCatalog.length;i++){
  shopItems.push({id:product.id,x,z});
 }
 // Shop exterior and city are spatially separated to avoid overlap.
+decorateArena(T,shop,'shop');
 function enterShop(){mode='shop';shop.visible=true;sun.shadow.needsUpdate=true;player.position.set(0,0,283);vel=0;onGround=true;angle=0;targetAngle=0;keys.clear();$('status').textContent='🛍️ TK SHOP · Recorre los pasillos y pulsa USAR cerca de cada producto'}
 function leaveShop(){shop.visible=false;goIsland('map')}
 
@@ -219,7 +221,8 @@ function leaveShop(){shop.visible=false;goIsland('map')}
    p.mesh.position.set(x,p.y-.19,z);p.mesh.scale.set(w/original[3],1,d/original[4]);
   });
  }
- function enterParkour(){mode='parkour';parkour.visible=true;scene.background=parkSky;scene.fog=parkFog;parkCheckpoint=0;parkDone=false;parkFails=0;angle=0;targetAngle=0;targetPitch=.28;parkRespawn();$('status').textContent='🧗 PARKOUR · Salta de plataforma en plataforma. ¡Checkpoint a mitad!'}
+ decorateArena(T,parkour,'parkour');
+function enterParkour(){mode='parkour';parkour.visible=true;scene.background=parkSky;scene.fog=parkFog;parkCheckpoint=0;parkDone=false;parkFails=0;angle=0;targetAngle=0;targetPitch=.28;parkRespawn();$('status').textContent='🧗 PARKOUR · Salta de plataforma en plataforma. ¡Checkpoint a mitad!'}
  function leaveParkour(message){parkour.visible=false;scene.background=scene.userData.citySky||new T.Color('#b4dcf0');scene.fog=cityFog;goIsland('map');if(message)$('status').textContent=message}
 const arenaScenery=new T.Group();scene.add(arenaScenery);arenaScenery.visible=false;adventureBackdrop(arenaScenery,0,72,1.15);
 const tiles=[];let arenaBuilt=false;const arenaGroup=new T.Group();scene.add(arenaGroup);arenaGroup.visible=false;function resetArena(){arenaGroup.visible=true;arenaScenery.visible=true;if(!arenaBuilt){const before=new Set(scene.children);block(19,.6,10,mat('#a1dcb2'),0,-.4,86);block(19,.6,10,mat('#a1dcb2'),0,-.4,56);for(let r=0;r<8;r++)for(let c=0;c<7;c++){let t=block(2.45,.35,2.45,mat((r+c)%2?'#f8a5d8':'#a9b2fc'),(c-3)*2.55,-.12,65+r*2.55);tiles.push({mesh:t,r,c,safe:c===(r*3+2)%7,broken:false})}for(const object of [...scene.children])if(!before.has(object)&&object!==arenaGroup)arenaGroup.add(object);arenaBuilt=true}for(let t of tiles){t.broken=false;t.mesh.visible=true;t.mesh.material.color.set((t.r+t.c)%2?'#f8a5d8':'#a9b2fc')}player.position.set(0,0,87);vel=0;onGround=true}function backCity(msg){goIsland('map');if(msg)$('status').textContent=msg}
