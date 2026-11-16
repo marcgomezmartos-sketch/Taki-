@@ -1,12 +1,13 @@
+import {premiumWorld} from './premium-v83.js';
 import {installSocial} from './social.js?v=73';
-import {createTournament} from './tournament.js?v=80';
+import {createTournament} from './tournament.js?v=83';
 import * as T from 'three';import {createGraphics} from './graphics.js?v=57';import {crearBarbasV4} from './barbas_v5.js?v=rig74';import {iniciarExtras} from './features.js?v=reset77';
 function iniciarBarbasParty(){
 const $=id=>document.getElementById(id), scene=new T.Scene();scene.background=new T.Color('#e99588');scene.fog=new T.FogExp2('#d99c94',.0035);// Skybox image path: replace with your own panoramic sky asset.
  const SKY_IMAGE='assets/cielo_ciudad.jpg';
  const skyImage=new Image();skyImage.decoding='async';skyImage.onload=()=>{const c=document.createElement('canvas');c.width=2048;c.height=1024;const q=c.getContext('2d');q.drawImage(skyImage,0,0,c.width,c.height);const t=new T.CanvasTexture(c);t.colorSpace=T.SRGBColorSpace;scene.userData.citySky=t;if(mode!=='parkour')scene.background=new T.Color('#b2cfe2')};skyImage.onerror=()=>{};skyImage.src=SKY_IMAGE;
- const camera=new T.PerspectiveCamera(65,innerWidth/innerHeight,.1,180);const renderer=new T.WebGLRenderer({antialias:true,powerPreference:'high-performance'});renderer.setPixelRatio(Math.min(devicePixelRatio,1.6));renderer.setSize(innerWidth,innerHeight);renderer.outputColorSpace=T.SRGBColorSpace;renderer.toneMapping=T.ACESFilmicToneMapping;renderer.toneMappingExposure=1.06;document.body.prepend(renderer.domElement);
-scene.add(new T.HemisphereLight('#d7eaff','#817365',.95));const sun=new T.DirectionalLight('#fff2dc',2.0);sun.position.set(-32,64,-23);sun.castShadow=true;sun.shadow.mapSize.set(/Android|iPhone|Mobile/i.test(navigator.userAgent)?512:1024,/Android|iPhone|Mobile/i.test(navigator.userAgent)?512:1024);sun.shadow.camera.left=-40;sun.shadow.camera.right=40;sun.shadow.camera.top=40;sun.shadow.camera.bottom=-40;sun.shadow.normalBias=.025;sun.shadow.radius=2.5;sun.shadow.bias=-.0003;scene.add(sun);renderer.shadowMap.enabled=true;renderer.shadowMap.type=T.PCFSoftShadowMap;const amb=new T.AmbientLight('#e9e4ff',.25);scene.add(amb);const graphics=createGraphics(renderer,scene,camera);
+ const camera=new T.PerspectiveCamera(65,innerWidth/innerHeight,.1,180);const renderer=new T.WebGLRenderer({antialias:true,powerPreference:'high-performance'});renderer.setPixelRatio(Math.min(devicePixelRatio,1.6));renderer.setSize(innerWidth,innerHeight);renderer.outputColorSpace=T.SRGBColorSpace;renderer.toneMapping=T.ACESFilmicToneMapping;renderer.toneMappingExposure=1.22;document.body.prepend(renderer.domElement);
+scene.add(new T.HemisphereLight('#e6f6ff','#7e92ac',1.65));const sun=new T.DirectionalLight('#fff4d8',2.8);sun.position.set(-32,64,-23);sun.castShadow=true;sun.shadow.mapSize.set(/Android|iPhone|Mobile/i.test(navigator.userAgent)?512:1024,/Android|iPhone|Mobile/i.test(navigator.userAgent)?512:1024);sun.shadow.camera.left=-40;sun.shadow.camera.right=40;sun.shadow.camera.top=40;sun.shadow.camera.bottom=-40;sun.shadow.normalBias=.025;sun.shadow.radius=2.5;sun.shadow.bias=-.0003;scene.add(sun);renderer.shadowMap.enabled=true;renderer.shadowMap.type=T.PCFSoftShadowMap;const amb=new T.AmbientLight('#e9e4ff',.25);scene.add(amb);const graphics=createGraphics(renderer,scene,camera);
 const mat=(color,emissive)=>new T.MeshStandardMaterial({color,roughness:.8,emissive:emissive||'#000000',emissiveIntensity:emissive?.5:0});function block(w,h,d,m,x,y,z){const o=new T.Mesh(new T.BoxGeometry(w,h,d),m);o.position.set(x,y,z);scene.add(o);return o}function ball(r,m,x,y,z){let o=new T.Mesh(new T.SphereGeometry(r,12,8),m);o.position.set(x,y,z);scene.add(o);return o}function cyl(r1,r2,h,m,x,y,z){let o=new T.Mesh(new T.CylinderGeometry(r1,r2,h,24),m);o.position.set(x,y,z);scene.add(o);return o}function sign(label,x,y,z,color='#fff'){let c=document.createElement('canvas');c.width=512;c.height=128;let q=c.getContext('2d');q.fillStyle='#282447';q.fillRect(0,0,512,128);q.fillStyle=color;q.font='bold 53px system-ui';q.textAlign='center';q.fillText(label,256,81);let tex=new T.CanvasTexture(c);tex.colorSpace=T.SRGBColorSpace;let p=new T.Mesh(new T.PlaneGeometry(6,1.5),new T.MeshBasicMaterial({map:tex,side:T.DoubleSide}));p.position.set(x,y,z);scene.add(p);return p}
 // Hand-painted panoramic sky and distant cloud silhouettes; no missing external assets needed.
  const skyCanvas=document.createElement('canvas');skyCanvas.width=2048;skyCanvas.height=1024;
@@ -169,7 +170,7 @@ function leaveShop(){shop.visible=false;goIsland('map')}
    }
    return bg;
  }
- const parkAdventure=adventureBackdrop(parkour,0,-17,1);
+ const parkAdventure=adventureBackdrop(parkour,0,-17,1);parkAdventure.visible=false;premiumWorld(T,parkour,'parkour');
  const parkArt=new T.Group();parkour.add(parkArt);
  const artMat=c=>new T.MeshStandardMaterial({color:c,roughness:.6});
  const artGreen=artMat('#47c89c'),artDark=artMat('#247b88'),artCream=artMat('#fff0bb'),artPink=artMat('#ff64a9'),artGold=artMat('#ffd55e'),artBlue=artMat('#4d95ed');
@@ -181,7 +182,7 @@ function leaveShop(){shop.visible=false;goIsland('map')}
    artCylinder(1.5,2.1,1.1,artCream,x,-14.7,z);artCylinder(.32,.42,3,artDark,x,-12.6,z);
    const crown=new T.Mesh(new T.IcosahedronGeometry(1.8,1),i%3?artGreen:artPink);crown.position.set(x,-10.6,z);parkArt.add(crown);
  }
- const wheel=new T.Group();wheel.position.set(-21,4,-17);parkArt.add(wheel);
+ const wheel=new T.Group();wheel.position.set(-21,4,-17);parkArt.add(wheel);wheel.visible=false;
  const wheelRing=new T.Mesh(new T.TorusGeometry(9,.48,8,48),artPink);wheel.add(wheelRing);
  const wheelInner=new T.Mesh(new T.TorusGeometry(7.4,.14,6,48),artCream);wheel.add(wheelInner);
  for(let i=0;i<12;i++){const a=i*Math.PI/6;const gondola=new T.Mesh(new T.SphereGeometry(.9,9,7),i%2?artGold:artBlue);gondola.position.set(Math.cos(a)*9,Math.sin(a)*9,0);wheel.add(gondola)}
