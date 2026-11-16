@@ -1,4 +1,3 @@
-import {decorateArena} from './theme-v81.js';
 import {crearBarbasV4} from './barbas_v5.js?v=rig58';
 // Barbas Minigames V63: round director. Local bots until multiplayer backend is ready.
 export function createTournament(T,scene,player,extras,ui){
@@ -313,7 +312,7 @@ export function createTournament(T,scene,player,extras,ui){
   }
  }
  function startRound(kind){
-  showResult=false;current=kind;started=false;makeWorld(kind);decorateArena(T,root,kind);
+  showResult=false;current=kind;started=false;makeWorld(kind);
   root.visible=false;hud.style.display='none';const token=++roundToken;let count=3;
   const countdown=()=>{if(token!==roundToken)return;if(count>0){show('RONDA '+(stage+1),String(count),labels[kind],null);count--;setTimeout(countdown,850)}else{hideBanner();root.visible=true;hud.style.display='block';started=true;time=0}};
   let spins=0;const options=stage===0?prelim:finals;const spin=()=>{if(token!==roundToken)return;if(spins<9){show('RULETA DEL PARQUE',labels[options[spins%options.length]],'Girando la ruleta de minijuegos…',null);spins++;setTimeout(spin,130)}else{show('¡MODO SELECCIONADO!',labels[kind],intro[kind],null);setTimeout(countdown,1100)}};spin();
